@@ -1,0 +1,245 @@
+before:
+  this_module   = "std.normalize"
+
+  M = require (this_module)
+  M.version = nil               -- previous specs may have autoloaded it
+
+
+specify std.normalize:
+- context when required:
+  - it returns a callable:
+      expect (type (getmetatable (M).__call)).to_be "function"
+  - it does not touch the global table:
+      expect (show_apis {added_to="_G", by=this_module}).
+        to_equal {}
+
+- context when lazy loading:
+  - it has no submodules on initial load:
+      for _, v in pairs (M) do
+        expect (type (v)).not_to_be "table"
+      end
+  - it loads submodules on demand:
+      lazy = M.version
+      expect (lazy).to_be (require "std.normalize.version")
+
+
+- describe setfenv:
+
+
+- describe getmetamethod:
+  - before:
+      f = M.getmetamethod
+
+  - context with a table:
+    - before:
+        fn = function () return "uh-oh" end
+        method = function () return "called" end
+        functor = setmetatable ({}, {__call = method})
+        t = setmetatable (
+          {field = 0, fn = fn, morefn = fn},
+          {field = 1, fn = functor, method = method}
+        )
+    - it returns nil for missing metamethods:
+        expect (f (t, "morefn")).to_be (nil)
+    - it returns nil for non-callable metatable entries:
+        expect (f (t, "field")).to_be (nil)
+    - it returns a function metamethod:
+        expect (f (t, "method")).to_be (method)
+        expect (f (t, "method")()).to_be "called"
+    - it returns a functor metamethod:
+        expect (f (t, "fn")).to_be (functor)
+        expect (f (t, "fn")()).to_be "called"
+
+
+- describe ipairs:
+  - before: |
+      __index = function (t, n)
+        if n <= #t[1] then
+          return string.sub (t[1], n ,n)
+        end
+      end
+      __ipairs = function (t)
+        return function (x, i)
+          if i < 5 then return i + 1, x[i] end
+        end, {"an", "unused", "proxy", "table"}, 0
+      end
+      __len = function (t) return 2 end
+      src = {"foo", "bar", 5, 42}
+      t = {}
+
+      f = M.ipairs
+
+  - it works for an empty list:
+      for i, v in f {} do t[i] = v end
+      expect (t).to_equal {}
+  - it is an iterator over integer-keyed table values:
+      for i, v in f (src) do t[i] = v end
+      expect (t).to_equal (src)
+  - it iterates from 1 up to element before the first nil:
+      for i, v in f {1, 2, nil, nil, 5, 6} do t[i] = v end
+      expect (t).to_equal {1, 2}
+  - it ignores the dictionary part of a table:
+      for i, v in f {"foo", 42; bar = "baz", qux = "quux"} do
+        t[i] = v
+      end
+      expect (t).to_equal {"foo", 42}
+  - it respects __index metamethod:
+      for i, v in f (setmetatable ({"abc", [4]="d"}, {__index = __index})) do
+        t[i] = v
+      end
+      expect (t).to_equal {"abc", "b", "c", "d"}
+  - it ignores __ipairs metamethod:
+      for i, v in f (setmetatable (src, {__ipairs = __ipairs})) do
+        t[i] = v
+      end
+      expect (t).to_equal (src)
+  - it ignores __len metamethod:
+      for k, v in f (setmetatable (src, {__len = __len})) do t[k] = v end
+      expect (t).to_equal (src)
+
+
+- describe len:
+  - before:
+      __len = function (x) return 42 end
+
+      f = M.len
+
+  - it works for an empty list:
+      src = {}
+      expect (f (src)).to_be (#src)
+  - it works for an empty string:
+      src = ""
+      expect (f (src)).to_be (#src)
+  - it respects __len metamethod:
+      expect (f (setmetatable ({}, {__len = __len}))).to_be (42)
+  - it does not count nil valued array part elements:
+      expect (f {1, 2, 3, nil, nil, 6}).to_be (3)
+  - 'it defers to the # operator':
+      expect (f "abc").to_be (3)
+
+
+- describe opairs:
+  - before:
+      __index = function (t, k)
+        if type(k) == "number" and k < 10 then return 1 end
+      end
+      __pairs = function (t)
+        return next, {"a", [5] = "proxy", "table"; foo=3, bar=1, baz=2, qux=4}
+      end
+      src = {"foo", bar = "baz", [5] = "quux", 42}
+      t = {}
+
+      f = M.opairs
+
+  - it works for an empty list:
+      for i, v in f {} do t[i] = v end
+      expect (t).to_equal {}
+  - it is an iterator over all table values:
+      for k, v in f (src) do t[k] = v end
+      expect (t).to_equal (src)
+  - it returns numeric keys in order:
+      for k in f (src) do table.insert (t, k) end
+      expect (t).to_equal {1, 2, 5, "bar"}
+  - it returns non-numeric keys in asciibetical order:
+      for k in f {foo=1, bar=2, baz=3, quux=4} do table.insert (t, k) end
+      expect (t).to_equal {"bar", "baz", "foo", "quux"}
+  - it respects __pairs metamethod:
+      for k, v in f (setmetatable (src, {__pairs = __pairs})) do t[k] = v end
+      expect (t).
+        to_equal {"a", [5] = "proxy", "table", foo=3, bar=1, baz=2, qux=4}
+  - it returns __pairs numeric keys in order:
+      for k in f (setmetatable (src, {__pairs = __pairs})) do
+        if type (k) == "number" then table.insert (t, k) end
+      end
+      expect (t).to_equal {1, 2, 5}
+  - it returns __pairs non-numeric keys in asciibetical order:
+      for k in f (setmetatable (src, {__pairs = __pairs})) do
+        if type (k) ~= "number" then table.insert (t, k) end
+      end
+      expect (t).to_equal {"bar", "baz", "foo", "qux"}
+
+
+- describe pack:
+  - before:
+      f = M.pack
+
+  - it returns a table:
+      expect (type (f ())).to_be "table"
+  - it sets the 'n' field:
+      expect (f ().n).not_to_be (nil)
+      expect (f (1, 2, 3).n).to_be (3)
+  - it packs arguments into the returned table:
+      expect (f (1, 2, 3)).to_equal {1, 2, 3; n = 3}
+
+
+- describe pairs:
+  - before:
+      __index = function (t, k)
+        if type(k) == "number" and k < 10 then return 1 end
+      end
+      __pairs = function (t)
+        return next, {"a", "proxy", "table"}
+      end
+      src = {"foo", bar = "baz", [5] = "qux", 42}
+      t = {}
+
+      f = M.pairs
+
+  - it works for an empty list:
+      for i, v in f {} do t[i] = v end
+      expect (t).to_equal {}
+  - it is an iterator over all table values:
+      for k, v in f (src) do t[k] = v end
+      expect (t).to_equal (src)
+  - it respects __pairs metamethod:
+      for k, v in f (setmetatable (src, {__pairs = __pairs})) do t[k] = v end
+      expect (t).to_equal {"a", "proxy", "table"}
+
+
+- describe setfenv:
+
+
+- describe str:
+  - before:
+      f = M.str
+
+  - it renders primitives exactly like system tostring:
+      expect (f (nil)).to_be (tostring (nil))
+      expect (f (false)).to_be (tostring (false))
+      expect (f (42)).to_be (tostring (42))
+      expect (f (f)).to_be (tostring (f))
+      expect (f "a string").to_be "a string"
+  - it renders empty tables as a pair of braces:
+      expect (f {}).to_be ("{}")
+  - it renders table array part compactly:
+      expect (f {"one", "two", "five"}).
+        to_be '{one, two, five}'
+  - it renders a table dictionary part compactly:
+      expect (f { one = true, two = 2, three = {3}}).
+        to_be '{one=true, three={3}, two=2}'
+  - it renders array elements before dictionary elements:
+      expect (f {7, six="five", 4, 3, one=2}).
+        to_be '{7, 4, 3; one=2, six=five}'
+  - it renders table keys in table.sort order:
+      expect (f { one = 3, two = 5, three = 4, four = 2, five = 1 }).
+        to_be '{five=1, four=2, one=3, three=4, two=5}'
+  - it renders keys with invalid symbol names compactly:
+      expect (f { _ = 0, word = 0, ["?"] = 1, ["a-key"] = 1, ["[]"] = 1 }).
+        to_be '{?=1, []=1, _=0, a-key=1, word=0}'
+
+
+- describe unpack:
+
+
+- describe version:
+  - before:
+      x = M.version
+
+  - it returns a string:
+      expect (type (M.version)).to_be "string"
+  - it contains package description:
+      expect (string.match (M.version, "Normalized Lua Functions")).
+        not_to_be (nil)
+  - it ends with a semantic version number:
+      expect (string.match (M.version, "([%.%d]+)%D*$")).
+        not_to_be (nil)

@@ -1,0 +1,95 @@
+before:
+  this_module = "std.normalize._base"
+
+  M = require (this_module)
+
+specify std.normalize._base:
+- context when required:
+  - it does not touch the global table:
+      expect (show_apis {added_to="_G", by=this_module}).
+        to_equal {}
+
+# TODO: fix Specl so that it doesn't mangle the environments so badly
+#       that the only way to run tests that need to mess with require
+#       and/or package.loaded is from a separate Lua process :(
+# TODO: find a clean API for patching functions in the environment
+- describe strict:
+  - context with unreleased specl:
+    - it does not break require:
+        package.loaded["std.strict.init"] = "MAGIC"
+        expect (require "std.strict.init").to_be "MAGIC"
+  - context std.strict is installed:
+    - context global _DEBUG is nil:
+      - it returns std.strict implementation:
+          expect (luaproc [[
+            local _require = require
+            function require (what)
+              if what == "std.strict.init" then
+                return "MAGIC"
+              elseif what == "std.debug_init" then
+                return {}
+              else
+                return _require (what)
+              end
+            end
+            M = require "std.normalize._base"
+            os.exit (M.strict == "MAGIC")
+          ]]).to_succeed_with ""
+    - context global _DEBUG is false:
+       - it returns a pass-through environment setter:
+          expect (luaproc [[
+            local _require = require
+            function require (what)
+              if what == "std.strict.init" then
+                return false
+              elseif what == "std.debug_init" then
+                return {}
+              else
+                return _require (what)
+              end
+            end
+            env = {"MAGIC"}
+            M = require "std.normalize._base"
+            print (env == M.strict (env))
+            os.exit (M.strict ~= require "std.strict.init")
+          ]]).to_succeed_while_matching "^true"
+    - context global _DEBUG is true:
+      - it returns std.strict implementation:
+          if have_strict then
+            expect (luaproc [[
+              _DEBUG = true
+              M = require "std.normalize._base"
+              print (M.strict, require "std.strict.init")
+              os.exit (M.strict == require "std.strict.init")
+            ]]).to_succeed_with ""
+          end
+    - context global _DEBUG.strict is nil:
+      - it returns std.strict implementation:
+          if have_strict then
+            expect (luaproc [[
+              _DEBUG = { strict = nil }
+              M = require "std.normalize._base"
+              print (M.strict, require "std.strict.init")
+              os.exit (M.strict == require "std.strict.init")
+            ]]).to_succeed_with ""
+          end
+    - context global _DEBUG.strict is false:
+      - it returns std.strict implementation:
+          if have_strict then
+            expect (luaproc [[
+              _DEBUG = { strict = false }
+              M = require "std.normalize._base"
+              print (M.strict, require "std.strict.init")
+              os.exit (M.strict == require "std.strict.init")
+            ]]).to_succeed_with ""
+          end
+    - context global _DEBUG.strict is true:
+      - it returns std.strict implementation:
+          if have_strict then
+            expect (luaproc [[
+              _DEBUG = { strict = true }
+              M = require "std.normalize._base"
+              print (M.strict, require "std.strict.init")
+              os.exit (M.strict == require "std.strict.init")
+            ]]).to_succeed_with ""
+          end
