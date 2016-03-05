@@ -5,6 +5,7 @@ by the [normalize project][github]
 
 [![License](https://img.shields.io/:license-mit-blue.svg)](https://mit-license.org)
 [![travis-ci status](https://secure.travis-ci.org/lua-stdlib/normalize.png?branch=master)](https://travis-ci.org/lua-stdlib/normalize/builds)
+[![codecov.io](https://codecov.io/github/lua-stdlib/normalize/coverage.svg?branch=master)](https://codecov.io/github/lua-stdlib/normalize?branch=master)
 [![Stories in Ready](https://badge.waffle.io/lua-stdlib/normalize.png?label=ready&title=Ready)](https://waffle.io/lua-stdlib/normalize)
 
 
