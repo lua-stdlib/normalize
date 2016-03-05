@@ -34,7 +34,7 @@ specify std.normalize._base:
               end
             end
             M = require "std.normalize._base"
-            os.exit (M.strict == "MAGIC")
+            os.exit (M.strict == "MAGIC" and 0 or 1)
           ]]).to_succeed_with ""
     - context global _DEBUG is false:
        - it returns a pass-through environment setter:
@@ -52,7 +52,7 @@ specify std.normalize._base:
             env = {"MAGIC"}
             M = require "std.normalize._base"
             print (env == M.strict (env))
-            os.exit (M.strict ~= require "std.strict.init")
+            os.exit (M.strict ~= require "std.strict.init" and 0 or 1)
           ]]).to_succeed_while_matching "^true"
     - context global _DEBUG is true:
       - it returns std.strict implementation:
@@ -61,7 +61,7 @@ specify std.normalize._base:
               _DEBUG = true
               M = require "std.normalize._base"
               print (M.strict, require "std.strict.init")
-              os.exit (M.strict == require "std.strict.init")
+              os.exit (M.strict == require "std.strict.init" and 0 or 1)
             ]]).to_succeed_with ""
           end
     - context global _DEBUG.strict is nil:
@@ -71,7 +71,7 @@ specify std.normalize._base:
               _DEBUG = { strict = nil }
               M = require "std.normalize._base"
               print (M.strict, require "std.strict.init")
-              os.exit (M.strict == require "std.strict.init")
+              os.exit (M.strict == require "std.strict.init" and 0 or 1)
             ]]).to_succeed_with ""
           end
     - context global _DEBUG.strict is false:
@@ -81,7 +81,7 @@ specify std.normalize._base:
               _DEBUG = { strict = false }
               M = require "std.normalize._base"
               print (M.strict, require "std.strict.init")
-              os.exit (M.strict == require "std.strict.init")
+              os.exit (M.strict == require "std.strict.init" and 0 or 1)
             ]]).to_succeed_with ""
           end
     - context global _DEBUG.strict is true:
@@ -91,6 +91,6 @@ specify std.normalize._base:
               _DEBUG = { strict = true }
               M = require "std.normalize._base"
               print (M.strict, require "std.strict.init")
-              os.exit (M.strict == require "std.strict.init")
+              os.exit (M.strict == require "std.strict.init" and 0 or 1)
             ]]).to_succeed_with ""
           end
