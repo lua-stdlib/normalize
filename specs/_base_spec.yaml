@@ -16,6 +16,7 @@ specify std.normalize._base:
 - describe strict:
   - context with unreleased specl:
     - it does not break require:
+        pending "next point release of Specl 14.1"
         package.loaded["std.strict.init"] = "MAGIC"
         expect (require "std.strict.init").to_be "MAGIC"
   - context std.strict is installed:
