@@ -127,13 +127,16 @@ local function getmetamethod (x, n)
 end
 
 
-local ipairs = (_VERSION == "Lua 5.3") and ipairs or function (l)
-  return function (l, n)
-    n = n + 1
-    if l[n] ~= nil then
-      return n, l[n]
-    end
-  end, l, 0
+if not ipairs(setmetatable({},{__ipairs=function() return false end})) then
+  -- Ignore support for __ipairs when implemented by core.
+  ipairs = function (l)
+    return function (l, n)
+      n = n + 1
+      if l[n] ~= nil then
+        return n, l[n]
+      end
+    end, l, 0
+  end
 end
 
 
@@ -155,7 +158,8 @@ local pack = table_pack or function (...)
 end
 
 
-if not pairs(setmetatable({},{__pairs=function() return false end})) then
+if not not pairs(setmetatable({},{__pairs=function() return false end})) then
+  -- Add support for __pairs when missing.
   local _pairs = pairs
   pairs = function (t)
     return (getmetamethod (t, "__pairs") or _pairs) (t)
