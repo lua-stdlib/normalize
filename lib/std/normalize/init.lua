@@ -38,7 +38,6 @@ local strict		= require "std.normalize._base".strict
 local _ENV = strict {
   _VERSION		= _VERSION,
   getmetatable		= getmetatable,
-  ipairs		= ipairs,
   next			= next,
   pairs			= pairs,
   pcall			= pcall,
@@ -128,16 +127,13 @@ local function getmetamethod (x, n)
 end
 
 
-if not ipairs(setmetatable({},{__ipairs=function() return false end})) then
-  -- Ignore support for __ipairs when implemented by core.
-  ipairs = function (l)
-    return function (l, n)
-      n = n + 1
-      if l[n] ~= nil then
-        return n, l[n]
-      end
-    end, l, 0
-  end
+local function ipairs (l)
+  return function (l, n)
+    n = n + 1
+    if l[n] ~= nil then
+      return n, l[n]
+    end
+  end, l, 0
 end
 
 
@@ -310,8 +306,9 @@ local function normal (env)
     --- Iterate over elements of a sequence, until the first `nil` value.
     --
     -- Returns successive key-value pairs with integer keys starting at 1,
-    -- up to the last non-`nil` value.  Unlike Lua 5.2, any `__ipairs`
-    -- metamethod is **ignored**!
+    -- up to the last non-`nil` value.  Unlike Lua 5.2+, any `__ipairs`
+    -- metamethod is **ignored**!  Unlike Lua 5.1, any `__index`
+    -- metamethod is respected.
     -- @function ipairs
     -- @tparam table t table to iterate on
     -- @treturn function iterator function
