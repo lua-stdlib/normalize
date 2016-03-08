@@ -40,8 +40,10 @@ local function is_strict ()
 end
 
 
+-- If strict is not required, pass the unchanged environment through.
+local strict = function (env) return env end
+
 -- If strict mode is required, use "std.strict" if we have it.
-local strict
 if is_strict () then
   -- `require "std.strict"` will get the old stdlib implementation of
   -- strict, which doesn't support individual environment tables :(
