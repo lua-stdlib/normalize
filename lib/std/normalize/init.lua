@@ -44,6 +44,7 @@ local _ENV = strict {
   pcall			= pcall,
   rawset		= rawset,
   require		= require,
+  select		= select,
   setmetatable		= setmetatable,
   tonumber		= tonumber,
   tostring		= tostring,
