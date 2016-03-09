@@ -397,7 +397,7 @@ local function normal (env)
     -- print (str {foo="bar","baz", 5})
     str = str,
 
-    --- Either `table.unpack` in newer-, or `pack` in older Lua implementations.
+    --- Either `table.unpack` in newer-, or `unpack` in older Lua implementations.
     -- @function unpack
     -- @tparam table t table to act on
     -- @int[opt=1] i first index to unpack
