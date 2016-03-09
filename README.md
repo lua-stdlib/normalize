@@ -1,7 +1,7 @@
 Normalized Lua Functions
 ========================
 
-by the [normalize project][github]
+Copyright (C) 2002-2016 [std.normalize authors][authors]
 
 [![License](https://img.shields.io/:license-mit-blue.svg)](https://mit-license.org)
 [![travis-ci status](https://secure.travis-ci.org/lua-stdlib/normalize.png?branch=master)](https://travis-ci.org/lua-stdlib/normalize/builds)
@@ -11,11 +11,11 @@ by the [normalize project][github]
 
 This is a collection of normalized lua functions for Lua 5.1 (including
 LuaJIT), 5.2 and 5.3. The libraries are copyright by their authors
-2000-2016 (see the [AUTHORS][] file for details), and released under the
+2002-2016 (see the [AUTHORS][] file for details), and released under the
 [MIT license][mit] (the same license as Lua itself). There is no warranty.
 
 _normalize_ has no run-time prerequisites beyond a standard Lua system,
-though it will take advantage of [stdlib][], [strict][] and [typecheck][]
+though it will take advantage of [stdlib][], [std.strict][] and [typecheck][]
 if they are installed.
 
 It can inject deterministic versions of core Lua functions that do not
@@ -38,7 +38,7 @@ provided.  More normalized APIs are welcome!
 [lua-compat]: https://github.com/keplerproject/lua-compat-5.3 "Lua 5.3ish API"
 [mit]: https://mit-license.org "MIT License"
 [stdlib]: https://github.com/lua-stdlib/lua-stdlib "Standard Lua Libraries"
-[strict]: https://github.com/lua-stdlib/strict "strict variables"
+[std.strict]: https://github.com/lua-stdlib/strict "strict variables"
 [typecheck]: https://github.com/gvvaughan/typecheck "function type checks"
 
 
@@ -49,7 +49,7 @@ The simplest and best way to install normalize is with [LuaRocks][]. To
 install the latest release (recommended):
 
 ```bash
-    luarocks install normalize
+    luarocks install std.normalize
 ```
 
 To install current git master (for testing, before submitting a bug
@@ -59,7 +59,7 @@ report for example):
     luarocks install https://raw.githubusercontent.com/lua-stdlib/normalize/master/normalize-git-1.rockspec
 ```
 
-The best way to install without [LuaRocks][] is to copy the `normalize`
+The best way to install without [LuaRocks][] is to copy the `std/normalize`
 folder and its contents into a directory on your package search path.
 
 [luarocks]: https://www.luarocks.org "Lua package manager"
