@@ -55,7 +55,7 @@ end
 
 
 return {
-  --- Set a strict environment.
+  --- Set a module environment, using std.strict if available.
   --
   -- Either "std.strict" when available, otherwise a (Lua 5.1 compatible)
   -- function to set the specified module environment.
