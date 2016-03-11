@@ -45,6 +45,9 @@ end
 local function mkscript (code)
   local f = os.tmpname ()
   local h = io.open (f, "w")
+  -- TODO: Move this into specl, or expose arguments so that we can
+  --       turn this on and off based on specl `--coverage` arg.
+  h:write 'pcall (require, "luacov")'
   h:write (code)
   h:close ()
   return f
