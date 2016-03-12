@@ -1,9 +1,7 @@
 before: |
   this_module = "std.normalize._base"
 
-  -- TODO: Why does uncommenting this reduce the coverage percentage
-  --       massively??
-  --M = require (this_module)
+  M = require (this_module)
 
 specify std.normalize._base:
 - context when required:
