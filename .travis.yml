@@ -27,6 +27,7 @@ script:
   - make check SPECL_OPTS='-vfreport --coverage'
 
 after_success:
+  - tail luacov.report.out
   - bash <(curl -s https://codecov.io/bash) -f luacov.report.out
 
 notifications:
