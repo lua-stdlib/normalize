@@ -6,6 +6,9 @@
 
   - Initial release, now separated out from lua-stdlib.
 
+  - `std.normalize.load` will load a string of valid Lua code, even in
+    Lua 5.1.
+
   - `std.normalize.str` is a fast specialization of `std.string.render`
     with all helper functions and abstractions inlined.
 

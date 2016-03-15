@@ -38,6 +38,7 @@ local strict		= require "std.normalize._base".strict
 local _ENV = strict {
   _VERSION		= _VERSION,
   getmetatable		= getmetatable,
+  load			= load,
   next			= next,
   pairs			= pairs,
   pcall			= pcall,
@@ -147,6 +148,17 @@ local function len (x)
     if x[i] == nil then return i -1 end
   end
   return n
+end
+
+
+if not pcall (load, "_=1") then
+  local loadfunction = load
+  load = function (...)
+    if type (...) == "string" then
+      return loadstring (...)
+    end
+    return loadfunction (...)
+  end
 end
 
 
@@ -338,6 +350,13 @@ local function normal (env)
     -- --> 5	3
     -- print (#x, len (x))
     len = len,
+
+    --- Load a string or a function, just like Lua 5.2+.
+    -- @function load
+    -- @tparam string|function ld chunk to load
+    -- @string source name of the source of *ld*
+    -- @treturn function a Lua function to execute *ld* in global scope.
+    load = load,
 
     --- Ordered `pairs` iterator, respecting `__pairs` metamethod.
     --
