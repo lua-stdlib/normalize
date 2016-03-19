@@ -49,6 +49,7 @@ local _ENV = strict {
   tonumber		= tonumber,
   tostring		= tostring,
   type			= type,
+  xpcall		= xpcall,
 
   debug_getfenv		= getfenv or false,
   debug_getinfo		= debug.getinfo,
@@ -290,6 +291,21 @@ local function unpack (t, i, j)
 end
 
 
+do
+  local have_xpcall_args = false
+  local function catch (arg) have_xpcall_args = arg end
+  xpcall (catch, function () end, true)
+
+  if not have_xpcall_args then
+    local _xpcall = xpcall
+    xpcall = function (fn, errh, ...)
+      local argu = pack (...)
+      return _xpcall (function () return fn (unpack (argu, 1, argu.n)) end, errh)
+    end
+  end
+end
+
+
 local function normal (env)
   local r = {
     --- Get a function or functor environment.
@@ -394,7 +410,7 @@ local function normal (env)
     -- pack (("ax1"):find "(%D+)")
     pack = pack,
 
-    --- set a function or functor environment.
+    --- Set a function or functor environment.
     --
     -- This version of setfenv works on all supported Lua versions, and
     -- knows how to unwrap functors.
@@ -425,6 +441,18 @@ local function normal (env)
     -- @usage
     -- return unpack (results_table)
     unpack = unpack,
+
+    --- Support arguments to a protected function call, even on Lua 5.1.
+    -- @function xpcall
+    -- @tparam function f protect this function call
+    -- @tparam function msgh message handler callback if *f* raises an
+    --   error
+    -- @param ... arguments to pass to *f*
+    -- @treturn[1] boolean `false` when `f (...)` raised an error
+    -- @treturn[1] string error message
+    -- @treturn[2] boolean `true` when `f (...)` succeeded
+    -- @return ... all return values from *f* follow
+    xpcall = xpcall,
   }
   for k, v in next, env do
     r[k] = v
