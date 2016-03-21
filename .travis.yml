@@ -28,7 +28,7 @@ script:
 
 after_success:
   - tail luacov.report.out
-  - bash <(curl -s https://codecov.io/bash) -v -d
+  - bash <(curl -s https://codecov.io/bash) -v
 
 notifications:
   slack: aspirinc:JyWeNrIdS0J5nf2Pn2BS1cih
