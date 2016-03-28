@@ -37,6 +37,7 @@ local strict		= require "std.normalize._base".strict
 
 local _ENV = strict {
   _VERSION		= _VERSION,
+  getfenv		= getfenv or false,
   getmetatable		= getmetatable,
   load			= load,
   next			= next,
@@ -45,13 +46,14 @@ local _ENV = strict {
   rawset		= rawset,
   require		= require,
   select		= select,
+  setfenv		= setfenv or false,
   setmetatable		= setmetatable,
   tonumber		= tonumber,
   tostring		= tostring,
   type			= type,
   xpcall		= xpcall,
 
-  debug_getfenv		= getfenv or false,
+  debug_getfenv		= debug.getfenv or false,
   debug_getinfo		= debug.getinfo,
   debug_getupvalue	= debug.getupvalue,
   debug_setfenv		= debug.setfenv or false,
@@ -74,14 +76,14 @@ local _ENV = strict {
 -- Lua 5.1). If "std.strict" is available, we'll also get a runtime
 -- error if any of the code below tries to use an undeclared variable.
 
-local getfenv
+local normalize_getfenv
 if debug_getfenv then
 
-  getfenv = function (fn)
+  normalize_getfenv = function (fn)
     fn = fn or 1
 
     local type_fn = type (fn)
-    if type_fn == "table" then
+    if type (fn) == "table" then
       -- Unwrap functors:
       -- No need to recurse because Lua doesn't support nested functors.
       -- __call can only (sensibly) be a function, so no need to adjust
@@ -89,19 +91,25 @@ if debug_getfenv then
       fn = (getmetatable (fn) or {}).__call or fn
     
     elseif type_fn == "number" and fn > 0 then
-       -- Adjust for this function's stack frame, if fn is non-zero.
-       fn = fn + 1
+      -- Adjust for this function's stack frame, if fn is non-zero.
+      fn = fn + 1
+    end
+
+    if type (fn) == "function" then
+      -- In Lua 5.1, only debug.getfenv works on C functions; but it
+      -- does not work on stack counts.
+      return debug_getfenv (fn)
     end
 
     -- Return an additional nil result to defeat tail call elimination
     -- which would remove a stack frame and break numeric *fn* count.
-    return debug_getfenv (fn), nil
+    return getfenv (fn), nil
   end
 
 else
 
   -- Thanks to http://lua-users.org/lists/lua-l/2010-06/msg00313.html
-  getfenv = function (fn)
+  normalize_getfenv = function (fn)
     fn = fn or 1
     
     local type_fn = type (fn)
@@ -202,10 +210,10 @@ local function opairs (t)
 end
 
 
-local setfenv
+local normalize_setfenv
 if debug_setfenv then
 
-  setfenv = function (fn, env)
+  normalize_setfenv = function (fn, env)
     fn = fn or 1
 
     local type_fn = type (fn)
@@ -214,7 +222,11 @@ if debug_setfenv then
     elseif type_fn == "number" and fn > 0 then
        fn = fn + 1
     end
-    return debug_setfenv (fn, env), nil
+
+    if type (fn) == "function" then
+      return debug_setfenv (fn, env)
+    end
+    return setfenv (fn, env), nil
   end
 
 else
