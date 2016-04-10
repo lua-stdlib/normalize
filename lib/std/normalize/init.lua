@@ -232,7 +232,7 @@ if debug_setfenv then
 else
 
   -- Thanks to http://lua-users.org/lists/lua-l/2010-06/msg00313.html
-  setfenv = function (fn, env)
+  normalize_setfenv = function (fn, env)
     fn = fn or 1
     
     local type_fn = type (fn)
@@ -433,7 +433,7 @@ local function normal (env)
     -- @treturn function function acted upon
     -- @usage
     -- function clearenv (fn) return setfenv (fn, {}) end
-    setfenv = setfenv,
+    setfenv = normalize_setfenv,
 
     --- Return a compact stringified representation of argument.
     -- @function str
