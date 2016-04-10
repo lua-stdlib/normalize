@@ -7,23 +7,52 @@ before:
 
 specify std.normalize:
 - context when required:
-  - it returns a callable:
+  - it returns a functor:
       expect (type (getmetatable (M).__call)).to_be "function"
   - it does not touch the global table:
       expect (show_apis {added_to="_G", by=this_module}).
         to_equal {}
 
 - context when lazy loading:
-  - it has no submodules on initial load:
-      for _, v in pairs (M) do
-        expect (type (v)).not_to_be "table"
+  - it has no unexpected submodules on initial load:
+      expected = {package = 1}
+      for k, v in pairs (M) do
+        if not expected[k] then
+          expect (type (v)).not_to_be "table"
+        end
       end
   - it loads submodules on demand:
       lazy = M.version
       expect (lazy).to_be (require "std.normalize.version")
 
+- context when called:
+  - before:
+      MAGIC = {"MAGIC"}
+      f = M
 
-- describe setfenv:
+  - it merges table argument fields:
+      expect (f {myfield = 1}).to_contain.a_permutation_of {
+        "myfield",
+        "getfenv", "getmetamethod", "ipairs", "len", "load", "opairs",
+        "pack", "package", "pairs", "setfenv", "str", "unpack", "xpcall",
+      }
+  - it merges nested table fields:
+      expect (f {package = {myfield = 1}}.package).
+        to_contain.a_permutation_of {
+          "myfield",
+          "dirsep", "execdir", "igmark", "pathmark", "pathsep",
+        }
+  - it supports overriding fields:
+      expect (f {len = MAGIC}.str).to_be (f.str)
+      expect (f {len = MAGIC}.len).to_be (MAGIC)
+  - it supports overriding nested table fields:
+      expect (f {package = {execdir = MAGIC}}.package.dirsep).
+        to_be (f.package.dirsep)
+      expect (f {package = {execdir = MAGIC}}.package.execdir).
+        to_be (MAGIC)
+
+
+- describe getfenv:
 
 
 - describe getmetamethod:
@@ -170,6 +199,29 @@ specify std.normalize:
       expect (f (1, 2, 3).n).to_be (3)
   - it packs arguments into the returned table:
       expect (f (1, 2, 3)).to_equal {1, 2, 3; n = 3}
+
+
+- describe package:
+  - it sets dirsep string:
+      s = M.package.dirsep
+      expect (type (s)).to_be "string"
+      expect (#s).not_to_be (0)
+  - it sets execdir string:
+      s = M.package.execdir
+      expect (type (s)).to_be "string"
+      expect (#s).not_to_be (0)
+  - it sets igmark string:
+      s = M.package.igmark
+      expect (type (s)).to_be "string"
+      expect (#s).not_to_be (0)
+  - it sets pathmark string:
+      s = M.package.pathmark
+      expect (type (s)).to_be "string"
+      expect (#s).not_to_be (0)
+  - it sets pathsep string:
+      s = M.package.pathsep
+      expect (type (s)).to_be "string"
+      expect (#s).not_to_be (0)
 
 
 - describe pairs:

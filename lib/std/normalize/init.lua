@@ -59,6 +59,8 @@ local _ENV = strict {
   debug_setfenv		= debug.setfenv or false,
   debug_setupvalue	= debug.setupvalue,
   debug_upvaluejoin	= debug.upvaluejoin,
+  package_config	= package.config,
+  string_match		= string.match,
   table_concat		= table.concat,
   table_pack		= table.pack or pack or false,
   table_sort		= table.sort,
@@ -75,6 +77,11 @@ local _ENV = strict {
 -- At this point, only the locals imported above are visible (even in
 -- Lua 5.1). If "std.strict" is available, we'll also get a runtime
 -- error if any of the code below tries to use an undeclared variable.
+
+
+local dirsep, pathsep, pathmark, execdir, igmark =
+  string_match (package_config, "^([^\n]+)\n([^\n]+)\n([^\n]+)\n([^\n]+)\n([^\n]+)")
+
 
 local normalize_getfenv
 if debug_getfenv then
@@ -149,7 +156,7 @@ end
 
 local function len (x)
   local m = getmetamethod (x, "__len")
-  if m then return m(x) end
+  if m then return m (x) end
   if type (x) ~= "table" then return #x end
 
   local n = #x
@@ -298,6 +305,18 @@ local function str (x, roots)
 end
 
 
+local function tree_merge (dst, src)
+  for k, v in next, src do
+    if type (v) ~= "table" or type (dst[k]) ~= "table" then
+      dst[k] = v
+    else
+      dst[k] = tree_merge (dst[k] or {}, v)
+    end
+  end
+  return dst
+end
+
+
 local function unpack (t, i, j)
   return table_unpack (t, tonumber (i) or 1, tonumber (j) or len (t))
 end
@@ -319,7 +338,7 @@ end
 
 
 local function normal (env)
-  local r = {
+  local normalized = {
     --- Get a function or functor environment.
     --
     -- This version of getfenv works on all supported Lua versions, and
@@ -402,6 +421,22 @@ local function normal (env)
     -- for k, v in opairs {"b", foo = "c", "a"} do print (k, v) end
     opairs = opairs,
 
+    --- Package module constants for `package.config` substrings.
+    -- @table package
+    -- @string dirsep directory separator in path elements
+    -- @string execdir replaced by the executable's directory in a path
+    -- @string igmark ignore everything before this when building
+    --   `luaopen_` function name
+    -- @string pathmark mark substitution points in a path template
+    -- @string pathsep element separator in a path template
+    package = {
+      dirsep	= dirsep,
+      execdir	= execdir,
+      igmark	= igmark,
+      pathmark	= pathmark,
+      pathsep	= pathsep,
+    },
+
     --- Like Lua `pairs` iterator, but respect `__pairs` even in Lua 5.1.
     -- @function pairs
     -- @tparam table t table to act on
@@ -466,10 +501,7 @@ local function normal (env)
     -- @return ... all return values from *f* follow
     xpcall = xpcall,
   }
-  for k, v in next, env do
-    r[k] = v
-  end
-  return r
+  return tree_merge (normalized, env)
 end
 
 
