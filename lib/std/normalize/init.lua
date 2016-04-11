@@ -520,7 +520,7 @@ return setmetatable (normal {}, {
   --   back to `_ENV`
   -- @usage
   -- local _ENV = require "std.normalize" {}
-  __call = function (_, env) return strict (normal (env)) end,
+  __call = function (_, env) return strict (normal (env)), nil end,
 
   --- Lazy loading of normalize modules.
   -- Don't load everything on initial startup, wait until first attempt
