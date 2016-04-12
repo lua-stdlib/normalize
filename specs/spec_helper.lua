@@ -15,7 +15,8 @@ package.path = std.package.normalize ("./lib/?.lua", "./lib/?/init.lua", package
 local LUA = os.getenv "LUA" or "lua"
 
 
--- Allow use of bare 'unpack' even in Lua 5.3.
+-- Allow use of bare 'pack' and 'unpack' even in Lua 5.3.
+pack = table.pack or function (...) return {n = select ("#", ...), ...} end
 unpack = table.unpack or unpack
 
 
