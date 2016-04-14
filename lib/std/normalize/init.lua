@@ -37,6 +37,7 @@ local strict		= require "std.normalize._base".strict
 
 local _ENV = strict {
   _VERSION		= _VERSION,
+  error			= error,
   getfenv		= getfenv or false,
   getmetatable		= getmetatable,
   load			= load,
@@ -60,6 +61,7 @@ local _ENV = strict {
   debug_setupvalue	= debug.setupvalue,
   debug_upvaluejoin	= debug.upvaluejoin,
   package_config	= package.config,
+  string_format		= string.format,
   string_match		= string.match,
   table_concat		= table.concat,
   table_pack		= table.pack or pack or false,
@@ -81,6 +83,16 @@ local _ENV = strict {
 
 local dirsep, pathsep, pathmark, execdir, igmark =
   string_match (package_config, "^([^\n]+)\n([^\n]+)\n([^\n]+)\n([^\n]+)\n([^\n]+)")
+
+
+local function argerror (name, i, extramsg, level)
+  level = level or 1
+  local s = string_format ("bad argument #%d to '%s'", i, name)
+  if extramsg ~= nil then
+    s = s .. " (" .. extramsg .. ")"
+  end
+  error (s, level + 1)
+end
 
 
 local normalize_getfenv
@@ -339,6 +351,23 @@ end
 
 local function normal (env)
   local normalized = {
+    --- Raise a bad argument error.
+    -- Equivalent to luaL_argerror in the Lua C API. This function does not
+    -- return.  The `level` argument behaves just like the core `error`
+    -- function.
+    -- @function argerror
+    -- @string name function to callout in error message
+    -- @int i argument number
+    -- @string[opt] extramsg additional text to append to message inside parentheses
+    -- @int[opt=1] level call stack level to blame for the error
+    -- @see resulterror
+    -- @usage
+    -- local function slurp (file)
+    --   local h, err = input_handle (file)
+    --   if h == nil then argerror ("std.io.slurp", 1, err, 2) end
+    --   ...
+    argerror = argerror,
+
     --- Get a function or functor environment.
     --
     -- This version of getfenv works on all supported Lua versions, and

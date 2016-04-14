@@ -33,8 +33,9 @@ specify std.normalize:
   - it merges table argument fields:
       expect (f {myfield = 1}).to_contain.a_permutation_of {
         "myfield",
-        "getfenv", "getmetamethod", "ipairs", "len", "load", "opairs",
-        "pack", "package", "pairs", "setfenv", "str", "unpack", "xpcall",
+        "argerror", "getfenv", "getmetamethod", "ipairs", "len", "load",
+        "opairs", "pack", "package", "pairs", "setfenv", "str",
+        "unpack", "xpcall",
       }
   - it merges nested table fields:
       expect (f {package = {myfield = 1}}.package).
@@ -50,6 +51,26 @@ specify std.normalize:
         to_be (f.package.dirsep)
       expect (f {package = {execdir = MAGIC}}.package.execdir).
         to_be (MAGIC)
+
+
+- describe argerror:
+  - before:
+      f = M.argerror
+
+  - it raises an argument error: |
+      expect (f ("myfunc", 1)).to_raise "bad argument #1 to 'myfunc'"
+  - it supports optional extramsg argument: |
+      expect (f ("another", 3, "oh noes")).
+        to_raise "bad argument #3 to 'another' (oh noes)"
+  - it supports optional stack level argument: |
+      badfunc = function (n) f ("badfunc", 1, "you are an idiot", n + 1) end
+      caller = function (n)
+        (function () return (badfunc (n)) end)()
+      end
+      expect (caller (0)).
+        to_raise ":2: bad argument #1 to 'badfunc' (you are an idiot)"
+      expect (caller (1)).
+        to_raise ":4: bad argument #1 to 'badfunc' (you are an idiot)"
 
 
 - describe getfenv:

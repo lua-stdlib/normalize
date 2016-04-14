@@ -6,6 +6,9 @@
 
   - Initial release, now separated out from lua-stdlib.
 
+  - `std.normalize.argerror` to add unhandled argument type reporting
+    to Lua functions; equivalent to `luaL_argerror` in the Lua C API.
+
   - `std.normalize.load` will load a string of valid Lua code, even in
     Lua 5.1.
 
