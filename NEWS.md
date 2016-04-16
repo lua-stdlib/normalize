@@ -21,8 +21,13 @@
     fields correctly, rather than `nil` as in previous releases.  It's
     also considerably faster now that it doesn't use `pcall` any more.
 
+  - `std.normalize.ipairs` and `std.normalize.opairs` now diagnose
+    missing argument.
+
   - `std.normalize.pack` now sets `n` field to number of arguments
     packed, even in Lua 5.1.
+
+  - `std.normalize.unpack` now diagnoses non-table valued argument.
 
 ### Incompatible changes
 

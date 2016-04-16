@@ -71,6 +71,27 @@ local _ENV = strict {
 
 
 
+--[[ ================= ]]--
+--[[ Helper functions. ]]--
+--[[ ================= ]]--
+
+
+local types = {
+  any = function (argu, i)
+    if argu[i] then return true end
+    return nil, "value expected"
+  end,
+
+  table = function (argu, i)
+    local got = type (argu[i])
+    if got == "table" then return true end
+    if i > argu.n then got = "no value" end
+    return nil, "table expected, got " .. got
+  end,
+}
+
+
+
 --[[ =============== ]]--
 --[[ Implementation. ]]--
 --[[ =============== ]]--
@@ -92,6 +113,39 @@ local function argerror (name, i, extramsg, level)
     s = s .. " (" .. extramsg .. ")"
   end
   error (s, level + 1)
+end
+
+
+local pack = table_pack or function (...)
+  return { n = select ("#", ...), ...}
+end
+
+
+local function icalls (name, checks, argu)
+  return function (state, i)
+    if i < state.checks.n then
+      i = i + 1
+      local ok, errmsg = state.checks[i] (state.argu, i)
+      return i, not ok and errmsg or nil
+    end
+  end, {argu=argu, checks=checks}, 0
+end
+
+
+local function argscheck (name, ...)
+  local checks = pack (...)
+  return setmetatable ({}, {
+    __concat = function (_, inner)
+      return function (...)
+	for i, extramsg in icalls (name, checks, pack (...)) do
+          if extramsg then
+            argerror (name, i, extramsg, 3)
+          end
+	end
+	return inner (...)
+      end
+    end,
+  })
 end
 
 
@@ -156,7 +210,8 @@ local function getmetamethod (x, n)
 end
 
 
-local function ipairs (l)
+local ipairs = argscheck ("ipairs", types.any) ..
+function (l)
   return function (l, n)
     n = n + 1
     if l[n] ~= nil then
@@ -190,15 +245,11 @@ if not pcall (load, "_=1") then
 end
 
 
-local pack = table_pack or function (...)
-  return { n = select ("#", ...), ...}
-end
-
-
 if not not pairs(setmetatable({},{__pairs=function() return false end})) then
   -- Add support for __pairs when missing.
   local _pairs = pairs
-  pairs = function (t)
+  pairs = argscheck ("pairs", types.table) ..
+  function (t)
     return (getmetamethod (t, "__pairs") or _pairs) (t)
   end
 end
@@ -213,7 +264,8 @@ local function keysort (a, b)
 end
 
 
-local function opairs (t)
+local opairs = argscheck ("opairs", types.any) ..
+function (t)
   local keys, i = {}, 0
   for k in pairs (t) do keys[#keys + 1] = k end
   table_sort (keys, keysort)
@@ -329,7 +381,8 @@ local function tree_merge (dst, src)
 end
 
 
-local function unpack (t, i, j)
+local unpack = argscheck ("unpack", types.table) ..
+function (t, i, j)
   return table_unpack (t, tonumber (i) or 1, tonumber (j) or len (t))
 end
 

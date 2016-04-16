@@ -119,6 +119,14 @@ specify std.normalize:
 
       f = M.ipairs
 
+  - context with bad arguments:
+    - 'it diagnoses missing argument #1':
+         expect (f ()).to_raise "value expected"
+    - 'it diagnoses nil-valued argument #1':
+         expect (f (nil)).to_raise "value expected"
+    - 'it diagnoses argument #1 type not table':
+         expect (f (false)).to_raise "value expected"
+
   - it works for an empty list:
       for i, v in f {} do t[i] = v end
       expect (t).to_equal {}
@@ -180,6 +188,14 @@ specify std.normalize:
       t = {}
 
       f = M.opairs
+
+  - context with bad arguments:
+    - 'it diagnoses missing argument #1':
+         expect (f ()).to_raise "value expected"
+    - 'it diagnoses nil-valued argument #1':
+         expect (f (nil)).to_raise "value expected"
+    - 'it diagnoses argument #1 type not table':
+         expect (f (false)).to_raise "value expected"
 
   - it works for an empty list:
       for i, v in f {} do t[i] = v end
@@ -258,6 +274,14 @@ specify std.normalize:
 
       f = M.pairs
 
+  - context with bad arguments:
+    - 'it diagnoses missing argument #1':
+         expect (f ()).to_raise "table expected, got no value"
+    - 'it diagnoses nil-valued argument #1':
+         expect (f (nil)).to_raise "table expected, got nil"
+    - 'it diagnoses argument #1 type not table':
+         expect (f (false)).to_raise "table expected, got boolean"
+
   - it works for an empty list:
       for i, v in f {} do t[i] = v end
       expect (t).to_equal {}
@@ -306,6 +330,14 @@ specify std.normalize:
       t = {1, 2, 5}
       u = {1, 2, 5, n=3}
       f = function (...) return pack (M.unpack (...)) end
+
+  - context with bad arguments:
+    - 'it diagnoses missing argument #1':
+         expect (f ()).to_raise "table expected, got no value"
+    - 'it diagnoses nil-valued argument #1':
+         expect (f (nil)).to_raise "table expected, got nil"
+    - 'it diagnoses argument #1 type not table':
+         expect (f (false)).to_raise "table expected, got boolean"
 
   - it works with an empty sequence:
       expect (f {}).to_equal {n=0}
