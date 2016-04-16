@@ -107,12 +107,11 @@ local dirsep, pathsep, pathmark, execdir, igmark =
 
 
 local function argerror (name, i, extramsg, level)
-  level = level or 1
   local s = string_format ("bad argument #%d to '%s'", i, name)
   if extramsg ~= nil then
     s = s .. " (" .. extramsg .. ")"
   end
-  error (s, level + 1)
+  error (s, level and level > 0 and level + 1 or 0)
 end
 
 

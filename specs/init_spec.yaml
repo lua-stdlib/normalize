@@ -55,6 +55,12 @@ specify std.normalize:
 
 - describe argerror:
   - before:
+      badfunc = function (n)
+        f ("badfunc", 1, "you are an idiot", n and n > 0 and n + 1 or 0)
+      end
+      caller = function (n)
+        (function () return (badfunc (n)) end)() --[[LINE 5]]
+      end
       f = M.argerror
 
   - it raises an argument error: |
@@ -63,14 +69,13 @@ specify std.normalize:
       expect (f ("another", 3, "oh noes")).
         to_raise "bad argument #3 to 'another' (oh noes)"
   - it supports optional stack level argument: |
-      badfunc = function (n) f ("badfunc", 1, "you are an idiot", n + 1) end
-      caller = function (n)
-        (function () return (badfunc (n)) end)()
-      end
-      expect (caller (0)).
-        to_raise ":2: bad argument #1 to 'badfunc' (you are an idiot)"
       expect (caller (1)).
-        to_raise ":4: bad argument #1 to 'badfunc' (you are an idiot)"
+        to_raise ":5: bad argument #1 to 'badfunc' (you are an idiot)"
+  - it suppresses position information at level 0: |
+      expect (caller (0)).
+        to_raise "bad argument #1 to 'badfunc' (you are an idiot)"
+      expect (caller (0)).
+        not_to_raise ":2: bad argument #1 to 'badfunc' (you are an idiot)"
 
 
 - describe getfenv:
