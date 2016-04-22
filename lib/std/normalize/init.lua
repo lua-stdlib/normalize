@@ -33,11 +33,10 @@
 ]]
 
 
-local strict		= require "std.normalize._base".strict
+local _			= require "std.normalize._base"
 
-local _ENV = strict {
+local _ENV = _.strict {
   _VERSION		= _VERSION,
-  error			= error,
   getfenv		= getfenv or false,
   getmetatable		= getmetatable,
   load			= load,
@@ -61,13 +60,17 @@ local _ENV = strict {
   debug_setupvalue	= debug.setupvalue,
   debug_upvaluejoin	= debug.upvaluejoin,
   package_config	= package.config,
-  string_format		= string.format,
   string_match		= string.match,
   table_concat		= table.concat,
   table_pack		= table.pack or pack or false,
   table_sort		= table.sort,
   table_unpack		= table.unpack or unpack,
+
+  argerror		= _.argerror,
+  argscheck		= _.argscheck,
 }
+local strict		= _.strict
+_ = nil
 
 
 
@@ -104,48 +107,6 @@ local types = {
 
 local dirsep, pathsep, pathmark, execdir, igmark =
   string_match (package_config, "^([^\n]+)\n([^\n]+)\n([^\n]+)\n([^\n]+)\n([^\n]+)")
-
-
-local function argerror (name, i, extramsg, level)
-  local s = string_format ("bad argument #%d to '%s'", i, name)
-  if extramsg ~= nil then
-    s = s .. " (" .. extramsg .. ")"
-  end
-  error (s, level and level > 0 and level + 1 or 0)
-end
-
-
-local pack = table_pack or function (...)
-  return { n = select ("#", ...), ...}
-end
-
-
-local function icalls (name, checks, argu)
-  return function (state, i)
-    if i < state.checks.n then
-      i = i + 1
-      local ok, errmsg = state.checks[i] (state.argu, i)
-      return i, not ok and errmsg or nil
-    end
-  end, {argu=argu, checks=checks}, 0
-end
-
-
-local function argscheck (name, ...)
-  local checks = pack (...)
-  return setmetatable ({}, {
-    __concat = function (_, inner)
-      return function (...)
-	for i, extramsg in icalls (name, checks, pack (...)) do
-          if extramsg then
-            argerror (name, i, extramsg, 3)
-          end
-	end
-	return inner (...)
-      end
-    end,
-  })
-end
 
 
 local normalize_getfenv
@@ -230,6 +191,11 @@ local function len (x)
     if x[i] == nil then return i -1 end
   end
   return n
+end
+
+
+local pack = table_pack or function (...)
+  return { n = select ("#", ...), ...}
 end
 
 
