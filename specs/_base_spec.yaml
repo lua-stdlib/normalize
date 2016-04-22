@@ -1,3 +1,20 @@
+# Many of these examples are a lot trickier than they look!
+#
+#  0. Specl is already doing weird things with `require` to ensure
+#     that it runs in the context of the example and not in the
+#     environment of the Specl implementation code, so things are
+#     weird even before we touch anything here!
+#  1. We need to capture (into local symbols) anything we still need
+#     access to after calling `_base.strict`, because at that point
+#     the execution environment is obliterated...
+#  2. But, we can't capture `require` blindly, because some examples
+#     rely on changing the global `require` used inside the `_base`
+#     implementation... and yet other examples call `require` after
+#     calling `_base.strict` (and obliterating the environment).
+#
+# Don't be surprised if fiddling with these examples, or the code
+# they exercise breaks in surprising ways at first!
+
 before: |
   this_module = "std.normalize._base"
 
@@ -21,66 +38,78 @@ specify std.normalize._base:
         expect (require "std.strict.init").to_be "MAGIC"
 
   - context std.debug_init is installed:
+    - before: |
+        preamble = [[
+          local env = {"MAGIC"}
+          if _G._DEBUG == false then
+            _strict = false
+          elseif type (_G._DEBUG) ~= "table" then
+            _strict = true
+          elseif _G._DEBUG.strict ~= nil then
+            _strict = _G._DEBUG.strict
+          else
+            _strict = true
+          end
+          package.loaded["std.debug_init"] = {_DEBUG = {strict = _strict}}
+
+          local os, package, print = os, package, print
+          local function exit (x) os.exit (x and 0 or 1) end
+        ]]
     - context std.strict is installed:
       - before: |
-          preamble = [[
+          postamble = preamble .. [[
+            local require = require
             package.loaded["std.strict.init"] = "MAGIC"
-            if type (_G._DEBUG) == "table" then
-              package.loaded["std.debug_init"] = {strict = _G._DEBUG.strict}
-            else
-              package.loaded["std.debug_init"] = {strict = _G._DEBUG}
-            end
-            env = {"MAGIC"}
-            M = require "std.normalize._base"
+            local M = require "std.normalize._base"
           ]]
       - context global _DEBUG is nil:
         - it returns std.strict implementation:
-            expect (luaproc (preamble .. [[
-              os.exit (M.strict == "MAGIC" and 0 or 1)
+            expect (luaproc (postamble .. [[
+              exit (M.strict == "MAGIC")
             ]])).to_succeed_with ""
       - context global _DEBUG is false:
         - it returns a pass-through environment setter:
             expect (luaproc ([[
               _DEBUG = false
-              ]] .. preamble .. [[
+              ]] .. postamble .. [[
               print (env == M.strict (env))
-              os.exit (M.strict ~= require "std.strict.init" and 0 or 1)
+              exit (M.strict ~= require "std.strict.init")
             ]])).to_succeed_while_matching "^true"
       - context global _DEBUG is true:
         - it returns std.strict implementation:
             expect (luaproc ([[
               _DEBUG = true
-              ]] .. preamble .. [[
-              os.exit (M.strict == require "std.strict.init" and 0 or 1)
+              ]] .. postamble .. [[
+              exit (M.strict == require "std.strict.init")
             ]])).to_succeed_with ""
       - context global _DEBUG.strict is nil:
         - it returns std.strict implementation:
             expect (luaproc ([[
               _DEBUG = { strict = nil }
-              ]] .. preamble .. [[
-              os.exit (M.strict == require "std.strict.init" and 0 or 1)
+              ]] .. postamble .. [[
+              exit (M.strict == require "std.strict.init")
             ]])).to_succeed_with ""
       - context global _DEBUG.strict is false:
         - it returns std.strict implementation:
             expect (luaproc ([[
               _DEBUG = { strict = false }
-              ]] .. preamble .. [[
+              ]] .. postamble .. [[
               print (env == M.strict (env))
-              os.exit (M.strict ~= require "std.strict.init" and 0 or 1)
+              exit (M.strict ~= require "std.strict.init")
             ]])).to_succeed_while_matching "^true"
       - context global _DEBUG.strict is true:
         - it returns std.strict implementation:
             expect (luaproc ([[
               _DEBUG = { strict = true }
-              ]] .. preamble .. [[
-              os.exit (M.strict == require "std.strict.init" and 0 or 1)
+              ]] .. postamble .. [[
+              exit (M.strict == require "std.strict.init")
             ]])).to_succeed_with ""
 
     - context std.strict is not installed:
       - before: |
-          postamble = [[
+          postamble = preamble .. [[
             do
-              local _require = require
+              local error, _require = error, require
               require = function (...)
                  local x = ...
                  if x == "std.strict.init" then
@@ -89,13 +118,7 @@ specify std.normalize._base:
                  return _require (...)
               end
             end
-            if type (_G._DEBUG) == "table" then
-              package.loaded["std.debug_init"] = {strict = _G._DEBUG.strict}
-            else
-              package.loaded["std.debug_init"] = {strict = _G._DEBUG}
-            end
-            env = {"MAGIC"}
-            os.exit (env == require "std.normalize._base".strict (env) and 0 or 1)
+            exit (env == require "std.normalize._base".strict (env))
           ]]
       - context global _DEBUG is nil:
         - it returns a pass-through environment setter:
@@ -127,33 +150,39 @@ specify std.normalize._base:
             ]] .. postamble)).to_succeed_with ""
 
   - context std.debug_init is not installed:
+    - before: |
+        preamble = [[
+          env = {"MAGIC"}
+          do
+            local _require = require
+            require = function (...)
+               local x = ...
+               if x == "std.debug_init" then
+                 error ("module '" .. x .. "' not found", 2)
+               end
+               return _require (...)
+            end
+          end
+
+          local os, package, print = os, package, print
+          local function exit (x) os.exit (x and 0 or 1) end
+        ]]
     - context std.strict is installed:
       - before: |
-          preamble = [[
-            do
-              local _require = require
-              require = function (...)
-                 local x = ...
-                 if x == "std.debug_init" then
-                   error ("module '" .. x .. "' not found", 2)
-                 end
-                 return _require (...)
-              end
-            end
+          postamble = preamble .. [[
             package.loaded["std.strict.init"] = "MAGIC"
-            env = {"MAGIC"}
-            M = require "std.normalize._base"
+            local M, require = require "std.normalize._base", require
           ]]
       - context global _DEBUG is nil:
         - it returns std.strict implementation:
-            expect (luaproc (preamble .. [[
-              os.exit (M.strict == "MAGIC" and 0 or 1)
+            expect (luaproc (postamble .. [[
+              exit (M.strict == "MAGIC")
             ]])).to_succeed_with ""
       - context global _DEBUG is false:
         - it returns a pass-through environment setter:
             expect (luaproc ([[
               _DEBUG = false
-              ]] .. preamble .. [[
+              ]] .. postamble .. [[
               print (env == M.strict (env))
               os.exit (M.strict ~= require "std.strict.init" and 0 or 1)
             ]])).to_succeed_while_matching "^true"
@@ -161,21 +190,21 @@ specify std.normalize._base:
         - it returns std.strict implementation:
             expect (luaproc ([[
               _DEBUG = true
-              ]] .. preamble .. [[
+              ]] .. postamble .. [[
               os.exit (M.strict == require "std.strict.init" and 0 or 1)
             ]])).to_succeed_with ""
       - context global _DEBUG.strict is nil:
         - it returns std.strict implementation:
             expect (luaproc ([[
               _DEBUG = { strict = nil }
-              ]] .. preamble .. [[
+              ]] .. postamble .. [[
               os.exit (M.strict == require "std.strict.init" and 0 or 1)
             ]])).to_succeed_with ""
       - context global _DEBUG.strict is false:
         - it returns std.strict implementation:
             expect (luaproc ([[
               _DEBUG = { strict = false }
-              ]] .. preamble .. [[
+              ]] .. postamble .. [[
               print (env == M.strict (env))
               os.exit (M.strict ~= require "std.strict.init" and 0 or 1)
             ]])).to_succeed_while_matching "^true"
@@ -183,28 +212,23 @@ specify std.normalize._base:
         - it returns std.strict implementation:
             expect (luaproc ([[
               _DEBUG = { strict = true }
-              ]] .. preamble .. [[
+              ]] .. postamble .. [[
               os.exit (M.strict == require "std.strict.init" and 0 or 1)
             ]])).to_succeed_with ""
 
     - context std.strict is not installed:
       - before: |
-          postamble = [[
+          postamble = preamble .. [[
             do
               local _require = require
-              local noninstalled = {
-                ["std.debug_init"] = true,
-                ["std.strict.init"] = true,
-              }
               require = function (...)
                  local x = ...
-                 if noninstalled[x] then
+                 if x == "std.strict.init" then
                    error ("module '" .. x .. "' not found", 2)
                  end
                  return _require (...)
               end
             end
-            env = {"MAGIC"}
             os.exit (env == require "std.normalize._base".strict (env) and 0 or 1)
           ]]
       - context global _DEBUG is nil:

@@ -7,7 +7,9 @@
 ]]
 
 local _ENV = {
-  _DEBUG	= _DEBUG,
+  _G = {
+    _DEBUG	= rawget (_G, "_DEBUG"),
+  },
   next		= next,
   pcall		= pcall,
   require	= require,
@@ -17,39 +19,54 @@ local _ENV = {
 setfenv (1, _ENV)
 
 
--- Use the _DEBUG table from `std.debug_init`, if installed.
-local ok, debug_init	= pcall (require, "std.debug_init")
-if not ok then
-  debug_init		= _DEBUG
-end
+
+--[[ ================== ]]--
+--[[ Initialize _DEBUG. ]]--
+--[[ ================== ]]--
 
 
-local function is_strict ()
-  if debug_init == false then
-    -- _G._DEBUG == false
-    return false
-  elseif type (debug_init) ~= "table" then
-    -- `std.debug_init` is not installed, or _G._DEBUG == true or nil 
-    return true
-  elseif debug_init.strict ~= nil then
-    -- _G._DEBUG or std.debug_init have a specific `.strict` field set
-    return debug_init.strict
+local strict
+
+
+do
+  local _DEBUG
+
+  local ok, debug_init	= pcall (require, "std.debug_init")
+  if ok then
+    -- Use the _DEBUG table from `std.debug_init`, if installed.
+    _DEBUG		= debug_init._DEBUG
+  else
+    local function choose (t)
+      for k, v in next, t do
+	if _G._DEBUG == false then
+	  t[k] = v.fast
+	elseif _G._DEBUG == nil then
+	  t[k] = v.default
+	elseif type (_G._DEBUG) ~= "table" then
+	  t[k] = v.safe
+	elseif _G._DEBUG[k] ~= nil then
+	  t[k] = _G._DEBUG[k]
+	else
+	  t[k] = v.default
+	end
+      end
+      return t
+    end
+
+    _DEBUG = choose {
+      strict   = {default = true, safe = true, fast = false},
+    }
   end
-  -- otherwise, strict by default!
-  return true
-end
 
-
--- If strict is not required, pass the unchanged environment through.
-local strict = function (env) return env end
-
--- If strict mode is required, use "std.strict" if we have it.
-if is_strict () then
-  -- `require "std.strict"` will get the old stdlib implementation of
-  -- strict, which doesn't support individual environment tables :(
-  ok, strict		= pcall (require, "std.strict.init")
-  if not ok then
-    strict		= false
+  -- If strict mode is required, use "std.strict" if we have it.
+  if _DEBUG.strict then
+    -- `require "std.strict"` will get the old stdlib implementation of
+    -- strict, which doesn't support individual environment tables :(
+    ok, strict		= pcall (require, "std.strict.init")
+    if not ok then
+      strict		= false
+    end
+  else
   end
 end
 
