@@ -75,70 +75,6 @@ _ = nil
 
 
 
---[[ ================= ]]--
---[[ Helper functions. ]]--
---[[ ================= ]]--
-
-
-local function opt (predicate)
-  return setmetatable ({
-    -- `types.<name>.opt` accepts nil...
-    opt = function (argu, i)
-      if argu[i] == nil then
-	return true
-      end
-      return predicate (argu, i)
-    end,
-  }, {
-    -- ...otherwise `types.<name>` calls `predicate`.
-    __call = function (_, ...)
-      return predicate (...)
-    end,
-  })
-end
-
-
-local types = {
-  -- Accept argu[i] if it is an integer valued number, or can be
-  -- converted to one by `tonumber` (or nil with `.opt` variant).
-  integer = opt (function (argu, i)
-    local value = tonumber (argu[i])
-    local got = type (value)
-    if i > argu.n then
-      got = "no value"
-    end
-    if got ~= "number" then
-      return nil, "integer expected, got " .. type (argu[i])
-    end
-    if value - math_floor (value) > 0.0 then
-      return nil, "number has no integer representation"
-    end
-    return true
-  end),
-
-  -- Accept table valued argu[i].
-  table = function (argu, i)
-    local got = type (argu[i])
-    if got == "table" then
-      return true
-    end
-    if i > argu.n then
-      got = "no value"
-    end
-    return nil, "table expected, got " .. got
-  end,
-
-  -- Accept non-nil valued argu[i].
-  value = function (argu, i)
-    if argu[i] then
-      return true
-    end
-    return nil, "value expected"
-  end,
-}
-
-
-
 --[[ =============== ]]--
 --[[ Implementation. ]]--
 --[[ =============== ]]--
@@ -387,18 +323,6 @@ local function str (x, roots)
 end
 
 
-local function tree_merge (dst, src)
-  for k, v in next, src do
-    if type (v) ~= "table" or type (dst[k]) ~= "table" then
-      dst[k] = v
-    else
-      dst[k] = tree_merge (dst[k] or {}, v)
-    end
-  end
-  return dst
-end
-
-
 local function unpack (t, i, j)
   return table_unpack (t, tonumber (i) or 1, tonumber (j) or len (t))
 end
@@ -421,6 +345,88 @@ do
 end
 
 
+
+--[[ ================= ]]--
+--[[ Type annotations. ]]--
+--[[ ================= ]]--
+
+
+local function opt (predicate)
+  return setmetatable ({
+    -- `<name>.opt` accepts nil...
+    opt = function (argu, i)
+      if argu[i] == nil then
+	return true
+      end
+      return predicate (argu, i)
+    end,
+  }, {
+    -- ...otherwise `<name>` calls `predicate`.
+    __call = function (_, ...)
+      return predicate (...)
+    end,
+  })
+end
+
+
+-- Accept argu[i] if it is an integer valued number, or can be
+-- converted to one by `tonumber` (or nil with `.opt` variant).
+local T = {
+  integer = opt (function (argu, i)
+    local value = tonumber (argu[i])
+    local got = type (value)
+    if i > argu.n then
+      got = "no value"
+    end
+    if got ~= "number" then
+      return nil, "integer expected, got " .. type (argu[i])
+    end
+    if value - math_floor (value) > 0.0 then
+      return nil, "number has no integer representation"
+    end
+    return true
+  end),
+
+  -- Accept table valued argu[i].
+  table = function (argu, i)
+    local got = type (argu[i])
+    if got == "table" then
+      return true
+    end
+    if i > argu.n then
+      got = "no value"
+    end
+    return nil, "table expected, got " .. got
+  end,
+
+  -- Accept non-nil valued argu[i].
+  value = opt (function (argu, i)
+    if argu[i] then
+      return true
+    end
+    return nil, "value expected"
+  end),
+}
+
+
+
+--[[ ================= ]]--
+--[[ Public Interface. ]]--
+--[[ ================= ]]--
+
+
+local function tree_merge (dst, src)
+  for k, v in next, src do
+    if type (v) ~= "table" or type (dst[k]) ~= "table" then
+      dst[k] = v
+    else
+      dst[k] = tree_merge (dst[k] or {}, v)
+    end
+  end
+  return dst
+end
+
+
 local function normal (env)
   local normalized = {
     --- Raise a bad argument error.
@@ -430,7 +436,8 @@ local function normal (env)
     -- @function argerror
     -- @string name function to callout in error message
     -- @int i argument number
-    -- @string[opt] extramsg additional text to append to message inside parentheses
+    -- @string[opt] extramsg additional text to append to message inside
+    --   parentheses
     -- @int[opt=1] level call stack level to blame for the error
     -- @see resulterror
     -- @usage
@@ -482,7 +489,7 @@ local function normal (env)
     -- for i, v in ipairs (args) do
     --   print (string.format ("%d=%s", i, v))
     -- end
-    ipairs = argscheck ("ipairs", types.value) .. ipairs,
+    ipairs = argscheck ("ipairs", T.value) .. ipairs,
 
     --- Functional version of core Lua `#` operator.
     --
@@ -520,7 +527,7 @@ local function normal (env)
     -- --> 2        a
     -- --> foo      c
     -- for k, v in opairs {"b", foo = "c", "a"} do print (k, v) end
-    opairs = argscheck ("opairs", types.value) .. opairs,
+    opairs = argscheck ("opairs", T.value) .. opairs,
 
     --- Package module constants for `package.config` substrings.
     -- @table package
@@ -546,7 +553,7 @@ local function normal (env)
     -- @return the previous iteration key
     -- @usage
     -- for k, v in pairs {"a", b = "c", foo = 42} do process (k, v) end
-    pairs = argscheck ("pairs", types.table) .. pairs,
+    pairs = argscheck ("pairs", T.table) .. pairs,
 
     --- The fastest pack implementation available.
     -- @function pack
@@ -588,7 +595,9 @@ local function normal (env)
     -- @return ... values of numeric indices of *t*
     -- @usage
     -- return unpack (results_table)
-    unpack = argscheck ("unpack", types.table, types.integer.opt, types.integer.opt) .. unpack,
+    unpack = argscheck (
+      "unpack", T.table, T.integer.opt, T.integer.opt
+    ) .. unpack,
 
     --- Support arguments to a protected function call, even on Lua 5.1.
     -- @function xpcall
@@ -621,7 +630,9 @@ return setmetatable (normal {}, {
   --   back to `_ENV`
   -- @usage
   -- local _ENV = require "std.normalize" {}
-  __call = function (_, env) return strict (normal (env)), nil end,
+  __call = function (_, env)
+    return strict (normal (env)), nili
+  end,
 
   --- Lazy loading of normalize modules.
   -- Don't load everything on initial startup, wait until first attempt
