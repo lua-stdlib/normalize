@@ -21,6 +21,8 @@ local _ENV = {
   type		= type,
 
   string_format	= string.format,
+  table_pack	= table.pack or pack or false,
+  table_unpack	= table.unpack or unpack,
 }
 setfenv (1, _ENV)
 
@@ -31,16 +33,23 @@ setfenv (1, _ENV)
 --[[ =============== ]]--
 
 
-local function argerror (name, i, extramsg, level)
-  local s = string_format ("bad argument #%d to '%s'", i, name)
-  if extramsg ~= nil then
-    s = s .. " (" .. extramsg .. ")"
+local function argerror_offset (frames)
+  return function (name, i, extramsg, level)
+    local s = string_format ("bad argument #%d to '%s'", i, name)
+    if extramsg ~= nil then
+      s = s .. " (" .. extramsg .. ")"
+    end
+    error (s, level and level > 0 and level + frames or 0)
   end
-  error (s, level and level > 0 and level + 1 or 0)
 end
 
 
-local argscheck, strict
+local pack = table_pack or function (...)
+  return { n = select ("#", ...), ...}
+end
+
+
+local argerror, argscheck, strict
 do
   local _DEBUG
 
@@ -95,17 +104,32 @@ do
       end, {argu=argu, checks=checks}, 0
     end
 
+    -- So argerror(..., 1) needs 3 adding to it if the message from the
+    -- underlying call to `error` is to blame the correct frame:
+    --  1. calling error with level 1, would cause it to be the source
+    --  2. another level would report argerror itself as the source
+    --  3. a third would blame the argcheck wrapper we add in init.lua
+    --  4. we want to blame the function that called the wrapper, 3
+    --     frames higher
+    argerror = argerror_offset (3)
+
     argscheck = function (name, ...)
-      local checks = { n = select ("#", ...), ... }
+      local checks = pack (...)
       return setmetatable ({}, {
         __concat = function (_, inner)
           return function (...)
-	    for i, extramsg in icalls (name, checks, { n = select ("#", ...), ... }) do
+	    for i, extramsg in icalls (name, checks, pack (...)) do
               if extramsg then
-                argerror (name, i, extramsg, 3)
+                return argerror (name, i, extramsg, 3), nil
               end
 	    end
-	    return inner (...)
+	    -- Tail call pessimisation: inner might be counting frames,
+	    -- and have several return values that need preserving.
+	    -- Different Lua implementations tail call under differing
+	    -- conditions, so we need this hair to make sure we always
+	    -- get the same number of stack frames interposed.
+	    local results = pack (inner (...))
+	    return table_unpack (results, 1, results.n)
           end
         end,
       })
@@ -113,6 +137,10 @@ do
 
   else
 
+    -- No argcheck wrapper below, so one less frame to count through.
+    argerror = argerror_offset (2)
+
+    -- Return `inner` untouched, for no runtime overhead!
     argscheck = function (...)
       return setmetatable ({}, {
 	__concat = function (_, inner)

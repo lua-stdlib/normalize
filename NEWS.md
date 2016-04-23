@@ -15,20 +15,17 @@
   - `std.normalize.str` is a fast specialization of `std.string.render`
     with all helper functions and abstractions inlined.
 
+  - When `_DEBUG` specifies argchecking, these APIs all diagnose
+    unsuitable types passed by the caller.
+
 ### Bug fixes
 
   - `std.normalize.getmetamethod` now handles functor metatable
     fields correctly, rather than `nil` as in previous releases.  It's
     also considerably faster now that it doesn't use `pcall` any more.
 
-  - `std.normalize.ipairs` and `std.normalize.opairs` now diagnose
-    missing argument, when `_DEBUG` specifies argchecking.
-
   - `std.normalize.pack` now sets `n` field to number of arguments
     packed, even in Lua 5.1.
-
-  - `std.normalize.unpack` now diagnoses bad arguments, when `_DEBUG`
-    specifies argchecking.
 
 ### Incompatible changes
 

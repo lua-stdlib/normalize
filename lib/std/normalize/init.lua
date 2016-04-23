@@ -369,23 +369,38 @@ local function opt (predicate)
 end
 
 
--- Accept argu[i] if it is an integer valued number, or can be
--- converted to one by `tonumber` (or nil with `.opt` variant).
 local T = {
+  -- Accept argu[i] if it is an integer valued number, or can be
+  -- converted to one by `tonumber` (or nil with `.opt` variant).
   integer = opt (function (argu, i)
-    local value = tonumber (argu[i])
-    local got = type (value)
+    local got = type (argu[i])
     if i > argu.n then
       got = "no value"
     end
-    if got ~= "number" then
-      return nil, "integer expected, got " .. type (argu[i])
+    local value = tonumber (argu[i])
+    if type (value) ~= "number" then
+      return nil, "integer expected, got " .. got
     end
     if value - math_floor (value) > 0.0 then
       return nil, "number has no integer representation"
     end
     return true
   end),
+
+  -- Accept argu[i].
+  accept = function () return true end,
+
+  -- Accept string valued or `__string` metamethod carrying argu[i].
+  stringy = function (argu, i)
+    local got = type (argu[i])
+    if got == "string" or getmetamethod (argu[i], "__tostring") then
+      return true
+    end
+    if i > argu.n then
+      got = "no value"
+    end
+    return nil, "string expected, got " .. got
+  end,
 
   -- Accept table valued argu[i].
   table = function (argu, i)
@@ -400,12 +415,12 @@ local T = {
   end,
 
   -- Accept non-nil valued argu[i].
-  value = opt (function (argu, i)
+  value = function (argu, i)
     if argu[i] then
       return true
     end
     return nil, "value expected"
-  end),
+  end,
 }
 
 
@@ -445,7 +460,9 @@ local function normal (env)
     --   local h, err = input_handle (file)
     --   if h == nil then argerror ("std.io.slurp", 1, err, 2) end
     --   ...
-    argerror = argerror,
+    argerror = argscheck (
+      "argerror", T.stringy, T.integer, T.accept, T.integer.opt
+    ) .. argerror,
 
     --- Get a function or functor environment.
     --
