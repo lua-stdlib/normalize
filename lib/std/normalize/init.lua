@@ -84,7 +84,9 @@ local function opt (predicate)
   return setmetatable ({
     -- `types.<name>.opt` accepts nil...
     opt = function (argu, i)
-      if argu[i] == nil then return true end
+      if argu[i] == nil then
+	return true
+      end
       return predicate (argu, i)
     end,
   }, {
@@ -102,7 +104,9 @@ local types = {
   integer = opt (function (argu, i)
     local value = tonumber (argu[i])
     local got = type (value)
-    if i > argu.n then got = "no value" end
+    if i > argu.n then
+      got = "no value"
+    end
     if got ~= "number" then
       return nil, "integer expected, got " .. type (argu[i])
     end
@@ -115,14 +119,20 @@ local types = {
   -- Accept table valued argu[i].
   table = function (argu, i)
     local got = type (argu[i])
-    if got == "table" then return true end
-    if i > argu.n then got = "no value" end
+    if got == "table" then
+      return true
+    end
+    if i > argu.n then
+      got = "no value"
+    end
     return nil, "table expected, got " .. got
   end,
 
   -- Accept non-nil valued argu[i].
   value = function (argu, i)
-    if argu[i] then return true end
+    if argu[i] then
+      return true
+    end
     return nil, "value expected"
   end,
 }
@@ -199,8 +209,12 @@ end
 
 local function getmetamethod (x, n)
   local m = (getmetatable (x) or {})[n]
-  if type (m) == "function" then return m end
-  if type ((getmetatable (m) or {}).__call) == "function" then return m end
+  if type (m) == "function" then
+    return m
+  end
+  if type ((getmetatable (m) or {}).__call) == "function" then
+    return m
+  end
 end
 
 
@@ -216,12 +230,18 @@ end
 
 local function len (x)
   local m = getmetamethod (x, "__len")
-  if m then return m (x) end
-  if type (x) ~= "table" then return #x end
+  if m then
+    return m (x)
+  end
+  if type (x) ~= "table" then
+    return #x
+  end
 
   local n = #x
   for i = 1, n do
-    if x[i] == nil then return i -1 end
+    if x[i] == nil then
+      return i -1
+    end
   end
   return n
 end
@@ -325,7 +345,9 @@ end
 
 local function copy (t)
   local r = {}
-  for k, v in pairs (t) do r[k] = v end
+  for k, v in pairs (t) do
+    r[k] = v
+  end
   return r
 end
 
@@ -391,7 +413,9 @@ do
     local _xpcall = xpcall
     xpcall = function (fn, errh, ...)
       local argu = pack (...)
-      return _xpcall (function () return fn (unpack (argu, 1, argu.n)) end, errh)
+      return _xpcall (function ()
+	return fn (unpack (argu, 1, argu.n))
+      end, errh)
     end
   end
 end

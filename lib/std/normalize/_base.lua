@@ -160,5 +160,8 @@ return {
   -- @treturn table *env*, which must be assigned to `_ENV`
   -- @usage
   --   local _ENV = require "std.normalize._base".strict {}
-  strict = strict or function (env) setfenv (2, env) return env end
+  strict = strict or function (env)
+    setfenv (2, env)
+    return env
+  end
 }
