@@ -343,6 +343,22 @@ specify std.normalize:
          expect (f (nil)).to_raise "table expected, got nil"
     - 'it diagnoses argument #1 type not table':
          expect (f (false)).to_raise "table expected, got boolean"
+    - 'it diagnoses argument #2 type not number': |
+         expect (f (t, false)).
+           to_raise "bad argument #2 to 'unpack' (integer expected, got boolean)"
+    - 'it diagnoses argument #2 type not integer': |
+         expect (f (t, 1.5)).
+           to_raise "bad argument #2 to 'unpack' (number has no integer representation)"
+         expect (f (t, '1.5')).
+           to_raise "bad argument #2 to 'unpack' (number has no integer representation)"
+    - 'it diagnoses argument #3 type not number': |
+         expect (f (t, 1, false)).
+           to_raise "bad argument #3 to 'unpack' (integer expected, got boolean)"
+    - 'it diagnoses argument #3 type not integer': |
+         expect (f (t, 1, 1.5)).
+           to_raise "bad argument #3 to 'unpack' (number has no integer representation)"
+         expect (f (t, '1', '1.5')).
+           to_raise "bad argument #3 to 'unpack' (number has no integer representation)"
 
   - it works with an empty sequence:
       expect (f {}).to_equal {n=0}

@@ -22,12 +22,13 @@
     also considerably faster now that it doesn't use `pcall` any more.
 
   - `std.normalize.ipairs` and `std.normalize.opairs` now diagnose
-    missing argument.
+    missing argument, when `_DEBUG` specifies argchecking.
 
   - `std.normalize.pack` now sets `n` field to number of arguments
     packed, even in Lua 5.1.
 
-  - `std.normalize.unpack` now diagnoses non-table valued argument.
+  - `std.normalize.unpack` now diagnoses bad arguments, when `_DEBUG`
+    specifies argchecking.
 
 ### Incompatible changes
 

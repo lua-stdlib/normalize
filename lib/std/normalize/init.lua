@@ -59,6 +59,7 @@ local _ENV = _.strict {
   debug_setfenv		= debug.setfenv or false,
   debug_setupvalue	= debug.setupvalue,
   debug_upvaluejoin	= debug.upvaluejoin,
+  math_floor		= math.floor,
   package_config	= package.config,
   string_match		= string.match,
   table_concat		= table.concat,
@@ -80,6 +81,30 @@ _ = nil
 
 
 local types = {
+  integer = setmetatable ({}, {
+    __call = function (_, argu, i)
+      local value = tonumber (argu[i])
+      local got = type (value)
+      if i > argu.n then got = "no value" end
+      if got ~= "number" then
+        return nil, "integer expected, got " .. type (argu[i])
+      end
+      if value - math_floor (value) > 0.0 then
+        return nil, "number has no integer representation"
+      end
+      return true
+    end,
+
+    __index = function (self, k)
+      if k == "opt" then
+	return function (argu, i)
+	  if argu[i] == nil then return true end
+	  return self (argu, i)
+	end
+      end
+    end,
+  }),
+
   table = function (argu, i)
     local got = type (argu[i])
     if got == "table" then return true end
@@ -530,7 +555,7 @@ local function normal (env)
     -- @return ... values of numeric indices of *t*
     -- @usage
     -- return unpack (results_table)
-    unpack = argscheck ("unpack", types.table) .. unpack,
+    unpack = argscheck ("unpack", types.table, types.integer.opt, types.integer.opt) .. unpack,
 
     --- Support arguments to a protected function call, even on Lua 5.1.
     -- @function xpcall
