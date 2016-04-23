@@ -80,16 +80,16 @@ _ = nil
 
 
 local types = {
-  any = function (argu, i)
-    if argu[i] then return true end
-    return nil, "value expected"
-  end,
-
   table = function (argu, i)
     local got = type (argu[i])
     if got == "table" then return true end
     if i > argu.n then got = "no value" end
     return nil, "table expected, got " .. got
+  end,
+
+  value = function (argu, i)
+    if argu[i] then return true end
+    return nil, "value expected"
   end,
 }
 
@@ -170,8 +170,7 @@ local function getmetamethod (x, n)
 end
 
 
-local ipairs = argscheck ("ipairs", types.any) ..
-function (l)
+local function ipairs (l)
   return function (l, n)
     n = n + 1
     if l[n] ~= nil then
@@ -213,8 +212,7 @@ end
 if not not pairs(setmetatable({},{__pairs=function() return false end})) then
   -- Add support for __pairs when missing.
   local _pairs = pairs
-  pairs = argscheck ("pairs", types.table) ..
-  function (t)
+  function pairs (t)
     return (getmetamethod (t, "__pairs") or _pairs) (t)
   end
 end
@@ -229,8 +227,7 @@ local function keysort (a, b)
 end
 
 
-local opairs = argscheck ("opairs", types.any) ..
-function (t)
+local function opairs (t)
   local keys, i = {}, 0
   for k in pairs (t) do keys[#keys + 1] = k end
   table_sort (keys, keysort)
@@ -346,8 +343,7 @@ local function tree_merge (dst, src)
 end
 
 
-local unpack = argscheck ("unpack", types.table) ..
-function (t, i, j)
+local function unpack (t, i, j)
   return table_unpack (t, tonumber (i) or 1, tonumber (j) or len (t))
 end
 
@@ -428,7 +424,7 @@ local function normal (env)
     -- for i, v in ipairs (args) do
     --   print (string.format ("%d=%s", i, v))
     -- end
-    ipairs = ipairs,
+    ipairs = argscheck ("ipairs", types.value) .. ipairs,
 
     --- Functional version of core Lua `#` operator.
     --
@@ -466,7 +462,7 @@ local function normal (env)
     -- --> 2        a
     -- --> foo      c
     -- for k, v in opairs {"b", foo = "c", "a"} do print (k, v) end
-    opairs = opairs,
+    opairs = argscheck ("opairs", types.value) .. opairs,
 
     --- Package module constants for `package.config` substrings.
     -- @table package
@@ -492,7 +488,7 @@ local function normal (env)
     -- @return the previous iteration key
     -- @usage
     -- for k, v in pairs {"a", b = "c", foo = 42} do process (k, v) end
-    pairs = pairs,
+    pairs = argscheck ("pairs", types.table) .. pairs,
 
     --- The fastest pack implementation available.
     -- @function pack
@@ -534,7 +530,7 @@ local function normal (env)
     -- @return ... values of numeric indices of *t*
     -- @usage
     -- return unpack (results_table)
-    unpack = unpack,
+    unpack = argscheck ("unpack", types.table) .. unpack,
 
     --- Support arguments to a protected function call, even on Lua 5.1.
     -- @function xpcall
