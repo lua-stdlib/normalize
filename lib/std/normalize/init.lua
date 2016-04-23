@@ -80,31 +80,39 @@ _ = nil
 --[[ ================= ]]--
 
 
+local function opt (predicate)
+  return setmetatable ({
+    -- `types.<name>.opt` accepts nil...
+    opt = function (argu, i)
+      if argu[i] == nil then return true end
+      return predicate (argu, i)
+    end,
+  }, {
+    -- ...otherwise `types.<name>` calls `predicate`.
+    __call = function (_, ...)
+      return predicate (...)
+    end,
+  })
+end
+
+
 local types = {
-  integer = setmetatable ({}, {
-    __call = function (_, argu, i)
-      local value = tonumber (argu[i])
-      local got = type (value)
-      if i > argu.n then got = "no value" end
-      if got ~= "number" then
-        return nil, "integer expected, got " .. type (argu[i])
-      end
-      if value - math_floor (value) > 0.0 then
-        return nil, "number has no integer representation"
-      end
-      return true
-    end,
+  -- Accept argu[i] if it is an integer valued number, or can be
+  -- converted to one by `tonumber` (or nil with `.opt` variant).
+  integer = opt (function (argu, i)
+    local value = tonumber (argu[i])
+    local got = type (value)
+    if i > argu.n then got = "no value" end
+    if got ~= "number" then
+      return nil, "integer expected, got " .. type (argu[i])
+    end
+    if value - math_floor (value) > 0.0 then
+      return nil, "number has no integer representation"
+    end
+    return true
+  end),
 
-    __index = function (self, k)
-      if k == "opt" then
-	return function (argu, i)
-	  if argu[i] == nil then return true end
-	  return self (argu, i)
-	end
-      end
-    end,
-  }),
-
+  -- Accept table valued argu[i].
   table = function (argu, i)
     local got = type (argu[i])
     if got == "table" then return true end
@@ -112,6 +120,7 @@ local types = {
     return nil, "table expected, got " .. got
   end,
 
+  -- Accept non-nil valued argu[i].
   value = function (argu, i)
     if argu[i] then return true end
     return nil, "value expected"
