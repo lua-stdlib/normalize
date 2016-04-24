@@ -21,6 +21,7 @@ local _ENV = {
   type		= type,
 
   string_format	= string.format,
+  table_concat	= table.concat,
   table_pack	= table.pack or pack or false,
   table_unpack	= table.unpack or unpack,
 }
@@ -60,17 +61,17 @@ do
   else
     local function choose (t)
       for k, v in next, t do
-	if _G._DEBUG == false then
-	  t[k] = v.fast
-	elseif _G._DEBUG == nil then
-	  t[k] = v.default
-	elseif type (_G._DEBUG) ~= "table" then
-	  t[k] = v.safe
-	elseif _G._DEBUG[k] ~= nil then
-	  t[k] = _G._DEBUG[k]
-	else
-	  t[k] = v.default
-	end
+        if _G._DEBUG == false then
+          t[k] = v.fast
+        elseif _G._DEBUG == nil then
+          t[k] = v.default
+        elseif type (_G._DEBUG) ~= "table" then
+          t[k] = v.safe
+        elseif _G._DEBUG[k] ~= nil then
+          t[k] = _G._DEBUG[k]
+        else
+          t[k] = v.default
+        end
       end
       return t
     end
@@ -98,8 +99,11 @@ do
       return function (state, i)
         if i < state.checks.n then
           i = i + 1
-          local ok, errmsg = state.checks[i] (state.argu, i)
-          return i, not ok and errmsg or nil
+          local ok, expected, got = state.checks[i] (state.argu, i)
+          if not ok then
+            return i, expected, got
+          end
+          return i, nil
         end
       end, {argu=argu, checks=checks}, 0
     end
@@ -118,18 +122,31 @@ do
       return setmetatable ({}, {
         __concat = function (_, inner)
           return function (...)
-	    for i, extramsg in icalls (name, checks, pack (...)) do
-              if extramsg then
+            for i, expected, got in icalls (name, checks, pack (...)) do
+              if expected or got then
+                local buf, extramsg = {}
+                if expected then
+                  buf[#buf +1] = expected .. " expected"
+                end
+                if expected and got then
+                  buf[#buf +1] = ", "
+                end
+                if got then
+                  buf[#buf +1] = got
+                end
+                if #buf > 0 then
+                  extramsg = table_concat (buf)
+                end
                 return argerror (name, i, extramsg, 3), nil
               end
-	    end
-	    -- Tail call pessimisation: inner might be counting frames,
-	    -- and have several return values that need preserving.
-	    -- Different Lua implementations tail call under differing
-	    -- conditions, so we need this hair to make sure we always
-	    -- get the same number of stack frames interposed.
-	    local results = pack (inner (...))
-	    return table_unpack (results, 1, results.n)
+            end
+            -- Tail call pessimisation: inner might be counting frames,
+            -- and have several return values that need preserving.
+            -- Different Lua implementations tail call under differing
+            -- conditions, so we need this hair to make sure we always
+            -- get the same number of stack frames interposed.
+            local results = pack (inner (...))
+            return table_unpack (results, 1, results.n)
           end
         end,
       })
@@ -143,9 +160,9 @@ do
     -- Return `inner` untouched, for no runtime overhead!
     argscheck = function (...)
       return setmetatable ({}, {
-	__concat = function (_, inner)
-	  return inner
-	end,
+        __concat = function (_, inner)
+          return inner
+        end,
       })
     end
 

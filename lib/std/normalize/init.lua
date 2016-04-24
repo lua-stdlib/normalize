@@ -306,13 +306,13 @@ local function str (x, roots)
     for k, v in opairs (x) do
       if kp ~= nil and k ~= nil then
         -- semi-colon separator after sequence values, or else comma separator
-	buf[#buf + 1] = type (kp) == "number" and k ~= kp + 1 and "; " or ", "
+        buf[#buf + 1] = type (kp) == "number" and k ~= kp + 1 and "; " or ", "
       end
       if k == 1 or type (k) == "number" and k -1 == kp then
-	-- no key for sequence values
-	buf[#buf + 1] = stop_roots (v)
+        -- no key for sequence values
+        buf[#buf + 1] = stop_roots (v)
       else
-	buf[#buf + 1] = stop_roots (k) .. "=" .. stop_roots (v)
+        buf[#buf + 1] = stop_roots (k) .. "=" .. stop_roots (v)
       end
       kp, vp = k, v
     end
@@ -338,7 +338,7 @@ do
     xpcall = function (fn, errh, ...)
       local argu = pack (...)
       return _xpcall (function ()
-	return fn (unpack (argu, 1, argu.n))
+        return fn (unpack (argu, 1, argu.n))
       end, errh)
     end
   end
@@ -351,67 +351,61 @@ end
 --[[ ================= ]]--
 
 
-local function opt (predicate)
-  return setmetatable ({
-    -- `<name>.opt` accepts nil...
-    opt = function (argu, i)
-      if argu[i] == nil then
-	return true
-      end
-      return predicate (argu, i)
-    end,
-  }, {
-    -- ...otherwise `<name>` calls `predicate`.
-    __call = function (_, ...)
-      return predicate (...)
-    end,
-  })
+
+local function fail (expected, argu, i)
+  local got = type (argu[i])
+  if i > argu.n then
+    got = "no value"
+  end
+  return nil, expected, "got " .. got
 end
 
+local function check (expected, argu, i, predicate)
+  local arg = argu[i]
+  if predicate (arg) then
+    return true
+  end
+  return fail (expected, argu, i)
+end
 
 local T = {
   -- Accept argu[i] if it is an integer valued number, or can be
   -- converted to one by `tonumber` (or nil with `.opt` variant).
-  integer = opt (function (argu, i)
-    local got = type (argu[i])
-    if i > argu.n then
-      got = "no value"
-    end
+  integer = function (argu, i)
     local value = tonumber (argu[i])
     if type (value) ~= "number" then
-      return nil, "integer expected, got " .. got
+      return fail ("integer", argu, i)
     end
     if value - math_floor (value) > 0.0 then
-      return nil, "number has no integer representation"
+      return nil, nil, "number has no integer representation"
     end
     return true
-  end),
+  end,
 
   -- Accept argu[i].
-  accept = function () return true end,
+  accept = function ()
+    return true
+  end,
+
+  -- Accept nil valued argu[i].
+  none = function (argu, i)
+    return check ("nil", argu, i, function (x)
+      return x == nil
+    end)
+  end,
 
   -- Accept string valued or `__string` metamethod carrying argu[i].
   stringy = function (argu, i)
-    local got = type (argu[i])
-    if got == "string" or getmetamethod (argu[i], "__tostring") then
-      return true
-    end
-    if i > argu.n then
-      got = "no value"
-    end
-    return nil, "string expected, got " .. got
+    return check ("string", argu, i, function (x)
+      return type (x) == "string" or getmetamethod (x, "__tostring")
+    end)
   end,
 
   -- Accept table valued argu[i].
   table = function (argu, i)
-    local got = type (argu[i])
-    if got == "table" then
-      return true
-    end
-    if i > argu.n then
-      got = "no value"
-    end
-    return nil, "table expected, got " .. got
+    return check ("table", argu, i, function (x)
+      return type (x) == "table"
+    end)
   end,
 
   -- Accept non-nil valued argu[i].
@@ -419,9 +413,35 @@ local T = {
     if argu[i] then
       return true
     end
-    return nil, "value expected"
+    return nil, "value expected", nil
   end,
 }
+
+local function any (...)
+  local fns = {...}
+  return function (argu, i)
+    local buf, ok, expected, got = {}
+    for _, predicate in ipairs (fns) do
+      ok, expected, got = predicate (argu, i)
+      if ok then
+        return true
+      end
+      if expected ~= "nil" then
+        buf[#buf + 1] = expected
+      end
+    end
+    if #buf == 0 then
+      return nil, nil, got
+    elseif #buf > 1 then
+      buf[#buf -1], buf[#buf] = buf[#buf -1] .. " or " .. buf[#buf], nil
+    end
+    return nil, table_concat (buf, ", "), got
+  end
+end
+
+local function opt (...)
+  return any (T.none, ...)
+end
 
 
 
@@ -461,7 +481,7 @@ local function normal (env)
     --   if h == nil then argerror ("std.io.slurp", 1, err, 2) end
     --   ...
     argerror = argscheck (
-      "argerror", T.stringy, T.integer, T.accept, T.integer.opt
+      "argerror", T.stringy, T.integer, T.accept, opt (T.integer)
     ) .. argerror,
 
     --- Get a function or functor environment.
@@ -613,7 +633,7 @@ local function normal (env)
     -- @usage
     -- return unpack (results_table)
     unpack = argscheck (
-      "unpack", T.table, T.integer.opt, T.integer.opt
+      "unpack", T.table, opt (T.integer), opt (T.integer)
     ) .. unpack,
 
     --- Support arguments to a protected function call, even on Lua 5.1.

@@ -34,7 +34,7 @@ specify std.normalize._base:
         function inner () return "MAGIC" end
         types = {
           woot = function () return true end,
-          ohno = function (t, i) return nil, type (t[i]) .. " unexpected" end,
+          ohno = function (t, i) return nil, nil, type (t[i]) .. " unexpected" end,
         }
         local function exit (x) os.exit (x and 0 or 1) end
       ]]
