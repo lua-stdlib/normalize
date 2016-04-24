@@ -28,20 +28,30 @@ local _ENV = {
 setfenv (1, _ENV)
 
 
+-- There an additional stack frame to count over from inside functions
+-- with argchecks enabled.
+local ARGCHECK_FRAME = 0
+
+
 
 --[[ =============== ]]--
 --[[ Implementation. ]]--
 --[[ =============== ]]--
 
 
-local function argerror_offset (frames)
-  return function (name, i, extramsg, level)
-    local s = string_format ("bad argument #%d to '%s'", i, name)
-    if extramsg ~= nil then
-      s = s .. " (" .. extramsg .. ")"
-    end
-    error (s, level and level > 0 and level + frames or 0)
+local function argerror (name, i, extramsg, level)
+  local s = string_format ("bad argument #%d to '%s'", i, name)
+  if extramsg ~= nil then
+    s = s .. " (" .. extramsg .. ")"
   end
+
+  -- So argerror(..., 1) needs 3 adding to it if the message from the
+  -- underlying call to `error` is to blame the correct frame:
+  --  1. calling error with level 1, would cause it to be the source
+  --  2. another level would report argerror itself as the source
+  --  3. we want to blame the function that called argerror, 2
+  --     frames higher
+  error (s, level and level > 0 and level + 2 + ARGCHECK_FRAME or 0)
 end
 
 
@@ -50,7 +60,7 @@ local pack = table_pack or function (...)
 end
 
 
-local argerror, argscheck, strict
+local argscheck, strict
 do
   local _DEBUG
 
@@ -95,6 +105,8 @@ do
   -- Set argscheck according to whether argcheck is required.
   if _DEBUG.argcheck then
 
+    ARGCHECK_FRAME = 1
+
     local function icalls (name, checks, argu)
       return function (state, i)
         if i < state.checks.n then
@@ -107,15 +119,6 @@ do
         end
       end, {argu=argu, checks=checks}, 0
     end
-
-    -- So argerror(..., 1) needs 3 adding to it if the message from the
-    -- underlying call to `error` is to blame the correct frame:
-    --  1. calling error with level 1, would cause it to be the source
-    --  2. another level would report argerror itself as the source
-    --  3. a third would blame the argcheck wrapper we add in init.lua
-    --  4. we want to blame the function that called the wrapper, 3
-    --     frames higher
-    argerror = argerror_offset (3)
 
     argscheck = function (name, ...)
       local checks = pack (...)
@@ -153,9 +156,6 @@ do
     end
 
   else
-
-    -- No argcheck wrapper below, so one less frame to count through.
-    argerror = argerror_offset (2)
 
     -- Return `inner` untouched, for no runtime overhead!
     argscheck = function (...)
