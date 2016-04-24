@@ -194,6 +194,87 @@ specify std.normalize:
 
 
 - describe getfenv:
+  - before:
+      f = M.getfenv
+
+  - context with bad arguments:
+    - 'it diagnoses argument #1 type not callable or integer':
+        expect (f (false)).
+          to_raise "callable or integer expected, got boolean"
+
+  - it returns a table:
+      expect (type (f ())).to_be "table"
+      expect (type (f (0))).to_be "table"
+      expect (type (f (1))).to_be "table"
+      expect (type (f (f))).to_be "table"
+
+  - context when _DEBUG.argcheck is true:
+    - before:
+        fn = function (n) return getfenv (n), nil end
+        fnenv = {getfenv = f}
+        M.setfenv (fn, fnenv)
+        gn = function (n) return fn (n), nil end
+        gnenv = {fn = fn}
+        M.setfenv (gn, gnenv)
+
+    - it returns the environment of a function:
+        expect (f (fn)).to_be (fnenv)
+    - it returns the environment of a functor:
+        ftor = setmetatable ({}, {__call = fn})
+        expect (f (ftor)).to_be (fnenv)
+    - it returns the global environment:
+        # FIXME: don't break out of the sandbox in Lua 5.1
+        #  expect (f (0)).to_be (_G)
+        expect (f (0) == f (0)._G).to_be (true)
+    - it returns the callers environment:
+        expect (fn (1)).to_be (fnenv)
+        expect (gn (1)).to_be (fnenv)
+    - it returns the callers environment by default:
+        expect (fn ()).to_be (fn (1))
+    - it returns the environment of higher stack frames:
+        expect (gn(2)).to_be (gnenv)
+
+  - context when _DEBUG.argcheck is false:
+    - before:
+        preamble = [[
+          M = require "std.normalize"
+          f = M.getfenv
+          fn = function (n) return getfenv (n), nil end
+          fnenv = {getfenv = f}
+          M.setfenv (fn, fnenv)
+          gn = function (n) return fn (n), nil end
+          gnenv = {fn = fn}
+          M.setfenv (gn, gnenv)
+        ]]
+    - it returns the environment of a function:
+        expect (luaproc (preamble .. [[
+          os.exit (f (fn) == fnenv and 0 or 1)
+        ]])).to_succeed_with ""
+    - it returns the environment of a functor:
+        expect (luaproc (preamble .. [[
+          ftor = setmetatable ({}, {__call = fn})
+          os.exit (f (ftor) == fnenv and 0 or 1)
+        ]])).to_succeed_with ""
+    - it returns the global environment:
+        # FIXME: don't break out of the sandbox in Lua 5.1
+        expect (luaproc (preamble .. [[
+          os.exit (f (0) == f (0)._G and 0 or 1)
+        ]])).to_succeed_with ""
+    - it returns the callers environment:
+        expect (luaproc (preamble .. [[
+          os.exit (fn (1) == fnenv and 0 or 1)
+        ]])).to_succeed_with ""
+        expect (luaproc (preamble .. [[
+          os.exit (gn (1) == fnenv and 0 or 1)
+        ]])).to_succeed_with ""
+    - it returns the callers environment by default:
+        expect (luaproc (preamble .. [[
+          os.exit (fn () == fn (1) and 0 or 1)
+        ]])).to_succeed_with ""
+    - it returns the environment of higher stack frames:
+        expect (luaproc (preamble .. [[
+          os.exit (gn (2) == gnenv and 0 or 1)
+        ]])).to_succeed_with ""
 
 
 - describe getmetamethod:

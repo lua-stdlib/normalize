@@ -6,13 +6,12 @@
 
   - Initial release, now separated out from lua-stdlib.
 
-  - `std.normalize.argerror` to add unhandled argument type reporting
-    to Lua functions; equivalent to `luaL_argerror` in the Lua C API.
+  - New `argerror` to add unhandled argument type reporting to Lua
+    functions; equivalent to `luaL_argerror` in the Lua C API.
 
-  - `std.normalize.load` will load a string of valid Lua code, even in
-    Lua 5.1.
+  - `load` will load a string of valid Lua code, even in Lua 5.1.
 
-  - `std.normalize.str` is a fast specialization of `std.string.render`
+  - `str` is a fast specialization of `std.string.render`
     with all helper functions and abstractions inlined.
 
   - When `_DEBUG` specifies argchecking, these APIs all diagnose
@@ -20,15 +19,18 @@
 
 ### Bug fixes
 
-  - `std.normalize.getmetamethod` now handles functor metatable
-    fields correctly, rather than `nil` as in previous releases.  It's
-    also considerably faster now that it doesn't use `pcall` any more.
+  - `getfenv (0)` now returns the global environment correctly in
+    Lua 5.2+.
 
-  - `std.normalize.pack` now sets `n` field to number of arguments
-    packed, even in Lua 5.1.
+  - `getmetamethod` now handles functor metatable fields correctly,
+    rather than `nil` as in previous releases.  It's also considerably
+    faster now that it doesn't use `pcall` any more.
+
+  - `pack` now sets `n` field to number of arguments packed, even in
+    Lua 5.1.
 
 ### Incompatible changes
 
-  - The output format of `std.normalize.str` skips initial sequence keys
-    in the new compact format, including stringification of tables using
-    their `__tostring` metamethods.
+  - The output format of `str` skips initial sequence keys (compared to
+    the output from `std.tostring`) in this new compact format, including
+    stringification of tables using their `__tostring` metamethods.

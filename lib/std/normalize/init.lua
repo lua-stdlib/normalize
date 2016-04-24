@@ -36,6 +36,7 @@
 local _			= require "std.normalize._base"
 
 local _ENV = _.strict {
+  _G			= _G,
   _VERSION		= _VERSION,
   getfenv		= getfenv or false,
   getmetatable		= getmetatable,
@@ -70,6 +71,7 @@ local _ENV = _.strict {
   argerror		= _.argerror,
   argscheck		= _.argscheck,
 }
+local ARGCHECK_FRAME	= _.ARGCHECK_FRAME
 local strict		= _.strict
 _ = nil
 
@@ -102,10 +104,10 @@ if debug_getfenv then
       -- __call can only (sensibly) be a function, so no need to adjust
       -- stack frame offset either.
       fn = (getmetatable (fn) or {}).__call or fn
-    
+
     elseif type_fn == "number" and fn > 0 then
       -- Adjust for this function's stack frame, if fn is non-zero.
-      fn = fn + 1
+      fn = fn + 1 + ARGCHECK_FRAME
     end
 
     if type (fn) == "function" then
@@ -124,12 +126,18 @@ else
   -- Thanks to http://lua-users.org/lists/lua-l/2010-06/msg00313.html
   normalize_getfenv = function (fn)
     fn = fn or 1
-    
+
+    if fn == 0 then
+      return _G
+    end
     local type_fn = type (fn)
     if type_fn == "table" then
       fn = (getmetatable (fn) or {}).__call or fn
     elseif type_fn == "number" then
-      fn = debug_getinfo (fn == 0 and 0 or fn + 1, "f").func
+      if fn > 0 then
+	fn = fn + 1 + ARGCHECK_FRAME
+      end
+      fn = debug_getinfo (fn, "f").func
     end
     local name, env
     local up = 0
@@ -243,7 +251,7 @@ if debug_setfenv then
     if type_fn == "table" then
       fn = (getmetatable (fn) or {}).__call or fn
     elseif type_fn == "number" and fn > 0 then
-       fn = fn + 1
+       fn = fn + 1 + ARGCHECK_FRAME
     end
 
     if type (fn) == "function" then
@@ -257,12 +265,15 @@ else
   -- Thanks to http://lua-users.org/lists/lua-l/2010-06/msg00313.html
   normalize_setfenv = function (fn, env)
     fn = fn or 1
-    
+
     local type_fn = type (fn)
     if type_fn == "table" then
       fn = (getmetatable (fn) or {}).__call or fn
     elseif type_fn == "number" then
-      fn = debug_getinfo (fn == 0 and 0 or fn + 1, "f").func
+      if fn > 0 then
+	fn = fn + 1 + ARGCHECK_FRAME
+      end
+      fn = debug_getinfo (fn, "f").func
     end
     local up, name = 0
     repeat
@@ -387,6 +398,13 @@ local T = {
     return true
   end,
 
+  -- Accept function valued or `__call` metamethod carrying argu[i].
+  callable = function (argu, i)
+    return check ("callable", argu, i, function (x)
+      return type (x) == "function" or getmetamethod (x, "__call")
+    end)
+  end,
+
   -- Accept nil valued argu[i].
   none = function (argu, i)
     return check ("nil", argu, i, function (x)
@@ -433,6 +451,7 @@ local function any (...)
     if #buf == 0 then
       return nil, nil, got
     elseif #buf > 1 then
+      table_sort (buf)
       buf[#buf -1], buf[#buf] = buf[#buf -1] .. " or " .. buf[#buf], nil
     end
     return nil, table_concat (buf, ", "), got
@@ -495,7 +514,9 @@ local function normal (env)
     -- @treturn table the execution environment of *fn*
     -- @usage
     -- callers_environment = getfenv (1)
-    getfenv = getfenv,
+    getfenv = argscheck (
+      "getfenv", opt (T.integer, T.callable)
+    ) .. normalize_getfenv,
 
     --- Return named metamethod, if callable, otherwise `nil`.
     -- @function getmetamethod

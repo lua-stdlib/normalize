@@ -171,6 +171,10 @@ end
 
 
 return {
+  --- Add this to any stack frame offsets when argchecks are in force.
+  -- @int ARGCHECK_FRAME
+  ARGCHECK_FRAME = ARGCHECK_FRAME,
+
   --- Raise a bad argument error.
   -- @see std.normalize.argerror
   argerror = argerror,
