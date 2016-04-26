@@ -152,7 +152,7 @@ end
 
 
 local function getmetamethod (x, n)
-  local m = (getmetatable (x) or {})[n]
+  local m = (getmetatable (x) or {})[tostring (n)]
   if type (m) == "function" then
     return m
   end
@@ -526,7 +526,9 @@ local function normal (env)
     --   metamethod
     -- @usage
     -- normalize = getmetamethod (require "std.normalize", "__call")
-    getmetamethod = getmetamethod,
+    getmetamethod = argscheck (
+      "getmetamethod", T.value, T.stringy
+    ) .. getmetamethod,
 
     --- Iterate over elements of a sequence, until the first `nil` value.
     --

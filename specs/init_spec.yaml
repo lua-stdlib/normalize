@@ -281,6 +281,16 @@ specify std.normalize:
   - before:
       f = M.getmetamethod
 
+  - context with bad arguments:
+    - 'it diagnoses missing argument #1':
+         expect (f ()).to_raise "value expected"
+    - 'it diagnoses missing argument #2':
+         expect (f ({})).to_raise "string expected, got no value"
+    - 'it diagnoses argument #2 type not string':
+         stringy = setmetatable ({}, {__tostring = function () end})
+         expect (f ({}, nil)).to_raise "string expected, got nil"
+         expect (f ({}, stringy)).not_to_raise "string expected"
+
   - context with a table:
     - before:
         fn = function () return "uh-oh" end
