@@ -369,9 +369,20 @@ specify std.normalize:
 
 - describe len:
   - before:
-      __len = function (x) return 42 end
+      __len = function () return 42 end
+      __tostring = function () return "string" end
 
       f = M.len
+
+  - context with bad arguments:
+    - 'it diagnoses missing argument #1':
+        expect (f ()).to_raise "string or table expected, got no value"
+    - 'it diagnoses nil-valued argument #1':
+        expect (f (nil)).to_raise "string or table expected, got nil"
+    - 'it diagnoses argument #1 type not string or table':
+         stringy = setmetatable ({}, {__tostring = function () end})
+         expect (f (false)).to_raise "string or table expected, got boolean"
+         expect (f (stringy)).not_to_raise "string expected"
 
   - it works for an empty list:
       src = {}
@@ -381,6 +392,11 @@ specify std.normalize:
       expect (f (src)).to_be (#src)
   - it respects __len metamethod:
       expect (f (setmetatable ({}, {__len = __len}))).to_be (42)
+  - it respects __tostring metamethod:
+      expect (f (setmetatable ({}, {__tostring = __tostring}))).to_be (6)
+  - it prioritizes __len over __tostring:
+      x = setmetatable ({}, { __len = __len, __tostring = __tostring})
+      expect (f (x)).to_be (42)
   - it does not count nil valued array part elements:
       expect (f {1, 2, 3, nil, nil, 6}).to_be (3)
   - 'it defers to the # operator':

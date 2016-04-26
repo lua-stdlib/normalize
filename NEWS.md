@@ -9,6 +9,11 @@
   - New `argerror` to add unhandled argument type reporting to Lua
     functions; equivalent to `luaL_argerror` in the Lua C API.
 
+  - `len` will return the length of whatever an object's `__tostring`
+    metamethod returns (except that a `__len` metamethod is used first
+    if available), before counting initial non-nil valued integer
+    keys.
+
   - `load` will load a string of valid Lua code, even in Lua 5.1.
 
   - `str` is a fast specialization of `std.string.render`

@@ -177,6 +177,9 @@ local function len (x)
   if m then
     return m (x)
   end
+  if getmetamethod (x, "__tostring") then
+    x = tostring (x)
+  end
   if type (x) ~= "table" then
     return #x
   end
@@ -551,12 +554,13 @@ local function normal (env)
     -- end
     ipairs = argscheck ("ipairs", T.value) .. ipairs,
 
-    --- Functional version of core Lua `#` operator.
+    --- Deterministic, functional version of core Lua `#` operator.
     --
-    -- Respects `__len` metamethod (like Lua 5.2+), otherwise always
-    -- return one less than the lowest integer index with a `nil` value
-    -- in *x*, where the `#` operator implementation might return the
-    -- size of the array part of a table.
+    -- Respects `__len` metamethod (like Lua 5.2+), or else if there is
+    --  a `__tostring` metamethod return the length of the string it
+    -- returns.  Otherwise, always return one less than the lowest
+    -- integer index with a `nil` value in *x*, where the `#` operator
+    -- implementation might return the size of the array part of a table.  
     -- @function len
     -- @param x item to act on
     -- @treturn int the length of *x*
@@ -564,7 +568,7 @@ local function normal (env)
     -- x = {1, 2, 3, nil, 5}
     -- --> 5	3
     -- print (#x, len (x))
-    len = len,
+    len = argscheck ("len", any (T.table, T.stringy)) .. len,
 
     --- Load a string or a function, just like Lua 5.2+.
     -- @function load
