@@ -403,6 +403,60 @@ specify std.normalize:
       expect (f "abc").to_be (3)
 
 
+- describe load:
+  - before:
+      chunky = coroutine.wrap (function ()
+        for _, v in ipairs {"return\n", "math.pi\n"} do
+          coroutine.yield (v)
+        end
+      end)
+
+      f = M.load
+
+  - context with bad arguments:
+    - 'it diagnoses missing argument #1':
+        expect (f ()).to_raise "callable or string expected, got no value"
+    - 'it diagnoses nil-valued argument #1':
+        expect (f (nil)).to_raise "callable or string expected, got nil"
+    - 'it diagnoses argument #1 type not callable or string':
+        expect (f (false)).to_raise "callable or string expected, got boolean"
+        stringy = setmetatable ({}, {__tostring = function () end})
+        expect (f (stringy)).not_to_raise "callable or string expected"
+        funky = setmetatable ({}, {__call = function () end})
+        expect (f (funky)).not_to_raise "callable or string expected"
+    - 'it diagnoses argument #2 type not string':
+        expect (f ("_=1", false)).to_raise "string expected, got boolean"
+
+  - it returns a function:
+      expect (type (f "return 1")).to_be "function"
+  - it compiles a string into a callable function:
+      fn = f "return 42"
+      expect (fn ()).to_be (42)
+  - it compiles a string-like table into a callable function:
+      __tostring = function () return "return math.pi" end
+      stringy = setmetatable ({}, {__tostring = __tostring})
+      fn = f (stringy)
+      expect (fn ()).to_be (math.pi)
+  - it calls a function for successive chunks:
+      fn = f (chunky)
+      expect (fn ()).to_be (math.pi)
+  - it calls a functor for successive chunks:
+      fn = f (setmetatable ({}, {__call  = chunky}))
+      expect (fn ()).to_be (math.pi)
+  - it uses chunk string for error messages by default: |
+      pending "specl release with working load interception"
+      expect (assert (f ("blow"))).to_raise '%[string "blow"%]:1:'
+  - it uses '(load)' for function error messages by default: |
+      pending "specl release with working load interception"
+      expect (assert (f (chunky))).to_raise '%(load%):1:'
+  - it uses chunkname for error messages: |
+      pending "specl release with working load interception"
+      expect (assert (f ("blow", "the chunks"))).
+        to_raise '^%[string "the chunks"%]:1:'
+      expect (assert (f (chunky, "the chunks"))).
+        to_raise '^%[string "the chunks"%]:1:'
+
+
 - describe opairs:
   - before:
       __index = function (t, k)

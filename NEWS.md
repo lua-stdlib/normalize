@@ -14,7 +14,10 @@
     if available), before counting initial non-nil valued integer
     keys.
 
-  - `load` will load a string of valid Lua code, even in Lua 5.1.
+  - `load` will load a string of valid Lua code or call the given
+    function or functor argument to fetch strings, even in Lua 5.1.
+    Note that, for consistency across host implementations, the optional
+    `mode` and `env` arguments are currently **not** supported.
 
   - `str` is a fast specialization of `std.string.render`
     with all helper functions and abstractions inlined.

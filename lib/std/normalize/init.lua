@@ -41,6 +41,7 @@ local _ENV = _.strict {
   getfenv		= getfenv or false,
   getmetatable		= getmetatable,
   load			= load,
+  loadstring		= loadstring or load,
   next			= next,
   pairs			= pairs,
   pcall			= pcall,
@@ -176,8 +177,7 @@ local function len (x)
   local m = getmetamethod (x, "__len")
   if m then
     return m (x)
-  end
-  if getmetamethod (x, "__tostring") then
+  elseif getmetamethod (x, "__tostring") then
     x = tostring (x)
   end
   if type (x) ~= "table" then
@@ -194,11 +194,6 @@ local function len (x)
 end
 
 
-local pack = table_pack or function (...)
-  return { n = select ("#", ...), ...}
-end
-
-
 if not pcall (load, "_=1") then
   local loadfunction = load
   load = function (...)
@@ -207,6 +202,25 @@ if not pcall (load, "_=1") then
     end
     return loadfunction (...)
   end
+end
+
+
+local function normalize_load (chunk, chunkname)
+  local m = getmetamethod (chunk, "__call")
+  if m then
+    chunk = m
+  elseif getmetamethod (chunk, "__tostring") then
+    chunk = tostring (chunk)
+  end
+  if getmetamethod (chunkname, "__tostring") then
+    chunkname = tostring (chunkname)
+  end
+  return load (chunk, chunkname)
+end
+
+
+local pack = table_pack or function (...)
+  return { n = select ("#", ...), ...}
 end
 
 
@@ -575,7 +589,9 @@ local function normal (env)
     -- @tparam string|function ld chunk to load
     -- @string source name of the source of *ld*
     -- @treturn function a Lua function to execute *ld* in global scope.
-    load = load,
+    load = argscheck (
+      "load", any (T.callable, T.stringy), opt (T.stringy)
+    ) .. normalize_load,
 
     --- Ordered `pairs` iterator, respecting `__pairs` metamethod.
     --
