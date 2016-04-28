@@ -609,6 +609,16 @@ local function normal (env)
     -- for k, v in opairs {"b", foo = "c", "a"} do print (k, v) end
     opairs = argscheck ("opairs", T.value) .. opairs,
 
+    --- The fastest pack implementation available.
+    -- @function pack
+    -- @param ... tuple to act on
+    -- @treturn table packed list of *...* values, with field `n` set to
+    --   number of tuple elements (including any explicit `nil` elements)
+    -- @usage
+    -- --> {1, 2, "ax", n = 3}
+    -- pack (("ax1"):find "(%D+)")
+    pack = pack,
+
     --- Package module constants for `package.config` substrings.
     -- @table package
     -- @string dirsep directory separator in path elements
@@ -634,16 +644,6 @@ local function normal (env)
     -- @usage
     -- for k, v in pairs {"a", b = "c", foo = 42} do process (k, v) end
     pairs = argscheck ("pairs", T.table) .. pairs,
-
-    --- The fastest pack implementation available.
-    -- @function pack
-    -- @param ... tuple to act on
-    -- @treturn table packed list of *...* values, with field `n` set to
-    --   number of tuple elements (including any explicit `nil` elements)
-    -- @usage
-    -- --> {1, 2, "ax", n = 3}
-    -- pack (("ax1"):find "(%D+)")
-    pack = pack,
 
     --- Set a function or functor environment.
     --
