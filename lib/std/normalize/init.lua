@@ -461,7 +461,9 @@ local function any (...)
       if ok then
         return true
       end
-      if expected ~= "nil" then
+      if expected == nil then
+	return nil, nil, got
+      elseif expected ~= "nil" then
         buf[#buf + 1] = expected
       end
     end

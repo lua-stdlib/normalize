@@ -201,11 +201,14 @@ specify std.normalize:
     - 'it diagnoses argument #1 type not callable or integer':
         expect (f (false)).
           to_raise "callable or integer expected, got boolean"
+    - 'it diagnoses argument #1 type not integer':
+         expect (f (1.0001)).to_raise "number has no integer representation"
+         expect (f '1.0001').to_raise "number has no integer representation"
 
   - it returns a table:
       expect (type (f ())).to_be "table"
       expect (type (f (0))).to_be "table"
-      expect (type (f (1))).to_be "table"
+      expect (type (f '1')).to_be "table"
       expect (type (f (f))).to_be "table"
 
   - context when _DEBUG.argcheck is true:
