@@ -455,6 +455,14 @@ specify std.normalize:
         to_raise '^%[string "the chunks"%]:1:'
       expect (assert (f (chunky, "the chunks"))).
         to_raise '^%[string "the chunks"%]:1:'
+  - it supports string-like chunkname: |
+      pending "specl release with working load interception"
+      __tostring = function () return "teh chunks" end
+      chunkname = setmetatable ({}, {__tostring = __tostring})
+      expect (assert (f ("blow", chunkname))).
+        to_raise '^%[string "teh chunks"%]:1:'
+      expect (assert (f (chunky, chunkname))).
+        to_raise '^%[string "teh chunks"%]:1:'
 
 
 - describe opairs:
