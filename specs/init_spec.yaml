@@ -587,6 +587,108 @@ specify std.normalize:
 
 
 - describe setfenv:
+  - before:
+      f = M.setfenv
+
+  - context with bad arguments:
+    - 'it diagnoses missing argument #1':
+        expect (f ()).to_raise "callable or integer expected, got no value"
+    - 'it diagnoses nil-valued argument #1':
+        expect (f (nil)).to_raise "callable or integer expected, got nil"
+    - 'it diagnoses argument #1 type not callable or number':
+        expect (f (false)).
+          to_raise "callable or integer expected, got boolean"
+    - 'it diagnoses argument #1 type not integer':
+        expect (f (2/3)).
+          to_raise "number has no integer representation"
+        expect (f '2.3').
+          to_raise "number has no integer representation"
+    - 'it diagnoses missing argument #2':
+        expect (f (0)).to_raise "table expected, got no value"
+    - 'it diagnoses nil-valued argument #2':
+        expect (f (0, nil)).to_raise "table expected, got nil"
+    - 'it diagnoses argument #2 type not table':
+        expect (f (0, boolean)).to_raise "table expected, got nil"
+
+  - it returns nothing after setting the global environment:
+      expect (luaproc [[
+        setfenv = require "std.normalize".setfenv
+        print (tostring (setfenv (0, _G)))
+      ]]).to_succeed_with "nil\n"
+  - it returns the actioned function otherwise:
+      fn = function (env) return f (1, env), nil end
+      expect (fn {}).to_be (fn)
+      expect (f (fn, {})).to_be (fn)
+
+  - context when _DEBUG.argcheck is true:
+    - before:
+        fn = function (env) return f (1, env), nil end
+        fnenv = {f = f}
+
+    - it sets the environment of a function:
+        r = f (fn, fnenv)
+        expect (fn {}).to_be (r)
+    - it sets the environment of a functor:
+        ftor = setmetatable ({}, {__call = fn})
+        r = f (ftor, fnenv)
+        expect (ftor {}).to_be (r)
+    - it sets the global environment: |
+        pending "what is this supposed to do, anyway?"
+        expect (luaproc [[
+          local os, print, setfenv = os, print, require "std.normalize".setfenv
+          _G.x = "ohnoes"
+          setfenv (0, {x = "woo!"})
+          print (_G.x)
+          os.exit (_G.x == "woo!" and 0 or 1)
+        ]]).to_succeed_with "woo!\n"
+    - it sets the callers environment:
+        fn = function (n, env) return f (n, env), nil end
+        expect (fn (1, fnenv)).to_be (fn)
+        gn = function (n, env) return fn (n, env), nil end
+        expect (gn (1, fnenv)).to_be (fn)
+        expect (gn (2, {fn = fn})).to_be (gn)
+
+  - context when _DEBUG.argcheck is false:
+    - before:
+        preamble = [[
+          _DEBUG = { argcheck = false }
+          M = require "std.normalize"
+          f = M.setfenv
+          fn = function (env) return f (1, env), nil end
+          fnenv = {f = f}
+        ]]
+
+    - it sets the environment of a function:
+        expect (luaproc (preamble .. [[
+          r = f (fn, fnenv)
+          os.exit (fn {} == r and 0 or 1)
+        ]])).to_succeed_with ""
+    - it sets the environment of a functor:
+        expect (luaproc (preamble .. [[
+          ftor = setmetatable ({}, {__call = fn})
+          r = f (ftor, fnenv)
+          os.exit (ftor {} == r and 0 or 1)
+        ]])).to_succeed_with ""
+    - it sets the global environment: |
+        pending "what is this supposed to do, anyway?"
+        expect (luaproc [[
+          local os, print, setfenv = os, print, require "std.normalize".setfenv
+          _G.x = "ohnoes"
+          setfenv (0, {x = "woo!"})
+          print (_G.x)
+          os.exit (_G.x == "woo!" and 0 or 1)
+        ]]).to_succeed_with "woo!\n"
+    - it sets the callers environment:
+        expect (luaproc (preamble .. [[
+          fn = function (n, env) return f (n, env), nil end
+          os.exit (fn (1, fnenv) == fn and 0 or 1)
+        ]])).to_succeed_with ""
+        expect (luaproc (preamble .. [[
+          fn = function (n, env) return f (n, env), nil end
+          gn = function (n, env) return fn (n, env), nil end
+          print (gn (1, fnenv) == fn)
+          os.exit (gn (2, {fn = fn}) == gn and 0 or 1)
+        ]])).to_succeed_with "true\n"
 
 
 - describe str:

@@ -257,36 +257,33 @@ local normalize_setfenv
 if debug_setfenv then
 
   normalize_setfenv = function (fn, env)
-    fn = fn or 1
-
-    local type_fn = type (fn)
-    if type_fn == "table" then
+    local n = tonumber (fn or 1)
+    if n then
+      if n > 0 then
+	n = n + 1 + ARGCHECK_FRAME
+      end
+      return setfenv (n, env), nil
+    end
+    if type (fn) ~= "function" then
       fn = (getmetatable (fn) or {}).__call or fn
-    elseif type_fn == "number" and fn > 0 then
-       fn = fn + 1 + ARGCHECK_FRAME
     end
-
-    if type (fn) == "function" then
-      return debug_setfenv (fn, env)
-    end
-    return setfenv (fn, env), nil
+    return debug_setfenv (fn, env)
   end
 
 else
 
   -- Thanks to http://lua-users.org/lists/lua-l/2010-06/msg00313.html
   normalize_setfenv = function (fn, env)
-    fn = fn or 1
-
-    local type_fn = type (fn)
-    if type_fn == "table" then
-      fn = (getmetatable (fn) or {}).__call or fn
-    elseif type_fn == "number" then
-      if fn > 0 then
-	fn = fn + 1 + ARGCHECK_FRAME
+    local n = tonumber (fn or 1)
+    if n then
+      if n > 0 then
+	n = n + 1 + ARGCHECK_FRAME
       end
-      fn = debug_getinfo (fn, "f").func
+      fn = debug_getinfo (n, "f").func
+    elseif type (fn) ~= "function" then
+      fn = (getmetatable (fn) or {}).__call or fn
     end
+
     local up, name = 0
     repeat
       up = up + 1
@@ -296,7 +293,7 @@ else
       debug_upvaluejoin (fn, up, function () return name end, 1)
       debug_setupvalue (fn, up, env)
     end
-    return fn
+    return n ~= 0 and fn or nil
   end
 
 end
@@ -653,7 +650,9 @@ local function normal (env)
     -- @treturn function function acted upon
     -- @usage
     -- function clearenv (fn) return setfenv (fn, {}) end
-    setfenv = normalize_setfenv,
+    setfenv = argscheck (
+      "setfenv", any (T.integer, T.callable), T.table
+    ) .. normalize_setfenv,
 
     --- Return a compact stringified representation of argument.
     -- @function str
