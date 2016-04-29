@@ -96,50 +96,45 @@ local normalize_getfenv
 if debug_getfenv then
 
   normalize_getfenv = function (fn)
-    fn = fn or 1
+    local n = tonumber (fn or 1)
+    if n then
+      if n > 0 then
+        -- Adjust for this function's stack frame, if fn is non-zero.
+        n = n + 1 + ARGCHECK_FRAME
+      end
 
-    local type_fn = type (fn)
-    if type (fn) == "table" then
+      -- Return an additional nil result to defeat tail call elimination
+      -- which would remove a stack frame and break numeric *fn* count.
+      return getfenv (n), nil
+    end
+
+    if type (fn) ~= "function" then
       -- Unwrap functors:
       -- No need to recurse because Lua doesn't support nested functors.
       -- __call can only (sensibly) be a function, so no need to adjust
       -- stack frame offset either.
       fn = (getmetatable (fn) or {}).__call or fn
-
-    elseif type_fn == "number" and fn > 0 then
-      -- Adjust for this function's stack frame, if fn is non-zero.
-      fn = fn + 1 + ARGCHECK_FRAME
     end
 
-    if type (fn) == "function" then
-      -- In Lua 5.1, only debug.getfenv works on C functions; but it
-      -- does not work on stack counts.
-      return debug_getfenv (fn)
-    end
-
-    -- Return an additional nil result to defeat tail call elimination
-    -- which would remove a stack frame and break numeric *fn* count.
-    return getfenv (fn), nil
+    -- In Lua 5.1, only debug.getfenv works on C functions; but it
+    -- does not work on stack counts.
+    return debug_getfenv (fn)
   end
 
 else
 
   -- Thanks to http://lua-users.org/lists/lua-l/2010-06/msg00313.html
   normalize_getfenv = function (fn)
-    fn = fn or 1
-
     if fn == 0 then
       return _G
     end
-    local type_fn = type (fn)
-    if type_fn == "table" then
+    local n = tonumber (fn or 1)
+    if n then
+      fn = debug_getinfo (n + 1 + ARGCHECK_FRAME, "f").func
+    elseif type (fn) ~= "function" then
       fn = (getmetatable (fn) or {}).__call or fn
-    elseif type_fn == "number" then
-      if fn > 0 then
-	fn = fn + 1 + ARGCHECK_FRAME
-      end
-      fn = debug_getinfo (fn, "f").func
     end
+
     local name, env
     local up = 0
     repeat
@@ -576,7 +571,7 @@ local function normal (env)
     --  a `__tostring` metamethod return the length of the string it
     -- returns.  Otherwise, always return one less than the lowest
     -- integer index with a `nil` value in *x*, where the `#` operator
-    -- implementation might return the size of the array part of a table.  
+    -- implementation might return the size of the array part of a table.
     -- @function len
     -- @param x item to act on
     -- @treturn int the length of *x*
