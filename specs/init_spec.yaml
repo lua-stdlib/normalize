@@ -240,6 +240,7 @@ specify std.normalize:
   - context when _DEBUG.argcheck is false:
     - before:
         preamble = [[
+          _DEBUG = { argcheck = false }
           M = require "std.normalize"
           f = M.getfenv
           fn = function (n) return getfenv (n), nil end
