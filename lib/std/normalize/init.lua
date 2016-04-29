@@ -499,7 +499,6 @@ local function normal (env)
     -- @string[opt] extramsg additional text to append to message inside
     --   parentheses
     -- @int[opt=1] level call stack level to blame for the error
-    -- @see resulterror
     -- @usage
     -- local function slurp (file)
     --   local h, err = input_handle (file)
