@@ -65,12 +65,12 @@ local _ENV = _.strict {
   package_config	= package.config,
   string_match		= string.match,
   table_concat		= table.concat,
-  table_pack		= table.pack or pack or false,
   table_sort		= table.sort,
   table_unpack		= table.unpack or unpack,
 
   argerror		= _.argerror,
   argscheck		= _.argscheck,
+  pack			= _.pack,
 }
 local ARGCHECK_FRAME	= _.ARGCHECK_FRAME
 local strict		= _.strict
@@ -211,11 +211,6 @@ local function normalize_load (chunk, chunkname)
     chunkname = tostring (chunkname)
   end
   return load (chunk, chunkname)
-end
-
-
-local pack = table_pack or function (...)
-  return { n = select ("#", ...), ...}
 end
 
 
@@ -603,11 +598,12 @@ local function normal (env)
     -- for k, v in opairs {"b", foo = "c", "a"} do print (k, v) end
     opairs = argscheck ("opairs", T.value) .. opairs,
 
-    --- The fastest pack implementation available.
+    --- Return a list of given arguments, with field `n` set to the length.
     -- @function pack
     -- @param ... tuple to act on
     -- @treturn table packed list of *...* values, with field `n` set to
     --   number of tuple elements (including any explicit `nil` elements)
+    -- @see unpack
     -- @usage
     -- --> {1, 2, "ax", n = 3}
     -- pack (("ax1"):find "(%D+)")
@@ -669,6 +665,7 @@ local function normal (env)
     -- @int[opt=1] i first index to unpack
     -- @int[opt=len(t)] j last index to unpack
     -- @return ... values of numeric indices of *t*
+    -- @see pack
     -- @usage
     -- return unpack (results_table)
     unpack = argscheck (

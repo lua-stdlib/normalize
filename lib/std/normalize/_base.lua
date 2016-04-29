@@ -22,7 +22,7 @@ local _ENV = {
 
   string_format	= string.format,
   table_concat	= table.concat,
-  table_pack	= table.pack or pack or false,
+  table_pack	= table.pack,
   table_unpack	= table.unpack or unpack,
 }
 setfenv (1, _ENV)
@@ -199,6 +199,10 @@ return {
   --     return table.unpack (t, i or 1, j or #t)
   --   end
   argscheck = argscheck,
+
+  --- Return a list of given arguments, with field `n` set to the length.
+  -- @see std.normalize.pack
+  pack = pack,
 
   --- Set a module environment, using std.strict if available.
   --
