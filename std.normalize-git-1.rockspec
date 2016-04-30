@@ -28,6 +28,7 @@ build = {
   modules = {
     ["std.normalize"]		= "lib/std/normalize/init.lua",
     ["std.normalize._base"]	= "lib/std/normalize/_base.lua",
+    ["std.normalize._debug"]	= "lib/std/normalize/_debug.lua",
     ["std.normalize.version"]	= "lib/std/normalize/version.lua",
   },
 }

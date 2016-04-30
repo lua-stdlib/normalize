@@ -8,9 +8,6 @@
 ]]
 
 local _ENV = {
-  _G = {
-    _DEBUG	= rawget (_G, "_DEBUG"),
-  },
   error		= error,
   next		= next,
   pcall		= pcall,
@@ -24,6 +21,8 @@ local _ENV = {
   table_concat	= table.concat,
   table_pack	= table.pack,
   table_unpack	= table.unpack or unpack,
+
+  _DEBUG	= require "std.normalize._debug",
 }
 setfenv (1, _ENV)
 
@@ -62,36 +61,6 @@ end
 
 local argscheck, strict
 do
-  local _DEBUG
-
-  local ok, debug_init	= pcall (require, "std.debug_init")
-  if ok then
-    -- Use the _DEBUG table from `std.debug_init`, if installed.
-    _DEBUG		= debug_init._DEBUG
-  else
-    local function choose (t)
-      for k, v in next, t do
-        if _G._DEBUG == false then
-          t[k] = v.fast
-        elseif _G._DEBUG == nil then
-          t[k] = v.default
-        elseif type (_G._DEBUG) ~= "table" then
-          t[k] = v.safe
-        elseif _G._DEBUG[k] ~= nil then
-          t[k] = _G._DEBUG[k]
-        else
-          t[k] = v.default
-        end
-      end
-      return t
-    end
-
-    _DEBUG = choose {
-      argcheck = {default = true, safe = true, fast = false},
-      strict   = {default = true, safe = true, fast = false},
-    }
-  end
-
   -- If strict mode is required, use "std.strict" if we have it.
   if _DEBUG.strict then
     -- `require "std.strict"` will get the old stdlib implementation of
