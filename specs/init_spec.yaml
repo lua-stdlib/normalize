@@ -845,6 +845,12 @@ specify std.normalize:
       ok, r = f (fail, errh, 'a', 'b', 'c')
       expect (ok).to_be (false)
       expect (r).to_contain ': fail abc'
+  - it propagates nil arguments correctly:
+      fail = function (...) error (select ("#", ...)) end
+      _, r = f (fail, tostring)
+      expect (r).to_match ' 0$'
+      _, r = f (fail, tostring, nil, nil, nil)
+      expect (r).to_match ' 3$'
 
 
 - describe version:
