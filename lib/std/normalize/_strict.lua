@@ -1,0 +1,71 @@
+--[[
+ Depending on whether `std.strict` is installed, and what the value of
+ _DEBUG is in the global environment, return a function for setting up
+ a strict lexical environment for the caller.
+
+ @module std.normalize._strict
+]]
+
+local _ENV = {
+  pcall		= pcall,
+  require	= require,
+  setfenv	= setfenv or function () end,
+  setmetatable	= setmetatable,
+
+  _DEBUG	= require "std.normalize._debug",
+}
+setfenv (1, _ENV)
+
+
+
+--[[ =============== ]]--
+--[[ Implementation. ]]--
+--[[ =============== ]]--
+
+
+-- If strict mode is required, use "std.strict" if we have it.
+local strict
+if _DEBUG.strict then
+  -- `require "std.strict"` will get the old stdlib implementation of
+  -- strict, which doesn't support environment tables :(
+  ok, strict = pcall (require, "std.strict.init")
+  if not ok then
+    strict = false
+  end
+end
+
+
+--[[ ================= ]]--
+--[[ Public Interface. ]]--
+--[[ ================= ]]--
+
+
+return setmetatable ({
+  --- Set a module environment, using std.strict if available.
+  --
+  -- Either "std.strict" when available, otherwise a (Lua 5.1 compatible)
+  -- function to set the specified module environment.
+  -- @function strict
+  -- @tparam table env module environment table
+  -- @treturn table *env*, which must be assigned to `_ENV`
+  -- @usage
+  --   local _ENV = require "std.normalize._strict".strict {}
+  strict = strict or function (env)
+    setfenv (2, env)
+    return env
+  end,
+}, {
+  --- Module Metamethods
+  -- @section modulemetamethods
+
+  --- Set a module environment, using std.strict if available.
+  -- @function strict:__call
+  -- @tparam table env module environment table
+  -- @treturn table *env*, which must be assigned to `_ENV`
+  -- @usage
+  --   local _ENV = require "std.normalize._strict" {}
+  __call = function (_, env)
+    setfenv (2, env)
+    return env
+  end,
+})

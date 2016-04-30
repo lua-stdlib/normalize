@@ -59,18 +59,8 @@ local pack = table_pack or function (...)
 end
 
 
-local argscheck, strict
+local argscheck
 do
-  -- If strict mode is required, use "std.strict" if we have it.
-  if _DEBUG.strict then
-    -- `require "std.strict"` will get the old stdlib implementation of
-    -- strict, which doesn't support individual environment tables :(
-    ok, strict		= pcall (require, "std.strict.init")
-    if not ok then
-      strict		= false
-    end
-  end
-
   -- Set argscheck according to whether argcheck is required.
   if _DEBUG.argcheck then
 
@@ -172,18 +162,4 @@ return {
   --- Return a list of given arguments, with field `n` set to the length.
   -- @see std.normalize.pack
   pack = pack,
-
-  --- Set a module environment, using std.strict if available.
-  --
-  -- Either "std.strict" when available, otherwise a (Lua 5.1 compatible)
-  -- function to set the specified module environment.
-  -- @function strict
-  -- @tparam table env module environment table
-  -- @treturn table *env*, which must be assigned to `_ENV`
-  -- @usage
-  --   local _ENV = require "std.normalize._base".strict {}
-  strict = strict or function (env)
-    setfenv (2, env)
-    return env
-  end
 }

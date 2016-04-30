@@ -34,8 +34,9 @@
 
 
 local _			= require "std.normalize._base"
+local strict		= require "std.normalize._strict"
 
-local _ENV = _.strict {
+local _ENV = strict {
   _G			= _G,
   _VERSION		= _VERSION,
   getfenv		= getfenv or false,
@@ -73,7 +74,6 @@ local _ENV = _.strict {
   pack			= _.pack,
 }
 local ARGCHECK_FRAME	= _.ARGCHECK_FRAME
-local strict		= _.strict
 _ = nil
 
 
@@ -703,7 +703,7 @@ return setmetatable (normal {}, {
   -- @usage
   -- local _ENV = require "std.normalize" {}
   __call = function (_, env)
-    return strict (normal (env)), nili
+    return strict (normal (env)), nil
   end,
 
   --- Lazy loading of normalize modules.
