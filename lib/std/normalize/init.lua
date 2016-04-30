@@ -681,7 +681,7 @@ local function normal (env)
     -- @treturn[1] string error message
     -- @treturn[2] boolean `true` when `f (...)` succeeded
     -- @return ... all return values from *f* follow
-    xpcall = xpcall,
+    xpcall = argscheck ("xpcall", T.callable, T.callable) .. xpcall,
   }
   return tree_merge (normalized, env)
 end

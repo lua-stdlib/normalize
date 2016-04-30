@@ -797,6 +797,56 @@ specify std.normalize:
       expect (f (t, 100, 199)).to_equal {n=100}
 
 
+- describe xpcall:
+  - before:
+      errh = function (...) return 'errh ' .. table.concat {...} end
+      fail = function (...) error ('fail ' .. table.concat {...}) end
+      id = function (...) return ... end
+
+      f = M.xpcall
+
+  - context with bad arguments:
+    - 'it diagnoses missing argument #1': |
+        expect (f ()).to_raise
+          "bad argument #1 to 'xpcall' (callable expected, got no value)"
+    - 'it diagnoses nil-valued argument #1': |
+        expect (f (nil)).to_raise
+          "bad argument #1 to 'xpcall' (callable expected, got nil)"
+    - 'it diagnoses argument #1 type not function': |
+        expect (f {}).to_raise
+          "bad argument #1 to 'xpcall' (callable expected, got table)"
+    - 'it diagnoses missing argument #2': |
+        expect (f (id)).to_raise
+          "bad argument #2 to 'xpcall' (callable expected, got no value)"
+    - 'it diagnoses nil-valued argument #2': |
+        expect (f (id, nil)).to_raise
+          "bad argument #2 to 'xpcall' (callable expected, got nil)"
+    - 'it diagnoses argument #2 type not function': |
+        expect (f (id, {})).to_raise
+          "bad argument #2 to 'xpcall' (callable expected, got table)"
+
+  - it returns true if the protected call succeeds:
+      expect (f (id, id)).to_be (true)
+  - it returns false if the protected call errors:
+      expect (f (fail, id)).to_be (false)
+  - it calls the handler if the protected call errors:
+      t = {"MAGIC"}
+      ok, r = f (error, function () return t end)
+      expect (ok).to_be (false)
+      expect (r).to_be (t)
+  - it passes the protected call failure object to the handler:
+      t = {"MAGIC"}
+      fail = function () error (t) end
+      errh = function (obj) return obj end
+      ok, r = f (fail, errh)
+      expect (ok).to_be (false)
+      expect (r).to_be (t)
+  - it passes additional args to the protected call: |
+      ok, r = f (fail, errh, 'a', 'b', 'c')
+      expect (ok).to_be (false)
+      expect (r).to_contain ': fail abc'
+
+
 - describe version:
   - before:
       x = M.version
