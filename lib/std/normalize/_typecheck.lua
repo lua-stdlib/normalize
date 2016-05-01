@@ -16,19 +16,24 @@ local _	= {
 
 local _ENV = strict {
   error		= error,
+  ipairs	= ipairs,
   next		= next,
   pcall		= pcall,
   require	= require,
   select	= select,
   setfenv	= setfenv or function () end,
   setmetatable	= setmetatable,
+  tonumber	= tonumber,
   type		= type,
 
+  math_floor	= math.floor,
   string_format	= string.format,
   table_concat	= table.concat,
+  table_sort	= table.sort,
   table_unpack	= table.unpack or unpack,
 
   _DEBUG	= require "std.normalize._debug",
+  getmetamethod	= _.base.getmetamethod,
   pack		= _.base.pack,
 }
 _ = nil
@@ -131,10 +136,137 @@ do
 end
 
 
+
+--[[ ================= ]]--
+--[[ Type annotations. ]]--
+--[[ ================= ]]--
+
+
+local function fail (expected, argu, i)
+  local got = type (argu[i])
+  if i > argu.n then
+    got = "no value"
+  end
+  return nil, expected, "got " .. got
+end
+
+
+local function check (expected, argu, i, predicate)
+  local arg = argu[i]
+  if predicate (arg) then
+    return true
+  end
+  return fail (expected, argu, i)
+end
+
+
+local types = {
+  -- Accept argu[i].
+  accept = function ()
+    return true
+  end,
+
+  -- Accept function valued or `__call` metamethod carrying argu[i].
+  callable = function (argu, i)
+    return check ("callable", argu, i, function (x)
+      return type (x) == "function" or getmetamethod (x, "__call")
+    end)
+  end,
+
+  -- Accept argu[i] if it is an integer valued number, or can be
+  -- converted to one by `tonumber` (or nil with `.opt` variant).
+  integer = function (argu, i)
+    local value = tonumber (argu[i])
+    if type (value) ~= "number" then
+      return fail ("integer", argu, i)
+    end
+    if value - math_floor (value) > 0.0 then
+      return nil, nil, "number has no integer representation"
+    end
+    return true
+  end,
+
+  -- Accept nil valued argu[i].
+  none = function (argu, i)
+    return check ("nil", argu, i, function (x)
+      return x == nil
+    end)
+  end,
+
+  -- Accept string valued or `__string` metamethod carrying argu[i].
+  stringy = function (argu, i)
+    return check ("string", argu, i, function (x)
+      return type (x) == "string" or getmetamethod (x, "__tostring")
+    end)
+  end,
+
+  -- Accept table valued argu[i].
+  table = function (argu, i)
+    return check ("table", argu, i, function (x)
+      return type (x) == "table"
+    end)
+  end,
+
+  -- Accept non-nil valued argu[i].
+  value = function (argu, i)
+    if argu[i] then
+      return true
+    end
+    return nil, "value expected", nil
+  end,
+}
+
+
+local function any (...)
+  local fns = {...}
+  return function (argu, i)
+    local buf, ok, expected, got = {}
+    for _, predicate in ipairs (fns) do
+      ok, expected, got = predicate (argu, i)
+      if ok then
+        return true
+      end
+      if expected == nil then
+	return nil, nil, got
+      elseif expected ~= "nil" then
+        buf[#buf + 1] = expected
+      end
+    end
+    if #buf == 0 then
+      return nil, nil, got
+    elseif #buf > 1 then
+      table_sort (buf)
+      buf[#buf -1], buf[#buf] = buf[#buf -1] .. " or " .. buf[#buf], nil
+    end
+    return nil, table_concat (buf, ", "), got
+  end
+end
+
+
+local function opt (...)
+  return any (types.none, ...)
+end
+
+
+
 return {
   --- Add this to any stack frame offsets when argchecks are in force.
   -- @int ARGCHECK_FRAME
   ARGCHECK_FRAME = ARGCHECK_FRAME,
+
+  --- Call each argument in turn until one returns non-nil.
+  --
+  -- This function satisfies the @{ArgCheck} interface in order to be
+  -- useful as an argument to @{argscheck} when one of several other
+  -- @{ArgCheck} functions can satisfy the requirement for a given
+  -- argument.
+  -- @function any
+  -- @tparam ArgCheck ... type predicate callables
+  -- @treturn ArgCheck a new function that calls all passed
+  --   predicates, and combines error messages if all fail
+  -- @usage
+  --   len = argscheck ("len", any (types.table, types.string)) .. len
+  any = any,
 
   --- Raise a bad argument error.
   -- @see std.normalize.argerror
@@ -160,4 +292,51 @@ return {
   --     return table.unpack (t, i or 1, j or #t)
   --   end
   argscheck = argscheck,
+
+  --- Create an @{ArgCheck} predicate for an optional argument.
+  --
+  -- This function satisfies the @{ArgCheck} interface in order to be
+  -- useful as an argument to @{argscheck} when a particular argument
+  -- is optional.
+  -- @function opt
+  -- @tparam ArgCheck ... type predicate callables
+  -- @treturn ArgCheck a new function that calls all passed
+  --   predicates, and combines error messages if all fail
+  -- @usage
+  --   getfenv = argscheck (
+  --     "getfenv", opt (types.integer, types.callable)
+  --   ) .. getfenv
+  opt = opt,
+
+  --- A collection of @{ArgCheck} functions used by `normalize` APIs.
+  -- @table types
+  -- @tfield ArgCheck accept always succeeds
+  -- @tfield ArgCheck callable accept a function or functor
+  -- @tfield ArgCheck integer accept integer valued number
+  -- @tfield ArgCheck none accept only `nil`
+  -- @tfield ArgCheck stringy accept a string or `__tostring` metamethod
+  --   bearing object
+  -- @tfield ArgCheck table accept any table
+  -- @tfield ArgCheck value accept any non-`nil` value
+  types = types,
 }
+
+
+
+--- Types
+-- @section types
+
+--- Signature of an @{argscheck} predicate callable.
+-- @function ArgCheck
+-- @tparam table argu a packed table (including `n` field) of all arguments
+-- @int index into *argu* for argument to action
+-- @return[1] non-nil if one of the callable arguments succeeded
+-- @return[2] nil if all of the callable arguments failed
+-- @treturn[2] string the expected types returned by failed calls
+-- @treturn[2] string a description of the failed predicate argument
+-- @return[3] nil otherwise
+-- @treturn[3] nil if expected type list is not relevant to failure
+--   description
+-- @treturn[3] string error message
+-- @usage
+--   len = argscheck ("len", any (types.table, types.string)) .. len

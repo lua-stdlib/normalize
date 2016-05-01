@@ -8,8 +8,11 @@
 local strict	= require "std.normalize._strict"
 
 local _ENV = strict {
+  getmetatable	= getmetatable,
   select	= select,
   setfenv	= setfenv or function () end,
+  tostring	= tostring,
+  type		= type,
 
   table_pack	= table.pack,
 }
@@ -19,6 +22,17 @@ local _ENV = strict {
 --[[ =============== ]]--
 --[[ Implementation. ]]--
 --[[ =============== ]]--
+
+
+local function getmetamethod (x, n)
+  local m = (getmetatable (x) or {})[tostring (n)]
+  if type (m) == "function" then
+    return m
+  end
+  if type ((getmetatable (m) or {}).__call) == "function" then
+    return m
+  end
+end
 
 
 local pack = table_pack or function (...)
@@ -33,6 +47,10 @@ end
 
 
 return {
+  --- Return named metamethod, if callable, otherwise `nil`.
+  -- @see std.normalize.getmetamethod
+  getmetamethod = getmetamethod,
+
   --- Return a list of given arguments, with field `n` set to the length.
   -- @see std.normalize.pack
   pack = pack,

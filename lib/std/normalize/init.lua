@@ -52,7 +52,6 @@ local _ENV = strict {
   pcall			= pcall,
   rawset		= rawset,
   require		= require,
-  select		= select,
   setfenv		= setfenv or false,
   setmetatable		= setmetatable,
   tonumber		= tonumber,
@@ -66,17 +65,20 @@ local _ENV = strict {
   debug_setfenv		= debug.setfenv or false,
   debug_setupvalue	= debug.setupvalue,
   debug_upvaluejoin	= debug.upvaluejoin,
-  math_floor		= math.floor,
   package_config	= package.config,
   string_match		= string.match,
   table_concat		= table.concat,
   table_sort		= table.sort,
   table_unpack		= table.unpack or unpack,
 
+  getmetamethod		= _.base.getmetamethod,
   pack			= _.base.pack,
   ARGCHECK_FRAME	= _.typecheck.ARGCHECK_FRAME,
+  any			= _.typecheck.any,
   argerror		= _.typecheck.argerror,
   argscheck		= _.typecheck.argscheck,
+  opt			= _.typecheck.opt,
+  types			= _.typecheck.types,
 }
 _ = nil
 
@@ -151,17 +153,6 @@ else
     return env
   end
 
-end
-
-
-local function getmetamethod (x, n)
-  local m = (getmetatable (x) or {})[tostring (n)]
-  if type (m) == "function" then
-    return m
-  end
-  if type ((getmetatable (m) or {}).__call) == "function" then
-    return m
-  end
 end
 
 
@@ -369,117 +360,11 @@ end
 
 
 --[[ ================= ]]--
---[[ Type annotations. ]]--
---[[ ================= ]]--
-
-
-
-local function fail (expected, argu, i)
-  local got = type (argu[i])
-  if i > argu.n then
-    got = "no value"
-  end
-  return nil, expected, "got " .. got
-end
-
-local function check (expected, argu, i, predicate)
-  local arg = argu[i]
-  if predicate (arg) then
-    return true
-  end
-  return fail (expected, argu, i)
-end
-
-local T = {
-  -- Accept argu[i] if it is an integer valued number, or can be
-  -- converted to one by `tonumber` (or nil with `.opt` variant).
-  integer = function (argu, i)
-    local value = tonumber (argu[i])
-    if type (value) ~= "number" then
-      return fail ("integer", argu, i)
-    end
-    if value - math_floor (value) > 0.0 then
-      return nil, nil, "number has no integer representation"
-    end
-    return true
-  end,
-
-  -- Accept argu[i].
-  accept = function ()
-    return true
-  end,
-
-  -- Accept function valued or `__call` metamethod carrying argu[i].
-  callable = function (argu, i)
-    return check ("callable", argu, i, function (x)
-      return type (x) == "function" or getmetamethod (x, "__call")
-    end)
-  end,
-
-  -- Accept nil valued argu[i].
-  none = function (argu, i)
-    return check ("nil", argu, i, function (x)
-      return x == nil
-    end)
-  end,
-
-  -- Accept string valued or `__string` metamethod carrying argu[i].
-  stringy = function (argu, i)
-    return check ("string", argu, i, function (x)
-      return type (x) == "string" or getmetamethod (x, "__tostring")
-    end)
-  end,
-
-  -- Accept table valued argu[i].
-  table = function (argu, i)
-    return check ("table", argu, i, function (x)
-      return type (x) == "table"
-    end)
-  end,
-
-  -- Accept non-nil valued argu[i].
-  value = function (argu, i)
-    if argu[i] then
-      return true
-    end
-    return nil, "value expected", nil
-  end,
-}
-
-local function any (...)
-  local fns = {...}
-  return function (argu, i)
-    local buf, ok, expected, got = {}
-    for _, predicate in ipairs (fns) do
-      ok, expected, got = predicate (argu, i)
-      if ok then
-        return true
-      end
-      if expected == nil then
-	return nil, nil, got
-      elseif expected ~= "nil" then
-        buf[#buf + 1] = expected
-      end
-    end
-    if #buf == 0 then
-      return nil, nil, got
-    elseif #buf > 1 then
-      table_sort (buf)
-      buf[#buf -1], buf[#buf] = buf[#buf -1] .. " or " .. buf[#buf], nil
-    end
-    return nil, table_concat (buf, ", "), got
-  end
-end
-
-local function opt (...)
-  return any (T.none, ...)
-end
-
-
-
---[[ ================= ]]--
 --[[ Public Interface. ]]--
 --[[ ================= ]]--
+
+
+local T = types
 
 
 local function tree_merge (dst, src)
