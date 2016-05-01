@@ -33,8 +33,12 @@
 ]]
 
 
-local _			= require "std.normalize._base"
 local strict		= require "std.normalize._strict"
+
+local _ = {
+  base			= require "std.normalize._base",
+  typecheck		= require "std.normalize._typecheck",
+}
 
 local _ENV = strict {
   _G			= _G,
@@ -69,12 +73,15 @@ local _ENV = strict {
   table_sort		= table.sort,
   table_unpack		= table.unpack or unpack,
 
-  argerror		= _.argerror,
-  argscheck		= _.argscheck,
-  pack			= _.pack,
+  pack			= _.base.pack,
+  ARGCHECK_FRAME	= _.typecheck.ARGCHECK_FRAME,
+  argerror		= _.typecheck.argerror,
+  argscheck		= _.typecheck.argscheck,
 }
-local ARGCHECK_FRAME	= _.ARGCHECK_FRAME
 _ = nil
+
+
+local ARGCHECK_FRAME	= ARGCHECK_FRAME
 
 
 

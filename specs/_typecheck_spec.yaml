@@ -8,7 +8,7 @@
 #     access to after calling `_strict`, because at that point
 #     the execution environment is obliterated...
 #  2. But, we can't capture `require` blindly, because some examples
-#     rely on changing the global `require` used inside the `_base`
+#     rely on changing the global `require` used inside the `_typecheck`
 #     implementation... and yet other examples call `require` after
 #     calling `_strict` (and obliterating the environment).
 #
@@ -16,11 +16,11 @@
 # they exercise breaks in surprising ways at first!
 
 before: |
-  this_module = "std.normalize._base"
+  this_module = "std.normalize._typecheck"
 
   M = require (this_module)
 
-specify std.normalize._base:
+specify std.normalize._typecheck:
 - context when required:
   - it does not touch the global table:
       expect (show_apis {added_to="_G", by=this_module}).
@@ -30,7 +30,7 @@ specify std.normalize._base:
 - describe argscheck:
   - before: |
       preamble = [[
-        argscheck = require "std.normalize._base".argscheck
+        argscheck = require "std.normalize._typecheck".argscheck
         function inner () return "MAGIC" end
         types = {
           woot = function () return true end,
