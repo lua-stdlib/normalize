@@ -66,6 +66,7 @@ local _ENV = strict {
   debug_setupvalue	= debug.setupvalue,
   debug_upvaluejoin	= debug.upvaluejoin,
   package_config	= package.config,
+  string_gsub		= string.gsub,
   string_match		= string.match,
   table_concat		= table.concat,
   table_sort		= table.sort,
@@ -367,227 +368,412 @@ end
 local T = types
 
 
-local function tree_merge (dst, src)
-  for k, v in next, src do
-    if type (v) ~= "table" or type (dst[k]) ~= "table" then
-      dst[k] = v
-    else
-      dst[k] = tree_merge (dst[k] or {}, v)
+local M = {
+  --- Raise a bad argument error.
+  -- Equivalent to luaL_argerror in the Lua C API. This function does not
+  -- return.  The `level` argument behaves just like the core `error`
+  -- function.
+  -- @function argerror
+  -- @string name function to callout in error message
+  -- @int i argument number
+  -- @string[opt] extramsg additional text to append to message inside
+  --   parentheses
+  -- @int[opt=1] level call stack level to blame for the error
+  -- @usage
+  --   local function slurp (file)
+  --     local h, err = input_handle (file)
+  --     if h == nil then argerror ("std.io.slurp", 1, err, 2) end
+  --     ...
+  argerror = argscheck (
+    "argerror", T.stringy, T.integer, T.accept, opt (T.integer)
+  ) .. argerror,
+
+  --- Get a function or functor environment.
+  --
+  -- This version of getfenv works on all supported Lua versions, and
+  -- knows how to unwrap functors (table's with a function valued
+  -- `__call` metamethod).
+  -- @function getfenv
+  -- @tparam function|int fn stack level, C or Lua function or functor
+  --   to act on
+  -- @treturn table the execution environment of *fn*
+  -- @usage
+  --   callers_environment = getfenv (1)
+  getfenv = argscheck (
+    "getfenv", opt (T.integer, T.callable)
+  ) .. normalize_getfenv,
+
+  --- Return named metamethod, if callable, otherwise `nil`.
+  -- @function getmetamethod
+  -- @param x item to act on
+  -- @string n name of metamethod to look up
+  -- @treturn function|nil metamethod function, or `nil` if no
+  --   metamethod
+  -- @usage
+  --   normalize = getmetamethod (require "std.normalize", "__call")
+  getmetamethod = argscheck (
+    "getmetamethod", T.value, T.stringy
+  ) .. getmetamethod,
+
+  --- Iterate over elements of a sequence, until the first `nil` value.
+  --
+  -- Returns successive key-value pairs with integer keys starting at 1,
+  -- up to the last non-`nil` value.  Unlike Lua 5.2+, any `__ipairs`
+  -- metamethod is **ignored**!  Unlike Lua 5.1, any `__index`
+  -- metamethod is respected.
+  -- @function ipairs
+  -- @tparam table t table to iterate on
+  -- @treturn function iterator function
+  -- @treturn table *t* the table being iterated over
+  -- @treturn int the previous iteration index
+  -- @usage
+  --   -- length of sequence
+  --   args = {"first", "second", nil, "last"}
+  --   --> 1=first
+  --   --> 2=second
+  --   for i, v in ipairs (args) do
+  --     print (string.format ("%d=%s", i, v))
+  --   end
+  ipairs = argscheck ("ipairs", T.value) .. ipairs,
+
+  --- Deterministic, functional version of core Lua `#` operator.
+  --
+  -- Respects `__len` metamethod (like Lua 5.2+), or else if there is
+  --  a `__tostring` metamethod return the length of the string it
+  -- returns.  Otherwise, always return one less than the lowest
+  -- integer index with a `nil` value in *x*, where the `#` operator
+  -- implementation might return the size of the array part of a table.
+  -- @function len
+  -- @param x item to act on
+  -- @treturn int the length of *x*
+  -- @usage
+  --   x = {1, 2, 3, nil, 5}
+  --   --> 5	3
+  --   print (#x, len (x))
+  len = argscheck ("len", any (T.table, T.stringy)) .. len,
+
+  --- Load a string or a function, just like Lua 5.2+.
+  -- @function load
+  -- @tparam string|function ld chunk to load
+  -- @string source name of the source of *ld*
+  -- @treturn function a Lua function to execute *ld* in global scope.
+  -- @usage
+  --   assert (load 'print "woo"') ()
+  load = argscheck (
+    "load", any (T.callable, T.stringy), opt (T.stringy)
+  ) .. normalize_load,
+
+  --- Ordered `pairs` iterator, respecting `__pairs` metamethod.
+  --
+  -- Although `__pairs` will be used to collect results, `opairs`
+  -- always returns them in the same order as `str`.
+  -- @function opairs
+  -- @tparam table t table to act on
+  -- @treturn function iterator function
+  -- @treturn table *t*, the table being iterated over
+  -- @return the previous iteration key
+  -- @usage
+  --   --> 1        b
+  --   --> 2        a
+  --   --> foo      c
+  --   for k, v in opairs {"b", foo = "c", "a"} do print (k, v) end
+  opairs = argscheck ("opairs", T.value) .. opairs,
+
+  --- Return a list of given arguments, with field `n` set to the length.
+  -- @function pack
+  -- @param ... tuple to act on
+  -- @treturn table packed list of *...* values, with field `n` set to
+  --   number of tuple elements (including any explicit `nil` elements)
+  -- @see unpack
+  -- @usage
+  --   --> {1, 2, "ax", n = 3}
+  --   pack (("ax1"):find "(%D+)")
+  pack = pack,
+
+  --- Package module constants for `package.config` substrings.
+  -- @table package
+  -- @string dirsep directory separator in path elements
+  -- @string execdir replaced by the executable's directory in a path
+  -- @string igmark ignore everything before this when building
+  --   `luaopen_` function name
+  -- @string pathmark mark substitution points in a path template
+  -- @string pathsep element separator in a path template
+  package = {
+    dirsep	= dirsep,
+    execdir	= execdir,
+    igmark	= igmark,
+    pathmark	= pathmark,
+    pathsep	= pathsep,
+  },
+
+  --- Like Lua `pairs` iterator, but respect `__pairs` even in Lua 5.1.
+  -- @function pairs
+  -- @tparam table t table to act on
+  -- @treturn function iterator function
+  -- @treturn table *t*, the table being iterated over
+  -- @return the previous iteration key
+  -- @usage
+  --   for k, v in pairs {"a", b = "c", foo = 42} do process (k, v) end
+  pairs = argscheck ("pairs", T.table) .. pairs,
+
+  --- Set a function or functor environment.
+  --
+  -- This version of setfenv works on all supported Lua versions, and
+  -- knows how to unwrap functors.
+  -- @function setfenv
+  -- @tparam function|int fn stack level, C or Lua function or functor
+  --   to act on
+  -- @tparam table env new execution environment for *fn*
+  -- @treturn function function acted upon
+  -- @usage
+  --   function clearenv (fn) return setfenv (fn, {}) end
+  setfenv = argscheck (
+    "setfenv", any (T.integer, T.callable), T.table
+  ) .. normalize_setfenv,
+
+  --- Return a compact stringified representation of argument.
+  -- @function str
+  -- @param x item to act on
+  -- @treturn string compact string representing *x*
+  -- @usage
+  --   -- {baz,5,foo=bar}
+  --   print (str {foo="bar","baz", 5})
+  str = str,
+
+  --- Either `table.unpack` in newer-, or `unpack` in older Lua implementations.
+  -- @function unpack
+  -- @tparam table t table to act on
+  -- @int[opt=1] i first index to unpack
+  -- @int[opt=len(t)] j last index to unpack
+  -- @return ... values of numeric indices of *t*
+  -- @see pack
+  -- @usage
+  --   return unpack (results_table)
+  unpack = argscheck (
+    "unpack", T.table, opt (T.integer), opt (T.integer)
+  ) .. unpack,
+
+  --- Support arguments to a protected function call, even on Lua 5.1.
+  -- @function xpcall
+  -- @tparam function f protect this function call
+  -- @tparam function errh error object handler callback if *f* raises
+  --   an error
+  -- @param ... arguments to pass to *f*
+  -- @treturn[1] boolean `false` when `f (...)` raised an error
+  -- @treturn[1] string error message
+  -- @treturn[2] boolean `true` when `f (...)` succeeded
+  -- @return ... all return values from *f* follow
+  -- @usage
+  --   -- Use errh to get a backtrack after curses exits abnormally
+  --   xpcall (main, errh, arg, opt)
+  xpcall = argscheck ("xpcall", T.callable, T.callable) .. xpcall,
+}
+
+
+local G = {
+  _VERSION	= _G._VERSION,
+  arg		= _G.arg,
+  argerror	= M.argerror,
+  assert	= _G.assert,
+  collectgarbage = _G.collectgarbage,
+  coroutine = {
+    create	= _G.coroutine.create,
+    resume	= _G.coroutine.resume,
+    running	= _G.coroutine.running,
+    status	= _G.coroutine.status,
+    wrap	= _G.coroutine.wrap,
+    yield	= _G.coroutine.yield,
+  },
+  debug = {
+    debug	 = _G.debug.debug,
+    gethook	 = _G.debug.gethook,
+    getinfo	 = _G.debug.getinfo,
+    getlocal	 = _G.debug.getlocal,
+    getmetatable = _G.debug.getmetatable,
+    getregistry	 = _G.debug.getregistry,
+    getupvalue	 = _G.debug.getupvalue,
+    getuservalue = _G.debug.getuservalue,
+    sethook	 = _G.debug.sethook,
+    setmetatable = _G.debug.setmetatable,
+    setupvalue	 = _G.debug.setupvalue,
+    setuservalue = _G.debug.setuservalue,
+    traceback	 = _G.debug.traceback,
+    upvalueid	 = _G.debug.upvalueid,
+    upvaluejoin	 = _G.debug.upvaluejoin,
+  },
+  dofile	= _G.dofile,
+  error		= _G.error,
+  getfenv	= M.getfenv,
+  getmetamethod	= M.getmetamethod,
+  getmetatable	= _G.getmetatable,
+  io = {
+    close	= _G.io.close,
+    flush	= _G.io.flush,
+    input	= _G.io.input,
+    lines	= _G.io.lines,
+    open	= _G.io.open,
+    output	= _G.io.output,
+    popen	= _G.io.popen,
+    read	= _G.io.read,
+    stderr	= _G.io.stderr,
+    stdin	= _G.io.stdin,
+    stdout	= _G.io.stdout,
+    tmpfile	= _G.io.tmpfile,
+    type	= _G.io.type,
+    write	= _G.io.write,
+  },
+  ipairs	= M.ipairs,
+  len		= M.len,
+  load		= M.load,
+  loadfile	= _G.loadfile,
+  math = {
+    abs		= _G.math.abs,
+    acos	= _G.math.acos,
+    asin	= _G.math.asin,
+    atan	= _G.math.atan,
+    ceil	= _G.math.ceil,
+    cos		= _G.math.cos,
+    deg		= _G.math.deg,
+    exp		= _G.math.exp,
+    floor	= _G.math.floor,
+    fmod	= _G.math.fmod,
+    huge	= _G.math.huge,
+    log		= _G.math.log,
+    max		= _G.math.max,
+    min		= _G.math.min,
+    modf	= _G.math.modf,
+    pi		= _G.math.pi,
+    rad		= _G.math.rad,
+    random	= _G.math.random,
+    randomseed	= _G.math.randomseed,
+    sin		= _G.math.sin,
+    sqrt	= _G.math.sqrt,
+    tan		= _G.math.tan,
+  },
+  next		= _G.next,
+  opairs	= M.opairs,
+  os = {
+    clock	= _G.os.clock,
+    date	= _G.os.date,
+    difftime	= _G.os.difftime,
+    execute	= _G.os.execute,
+    exit	= _G.os.exit,
+    getenv	= _G.os.getenv,
+    remove	= _G.os.remove,
+    rename	= _G.os.rename,
+    setlocale	= _G.os.setlocale,
+    time	= _G.os.time,
+    tmpname	= _G.os.tmpname,
+  },
+  pack		= M.pack,
+  package = {
+    config	= _G.package.config,
+    cpath	= _G.package.cpath,
+    dirsep	= M.package.dirsep,
+    execdir	= M.package.execdir,
+    igmark	= M.package.igmark,
+    loadlib	= _G.package.loadlib,
+    path	= _G.package.path,
+    pathmark	= M.package.pathmark,
+    pathsep	= M.package.pathsep,
+    preload	= _G.package.preload,
+    searchers	= _G.package.searchers or _G.package.loaders,
+  },
+  pairs		= M.pairs,
+  pcall		= _G.pcall,
+  print		= _G.print,
+  rawequal	= _G.rawequal,
+  rawget	= _G.rawget,
+  rawset	= _G.rawset,
+  require	= _G.require,
+  select	= _G.select,
+  setfenv	= M.setfenv,
+  setmetatable	= _G.setmetatable,
+  str		= M.str,
+  string = {
+    byte	= _G.string.byte,
+    char	= _G.string.char,
+    dump	= _G.string.dump,
+    find	= _G.string.find,
+    format	= _G.string.format,
+    gmatch	= _G.string.gmatch,
+    gsub	= _G.string.gsub,
+    lower	= _G.string.lower,
+    match	= _G.string.match,
+    rep		= _G.string.rep,
+    reverse	= _G.string.reverse,
+    sub		= _G.string.sub,
+    upper	= _G.string.upper,
+  },
+  table = {
+    concat	= _G.table.concat,
+    insert	= _G.table.insert,
+    remove	= _G.table.remove,
+    sort	= _G.table.sort,
+  },
+  tonumber	= _G.tonumber,
+  tostring	= _G.tostring,
+  type		= _G.type,
+  unpack	= M.unpack,
+  xpcall	= M.xpcall,
+}
+G._G		= G
+G.package.loaded = {
+  _G		= G,
+  coroutine	= G.coroutine,
+  debug		= G.debug,
+  io		= G.io,
+  math		= G.math,
+  os		= G.os,
+  package	= G.package,
+  string	= G.string,
+  table		= G.table,
+}
+
+
+-- Replace host Lua functions with normalized equivalents.
+-- @tparam table userenv user's lexical environment table
+-- @treturn table *userenv* with normalized functions
+local function normalize (userenv)
+  local env = {}
+
+  -- Top level functions are always available.
+  for k, v in next, G do
+    if G.package.loaded[k] == nil then
+      env[k] = v
     end
   end
-  return dst
+
+  for _, v in ipairs (userenv) do
+    -- Top level tables must be required by name...
+    if G.package.loaded[v] then
+      env[v] = G.package.loaded[v]
+    else
+      local k, t = {}, env
+      string_gsub (v, "[^%.]+", function (s) k[#k + 1] = s end)
+      while #k > 1 do
+        local subkey = table_remove (k, 1)
+        t[subkey] = t[subkey] or {}
+        t = t[subkey]
+      end
+
+      -- ...or available from module path.
+      t[v] = require (v)
+    end
+  end
+
+  return env
 end
 
 
-local function normal (env)
-  local normalized = {
-    --- Raise a bad argument error.
-    -- Equivalent to luaL_argerror in the Lua C API. This function does not
-    -- return.  The `level` argument behaves just like the core `error`
-    -- function.
-    -- @function argerror
-    -- @string name function to callout in error message
-    -- @int i argument number
-    -- @string[opt] extramsg additional text to append to message inside
-    --   parentheses
-    -- @int[opt=1] level call stack level to blame for the error
-    -- @usage
-    -- local function slurp (file)
-    --   local h, err = input_handle (file)
-    --   if h == nil then argerror ("std.io.slurp", 1, err, 2) end
-    --   ...
-    argerror = argscheck (
-      "argerror", T.stringy, T.integer, T.accept, opt (T.integer)
-    ) .. argerror,
-
-    --- Get a function or functor environment.
-    --
-    -- This version of getfenv works on all supported Lua versions, and
-    -- knows how to unwrap functors (table's with a function valued
-    -- `__call` metamethod).
-    -- @function getfenv
-    -- @tparam function|int fn stack level, C or Lua function or functor
-    --   to act on
-    -- @treturn table the execution environment of *fn*
-    -- @usage
-    -- callers_environment = getfenv (1)
-    getfenv = argscheck (
-      "getfenv", opt (T.integer, T.callable)
-    ) .. normalize_getfenv,
-
-    --- Return named metamethod, if callable, otherwise `nil`.
-    -- @function getmetamethod
-    -- @param x item to act on
-    -- @string n name of metamethod to look up
-    -- @treturn function|nil metamethod function, or `nil` if no
-    --   metamethod
-    -- @usage
-    -- normalize = getmetamethod (require "std.normalize", "__call")
-    getmetamethod = argscheck (
-      "getmetamethod", T.value, T.stringy
-    ) .. getmetamethod,
-
-    --- Iterate over elements of a sequence, until the first `nil` value.
-    --
-    -- Returns successive key-value pairs with integer keys starting at 1,
-    -- up to the last non-`nil` value.  Unlike Lua 5.2+, any `__ipairs`
-    -- metamethod is **ignored**!  Unlike Lua 5.1, any `__index`
-    -- metamethod is respected.
-    -- @function ipairs
-    -- @tparam table t table to iterate on
-    -- @treturn function iterator function
-    -- @treturn table *t* the table being iterated over
-    -- @treturn int the previous iteration index
-    -- @usage
-    -- -- length of sequence
-    -- args = {"first", "second", nil, "last"}
-    -- --> 1=first
-    -- --> 2=second
-    -- for i, v in ipairs (args) do
-    --   print (string.format ("%d=%s", i, v))
-    -- end
-    ipairs = argscheck ("ipairs", T.value) .. ipairs,
-
-    --- Deterministic, functional version of core Lua `#` operator.
-    --
-    -- Respects `__len` metamethod (like Lua 5.2+), or else if there is
-    --  a `__tostring` metamethod return the length of the string it
-    -- returns.  Otherwise, always return one less than the lowest
-    -- integer index with a `nil` value in *x*, where the `#` operator
-    -- implementation might return the size of the array part of a table.
-    -- @function len
-    -- @param x item to act on
-    -- @treturn int the length of *x*
-    -- @usage
-    -- x = {1, 2, 3, nil, 5}
-    -- --> 5	3
-    -- print (#x, len (x))
-    len = argscheck ("len", any (T.table, T.stringy)) .. len,
-
-    --- Load a string or a function, just like Lua 5.2+.
-    -- @function load
-    -- @tparam string|function ld chunk to load
-    -- @string source name of the source of *ld*
-    -- @treturn function a Lua function to execute *ld* in global scope.
-    load = argscheck (
-      "load", any (T.callable, T.stringy), opt (T.stringy)
-    ) .. normalize_load,
-
-    --- Ordered `pairs` iterator, respecting `__pairs` metamethod.
-    --
-    -- Although `__pairs` will be used to collect results, `opairs`
-    -- always returns them in the same order as `str`.
-    -- @function opairs
-    -- @tparam table t table to act on
-    -- @treturn function iterator function
-    -- @treturn table *t*, the table being iterated over
-    -- @return the previous iteration key
-    -- @usage
-    -- --> 1        b
-    -- --> 2        a
-    -- --> foo      c
-    -- for k, v in opairs {"b", foo = "c", "a"} do print (k, v) end
-    opairs = argscheck ("opairs", T.value) .. opairs,
-
-    --- Return a list of given arguments, with field `n` set to the length.
-    -- @function pack
-    -- @param ... tuple to act on
-    -- @treturn table packed list of *...* values, with field `n` set to
-    --   number of tuple elements (including any explicit `nil` elements)
-    -- @see unpack
-    -- @usage
-    -- --> {1, 2, "ax", n = 3}
-    -- pack (("ax1"):find "(%D+)")
-    pack = pack,
-
-    --- Package module constants for `package.config` substrings.
-    -- @table package
-    -- @string dirsep directory separator in path elements
-    -- @string execdir replaced by the executable's directory in a path
-    -- @string igmark ignore everything before this when building
-    --   `luaopen_` function name
-    -- @string pathmark mark substitution points in a path template
-    -- @string pathsep element separator in a path template
-    package = {
-      dirsep	= dirsep,
-      execdir	= execdir,
-      igmark	= igmark,
-      pathmark	= pathmark,
-      pathsep	= pathsep,
-    },
-
-    --- Like Lua `pairs` iterator, but respect `__pairs` even in Lua 5.1.
-    -- @function pairs
-    -- @tparam table t table to act on
-    -- @treturn function iterator function
-    -- @treturn table *t*, the table being iterated over
-    -- @return the previous iteration key
-    -- @usage
-    -- for k, v in pairs {"a", b = "c", foo = 42} do process (k, v) end
-    pairs = argscheck ("pairs", T.table) .. pairs,
-
-    --- Set a function or functor environment.
-    --
-    -- This version of setfenv works on all supported Lua versions, and
-    -- knows how to unwrap functors.
-    -- @function setfenv
-    -- @tparam function|int fn stack level, C or Lua function or functor
-    --   to act on
-    -- @tparam table env new execution environment for *fn*
-    -- @treturn function function acted upon
-    -- @usage
-    -- function clearenv (fn) return setfenv (fn, {}) end
-    setfenv = argscheck (
-      "setfenv", any (T.integer, T.callable), T.table
-    ) .. normalize_setfenv,
-
-    --- Return a compact stringified representation of argument.
-    -- @function str
-    -- @param x item to act on
-    -- @treturn string compact string representing *x*
-    -- @usage
-    -- -- {baz,5,foo=bar}
-    -- print (str {foo="bar","baz", 5})
-    str = str,
-
-    --- Either `table.unpack` in newer-, or `unpack` in older Lua implementations.
-    -- @function unpack
-    -- @tparam table t table to act on
-    -- @int[opt=1] i first index to unpack
-    -- @int[opt=len(t)] j last index to unpack
-    -- @return ... values of numeric indices of *t*
-    -- @see pack
-    -- @usage
-    -- return unpack (results_table)
-    unpack = argscheck (
-      "unpack", T.table, opt (T.integer), opt (T.integer)
-    ) .. unpack,
-
-    --- Support arguments to a protected function call, even on Lua 5.1.
-    -- @function xpcall
-    -- @tparam function f protect this function call
-    -- @tparam function msgh message handler callback if *f* raises an
-    --   error
-    -- @param ... arguments to pass to *f*
-    -- @treturn[1] boolean `false` when `f (...)` raised an error
-    -- @treturn[1] string error message
-    -- @treturn[2] boolean `true` when `f (...)` succeeded
-    -- @return ... all return values from *f* follow
-    xpcall = argscheck ("xpcall", T.callable, T.callable) .. xpcall,
-  }
-  return tree_merge (normalized, env)
-end
-
-
-return setmetatable (normal {}, {
+return setmetatable (G, {
   --- Metamethods
   -- @section metamethods
 
   --- Normalize caller's lexical environment.
   --
   -- Using "std.strict" when available and selected, otherwise a (Lua 5.1
-  -- compatible) function to set the given environment with normalized
-  -- functions from this module merged in.
+  -- compatible) function to set the given environment.
   -- @function __call
   -- @tparam table env environment table
   -- @tparam[opt=1] int level stack level for `setfenv`, 1 means set
@@ -595,9 +781,12 @@ return setmetatable (normal {}, {
   -- @treturn table *env* with this module's functions merge id.  Assign
   --   back to `_ENV`
   -- @usage
-  -- local _ENV = require "std.normalize" {}
+  --   local _ENV = require "std.normalize" {
+  --     "string",
+  --     "std.strict",
+  --   }
   __call = function (_, env, level)
-    return strict (normal (env), 1 + (level or 1)), nil
+    return strict (normalize (env), 1 + (level or 1)), nil
   end,
 
   --- Lazy loading of normalize modules.
