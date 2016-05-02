@@ -15,14 +15,34 @@ LuaJIT), 5.2 and 5.3. The libraries are copyright by their authors
 [MIT license][mit] (the same license as Lua itself). There is no warranty.
 
 _normalize_ has no run-time prerequisites beyond a standard Lua system,
-though it will take advantage of [stdlib][], [std.strict][] and [typecheck][]
-if they are installed.
+though it will take advantage of [stdlib][] and [std.strict][] if they
+are installed.  It also respects the contents of global `_DEBUG` with
+respect to creating strict environments, and validating arguments to
+`std.normalize` APIs.
 
-It can inject deterministic versions of core Lua functions that do not
-behave identically across all supported Lua implementations into your
-module's lexical environment.  Each function is as thin and fast a
-version as is possible in each Lua implementation, evaluating to the
-Lua C implementation with no overhead when semantics allow.
+Writing Lua libraries that target several Lua implementations can be a
+frustrating exercise in working around lots of small differences in APIs
+and semantics they share (or rename, or omit).  _normalize_ provides the
+means to simply access deterministic implementations of those APIs that
+have the the same semantics across all supported host Lua
+implementations.  Each function is as thin and fast an implementation as
+is possible within that host Lua environment, evaluating to the Lua C
+implmentation with no overhead where host semantics allow.
+
+The core of this module is to transparently set the environment up with
+a single API (as opposed to requiring caching functions from a module
+table into module locals):
+
+```lua
+   local _ENV = require "std.normalize" {
+     "package",
+     "string",
+   }
+   
+   -- From here pairs, ipairs, setfenv et. al. work the same everywhere!
+   -- Only the "package" and "string" modules are imported (i.e. no
+   -- "debug", "table", etc inviting undeclared use).
+```
 
 It is not yet complete, and in contrast to the [lua-compat][] libraries,
 neither does it attempt to provide you with as nearly compatible an API
