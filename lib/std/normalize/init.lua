@@ -590,12 +590,14 @@ return setmetatable (normal {}, {
   -- functions from this module merged in.
   -- @function __call
   -- @tparam table env environment table
+  -- @tparam[opt=1] int level stack level for `setfenv`, 1 means set
+  --   caller's environment
   -- @treturn table *env* with this module's functions merge id.  Assign
   --   back to `_ENV`
   -- @usage
   -- local _ENV = require "std.normalize" {}
-  __call = function (_, env)
-    return strict (normal (env)), nil
+  __call = function (_, env, level)
+    return strict (normal (env), 1 + (level or 1)), nil
   end,
 
   --- Lazy loading of normalize modules.

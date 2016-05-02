@@ -27,30 +27,54 @@ specify std.normalize:
 
 - context when called:
   - before:
-      MAGIC = {"MAGIC"}
       f = M
 
   - it merges table argument fields:
-      expect (f {myfield = 1}).to_contain.a_permutation_of {
-        "myfield",
+      script = [[
+        local pairs, print, table = pairs, print, table
+        local _ENV = require "std.normalize" {myfield = 1}
+        local t = {}
+        for k in pairs (_ENV) do
+          t[#t + 1] = k
+        end
+        table.sort (t)
+        print (table.concat (t, ", "))
+      ]]
+      expect (luaproc (script)).to_output (table.concat ({
         "argerror", "getfenv", "getmetamethod", "ipairs", "len", "load",
-        "opairs", "pack", "package", "pairs", "setfenv", "str",
-        "unpack", "xpcall",
-      }
+        "myfield", "opairs", "pack", "package", "pairs", "setfenv",
+        "str", "unpack", "xpcall",
+      }, ", ") .. "\n")
   - it merges nested table fields:
-      expect (f {package = {myfield = 1}}.package).
-        to_contain.a_permutation_of {
-          "myfield",
-          "dirsep", "execdir", "igmark", "pathmark", "pathsep",
-        }
+      script = [[
+        local pairs, print, table = pairs, print, table
+        local _ENV = require "std.normalize" {package = {myfield = 1}}
+        local t = {}
+        for k in pairs (package) do
+          t[#t + 1] = k
+        end
+        table.sort (t)
+        print (table.concat (t, ", "))
+      ]]
+      expect (luaproc (script)).to_output (table.concat ({
+          "dirsep", "execdir", "igmark", "myfield", "pathmark", "pathsep",
+      }, ", ") .. "\n")
   - it supports overriding fields:
-      expect (f {len = MAGIC}.str).to_be (f.str)
-      expect (f {len = MAGIC}.len).to_be (MAGIC)
+      script = [[
+        local exit, MAGIC = os.exit, {"MAGIC"}
+        local normal = require "std.normalize"
+        local _ENV = normal {len = MAGIC}
+        exit (len == MAGIC and str == normal.str and 0 or 1)
+      ]]
+      expect (luaproc (script)).to_succeed_with ""
   - it supports overriding nested table fields:
-      expect (f {package = {execdir = MAGIC}}.package.dirsep).
-        to_be (f.package.dirsep)
-      expect (f {package = {execdir = MAGIC}}.package.execdir).
-        to_be (MAGIC)
+      script = [[
+        local exit, print, MAGIC = os.exit, print, {"MAGIC"}
+        local _ENV = require "std.normalize" {package = {execdir = MAGIC}}
+        print (package.dirsep)
+        exit (package.execdir == MAGIC and 0 or 1)
+      ]]
+      expect (luaproc (script)).to_succeed_with "/\n"
 
 
 - describe argerror:

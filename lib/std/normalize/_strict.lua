@@ -51,7 +51,6 @@ return setmetatable ({
   -- @usage
   --   local _ENV = require "std.normalize._strict".strict {}
   strict = strict or function (env)
-    setfenv (2, env)
     return env
   end,
 }, {
@@ -61,11 +60,13 @@ return setmetatable ({
   --- Set a module environment, using std.strict if available.
   -- @function strict:__call
   -- @tparam table env module environment table
+  -- @tparam[opt=1] int level stack level for `setfenv`, 1 means set
+  --   caller's environment
   -- @treturn table *env*, which must be assigned to `_ENV`
   -- @usage
   --   local _ENV = require "std.normalize._strict" {}
-  __call = function (_, env)
-    setfenv (2, env)
+  __call = function (_, env, level)
+    setfenv (1+ (level or 1), env)
     return env
   end,
 })
