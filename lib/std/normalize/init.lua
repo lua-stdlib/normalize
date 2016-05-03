@@ -20,7 +20,8 @@
 
     local _ENV = require "std.normalize" {
       "package",
-      "string",
+      "std.prototype",
+      strict = "std.strict",
     }
 
  It is not yet complete, and in contrast to the kepler project
@@ -68,6 +69,7 @@ local _ENV = strict {
   debug_setfenv		= debug.setfenv or false,
   debug_setupvalue	= debug.setupvalue,
   debug_upvaluejoin	= debug.upvaluejoin,
+  math_floor		= math.floor,
   package_config	= package.config,
   string_gsub		= string.gsub,
   string_match		= string.match,
@@ -748,22 +750,26 @@ local function normalize (userenv)
     end
   end
 
-  for _, v in ipairs (userenv) do
-    -- Top level tables must be required by name...
-    if G.package.loaded[v] then
-      env[v] = G.package.loaded[v]
-    else
-      local k, t = {}, env
-      string_gsub (v, "[^%.]+", function (s) k[#k + 1] = s end)
+  -- Top level tables must be required by name.
+  for symbol, module in pairs (userenv) do
+    local k, dst = tostring (module), env
+
+    -- e.g. { "string", "std.seq" }
+    local i = tonumber (symbol)
+    if i and i - math_floor (i) == 0.0 then
+      k = {}
+      string_gsub (module, "[^%.]+", function (s) k[#k + 1] = s end)
       while #k > 1 do
         local subkey = table_remove (k, 1)
-        t[subkey] = t[subkey] or {}
-        t = t[subkey]
+        dst[subkey] = dst[subkey] or {}
+        dst = dst[subkey]
       end
-
-      -- ...or available from module path.
-      t[k[1]] = require (v)
+      k = table_remove (k, 1)
+    else
+      k = symbol
     end
+
+    dst[k] = G.package.loaded[module] or require (module)
   end
 
   return env
@@ -788,8 +794,16 @@ return setmetatable (G, {
   --
   -- Additionally, external modules are loaded using `require`, with `.`
   -- separators in the module name translated to nested tables in the
-  -- module environment. For example "std.strict" in the usage below
-  -- is equivalent to `local std = { strict = require "std.strict" }`.
+  -- module environment. For example "std.prototype" in the usage below
+  -- is equivalent to:
+  --
+  --     local std = { prototype = require "std.prototype" }
+  --
+  -- And finally, you can assign a loaded module to a specific symbol
+  -- with `key=value` syntax.  For example "std.strict" in the usage
+  -- below is equivalent to:
+  --
+  --     local strict = require "std.strict"
   -- @function __call
   -- @tparam table env environment table
   -- @tparam[opt=1] int level stack level for `setfenv`, 1 means set
@@ -799,7 +813,8 @@ return setmetatable (G, {
   -- @usage
   --   local _ENV = require "std.normalize" {
   --     "string",
-  --     "std.strict",
+  --     "std.prototype",
+  --     strict = "std.strict",
   --   }
   __call = function (_, env, level)
     return strict (normalize (env), 1 + (level or 1)), nil

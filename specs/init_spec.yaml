@@ -40,42 +40,47 @@ specify std.normalize:
         "tonumber", "tostring", "type", "unpack", "xpcall",
       }, "\n") .. "\n")
   - it loads named core modules:
-      script = [[
+      expect (luaproc [[
         local _ENV = require "std.normalize" {"os", "string"}
         print (type (string))
         os.exit (next (string) and 0 or 1)
-      ]]
-      expect (luaproc (script)).to_succeed_with "table\n"
+      ]]).to_succeed_with "table\n"
   - it loads named external modules:
-      script = [[
+      expect (luaproc [[
         package.loaded["magic"] = "MAGIC"
         local _ENV = require "std.normalize" {
           "magic",
           "os",
         }
         os.exit (magic == "MAGIC" and 0 or 1)
-      ]]
-      expect (luaproc (script)).to_succeed_with ""
+      ]]).to_succeed_with ""
   - it loads named nested modules:
-      script = [[
+      expect (luaproc [[
         local exit = os.exit
         package.loaded["std.magic.module"] = "MAGIC"
         local _ENV = require "std.normalize" {
-          "std.magic.module"
+          "std.magic.module",
         }
         exit (std.magic.module == "MAGIC" and 0 or 1)
-      ]]
-      expect (luaproc (script)).to_succeed_with ""
+      ]]).to_succeed_with ""
+  - it loads nested modules into alternate symbols:
+      expect (luaproc [[
+        local exit = os.exit
+        package.loaded["std.magic.module"] = "MAGIC"
+        local _ENV = require "std.normalize" {
+          magic = "std.magic.module",
+        }
+        exit (magic == "MAGIC" and 0 or 1)
+      ]]).to_succeed_with ""
   - it sets callers environment: |
-      script = [[
+      expect (luaproc [[
         local _ENV = require "std.normalize" {
            "os",
            "package",
         }
         print (getmetamethod)
         os.exit (package.dirsep == "/" and 0 or 1)
-      ]]
-      expect (luaproc (script)).to_succeed_while_matching "^function: 0x"
+      ]]).to_succeed_while_matching "^function: 0x"
 
 
 - describe argerror:

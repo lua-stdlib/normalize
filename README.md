@@ -36,21 +36,25 @@ table into module locals):
 ```lua
    local _ENV = require "std.normalize" {
      "package",
-     "string",
+     "std.prototype",
+     strict = "std.strict",
    }
    
    -- From here pairs, ipairs, setfenv et. al. work the same everywhere!
-   -- Only the "package" and "string" modules are imported (i.e. no
-   -- "debug", "table", etc inviting undeclared use).
+   -- While "package" is imported, "debug", "table", et. al. are not
+   -- preventing undeclared use.  External modules can be loaded into
+   -- nested tables (std.prototype) or specific symbols (strict).
 ```
 
-It is not yet complete, and in contrast to the [lua-compat][] libraries,
-neither does it attempt to provide you with as nearly compatible an API
-as is possible relative to some specific Lua implementation - rather it
-provides a variation of the "lowest common denominator" that can be
-implemented relatively efficiently in the supported Lua implementations.
-At the moment, only the functionality required by [stdlib][] is
-provided.  More normalized APIs are welcome!
+The normalized API is not yet complete, and in contrast to the
+[lua-compat][] libraries, neither does it attempt to provide you with as
+nearly compatible an API as is possible relative to some specific Lua
+implementation - rather it provides a variation of the "lowest common
+denominator" that can be implemented relatively efficiently in the
+supported Lua implementations. At the moment, only the functionality
+required by [stdlib][] is provided.
+
+Pull-requests for more normalized APIs are welcome!
 
 [authors]: https://github.com/lua-stdlib/normalize/blob/master/AUTHORS.md
 [github]: https://github.com/lua-stdlib/normalize/ "Github repository"

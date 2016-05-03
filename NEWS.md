@@ -6,6 +6,20 @@
 
   - Initial release, now separated out from lua-stdlib.
 
+  - Passing a table of module names to the result of requiring this
+    module injects top-level normalized APIs into the module
+    environment, and additionally loads the named modules.  For
+    compatibility across supported Lua hosts, this must be assigned
+    back to `_ENV`:
+
+    ```lua
+      local _ENV = require "std.normalize" {
+        "package",
+        "std.prototype",
+        strict = "std.strict",
+      }
+    ```
+
   - New `argerror` to add unhandled argument type reporting to Lua
     functions; equivalent to `luaL_argerror` in the Lua C API.
 
@@ -22,7 +36,7 @@
   - `str` is a fast specialization of `std.string.render`
     with all helper functions and abstractions inlined.
 
-  - When `_DEBUG` specifies argchecking, these APIs all diagnose
+  - When `_DEBUG` specifies argchecking, normalized APIs all diagnose
     unsuitable types passed by the caller.
 
 ### Bug fixes
