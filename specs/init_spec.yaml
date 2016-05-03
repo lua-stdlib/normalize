@@ -35,7 +35,7 @@ specify std.normalize:
         "_VERSION", "arg", "argerror", "assert", "collectgarbage",
         "dofile", "error", "getfenv", "getmetamethod", "getmetatable",
         "ipairs", "len", "load", "loadfile", "next", "opairs", "pack",
-        "pairs", "pcall", "print", "rawequal", "rawget",
+        "pairs", "pcall", "print", "rawequal", "rawget", "rawlen",
         "rawset", "require", "select", "setfenv", "setmetatable", "str",
         "tonumber", "tostring", "type", "unpack", "xpcall",
       }, "\n") .. "\n")
@@ -614,6 +614,40 @@ specify std.normalize:
   - it respects __pairs metamethod:
       for k, v in f (setmetatable (src, {__pairs = __pairs})) do t[k] = v end
       expect (t).to_equal {"a", "proxy", "table"}
+
+
+- describe rawlen:
+  - before:
+      __len = function () return 42 end
+      __tostring = function () return "string" end
+
+      f = M.rawlen
+
+  - context with bad arguments:
+    - 'it diagnoses missing argument #1':
+        expect (f ()).to_raise "string or table expected, got no value"
+    - 'it diagnoses nil-valued argument #1':
+        expect (f (nil)).to_raise "string or table expected, got nil"
+    - 'it diagnoses argument #1 type not string or table':
+         expect (f (false)).to_raise "string or table expected, got boolean"
+
+  - it works for an empty list:
+      src = {}
+      expect (f (src)).to_be (0)
+  - it works for an empty string:
+      src = ""
+      expect (f (src)).to_be (0)
+  - it ignores __len metamethod:
+      expect (f (setmetatable ({}, {__len = __len}))).to_be (0)
+  - it ignores __tostring metamethod:
+      expect (f (setmetatable ({}, {__tostring = __tostring}))).to_be (0)
+  - it even ignores __len and __tostring together:
+      x = setmetatable ({}, { __len = __len, __tostring = __tostring})
+      expect (f (x)).to_be (0)
+  - it does not count nil valued array part elements:
+      expect (f {1, 2, 3, nil, nil, 6}).to_be (3)
+  - 'it defers to the # operator':
+      expect (f "abc").to_be (3)
 
 
 - describe setfenv:

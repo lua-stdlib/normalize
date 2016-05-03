@@ -173,13 +173,9 @@ local function ipairs (l)
 end
 
 
-local function len (x)
-  local m = getmetamethod (x, "__len")
-  if m then
-    return m (x)
-  elseif getmetamethod (x, "__tostring") then
-    x = tostring (x)
-  end
+local function rawlen (x)
+  -- Lua 5.1 does not implement rawlen, and while # operator ignores
+  -- __len metamethod, `nil` in sequence is handled inconsistently.
   if type (x) ~= "table" then
     return #x
   end
@@ -191,6 +187,17 @@ local function len (x)
     end
   end
   return n
+end
+
+
+local function len (x)
+  local m = getmetamethod (x, "__len")
+  if m then
+    return m (x)
+  elseif getmetamethod (x, "__tostring") then
+    x = tostring (x)
+  end
+  return rawlen (x)
 end
 
 
@@ -522,6 +529,15 @@ local M = {
   --   for k, v in pairs {"a", b = "c", foo = 42} do process (k, v) end
   pairs = argscheck ("pairs", T.table) .. pairs,
 
+  --- Length of a string or table object without using any metamethod.
+  -- @function rawlen
+  -- @tparam string|table x object to act on
+  -- @treturn int raw length of *x*
+  -- @usage
+  --   --> 0
+  --   rawlen (setmetatable ({}, {__len = function () return 42}))
+  rawlen = argscheck ("rawlen", any (T.string, T.table)) .. rawlen,
+
   --- Set a function or functor environment.
   --
   -- This version of setfenv works on all supported Lua versions, and
@@ -690,6 +706,7 @@ local G = {
   print		= _G.print,
   rawequal	= _G.rawequal,
   rawget	= _G.rawget,
+  rawlen	= M.rawlen,
   rawset	= _G.rawset,
   require	= _G.require,
   select	= _G.select,

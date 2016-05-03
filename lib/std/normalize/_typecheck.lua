@@ -193,6 +193,13 @@ local types = {
     end)
   end,
 
+  -- Accept string valued argu[i].
+  string = function (argu, i)
+    return check ("string", argu, i, function (x)
+      return type (x) == "string"
+    end)
+  end,
+
   -- Accept string valued or `__string` metamethod carrying argu[i].
   stringy = function (argu, i)
     return check ("string", argu, i, function (x)

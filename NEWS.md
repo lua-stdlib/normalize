@@ -28,6 +28,9 @@
     if available), before counting initial non-nil valued integer
     keys.
 
+  - `rawlen` ignores metamethods, and always counts up to the last
+    sequential non-`nil` valued element in a sequence.
+
   - `load` will load a string of valid Lua code or call the given
     function or functor argument to fetch strings, even in Lua 5.1.
     Note that, for consistency across host implementations, the optional
