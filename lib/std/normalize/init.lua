@@ -2,23 +2,26 @@
  Normalize API differences between supported Lua implementations.
 
  Respecting the values set in the `std.debug_init` module and the
- `_G._DEBUG` variable, merge deterministic identically behaving
+ `_G._DEBUG` variable, inject deterministic identically behaving
  cross-implementation low-level functions into the callers environment.
 
+ Writing Lua libraries that target several Lua implementations can be a
+ frustrating exercise in working around lots of small differences in APIs
+ and semantics they share (or rename, or omit).  _normalize_ provides the
+ means to simply access deterministic implementations of those APIs that
+ have the the same semantics across all supported host Lua
+ implementations.  Each function is as thin and fast an implementation as
+ is possible within that host Lua environment, evaluating to the Lua C
+ implmentation with no overhead where host semantics allow.
+
+ The core of this module is to transparently set the environment up with
+ a single API (as opposed to requiring caching functions from a module
+ table into module locals):
+
     local _ENV = require "std.normalize" {
-      -- Copy global functions into module environment
-      getmetatable = getmetatable,
-      setmetatable = setmetatable,
-
-      -- Prefer regular `tostring` over table value rendering
-      str = tostring,
+      "package",
+      "string",
     }
-
- It can merge deterministic versions of core Lua functions that do not
- behave identically across all supported Lua implementations into your
- module's lexical environment.  Each function is as thin and fast a
- version as is possible in each Lua implementation, evaluating to the
- Lua C implementation with no overhead when semantics allow.
 
  It is not yet complete, and in contrast to the kepler project
  lua-compat libraries, neither does it attempt to provide you with as
@@ -69,6 +72,7 @@ local _ENV = strict {
   string_gsub		= string.gsub,
   string_match		= string.match,
   table_concat		= table.concat,
+  table_remove		= table.remove,
   table_sort		= table.sort,
   table_unpack		= table.unpack or unpack,
 
@@ -758,7 +762,7 @@ local function normalize (userenv)
       end
 
       -- ...or available from module path.
-      t[v] = require (v)
+      t[k[1]] = require (v)
     end
   end
 
@@ -774,6 +778,18 @@ return setmetatable (G, {
   --
   -- Using "std.strict" when available and selected, otherwise a (Lua 5.1
   -- compatible) function to set the given environment.
+  --
+  -- With an empty table argument, the core (not-table) normalize
+  -- functions are loaded into the callers environment.  For consistent
+  -- behaviour between supported host Lua implementations, the result
+  -- must always be assigned back to `_ENV`.  Additional core modules
+  -- must be named to be loaded at all (i.e. no "debug" table unless it
+  -- is explicitly listed in the argument table).
+  --
+  -- Additionally, external modules are loaded using `require`, with `.`
+  -- separators in the module name translated to nested tables in the
+  -- module environment. For example "std.strict" in the usage below
+  -- is equivalent to `local std = { strict = require "std.strict" }`.
   -- @function __call
   -- @tparam table env environment table
   -- @tparam[opt=1] int level stack level for `setfenv`, 1 means set

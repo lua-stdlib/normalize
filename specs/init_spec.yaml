@@ -24,7 +24,7 @@ specify std.normalize:
   - before:
       f = M
 
-  - it contains core functions:
+  - it loads core functions:
       script = [[
         local _ENV = require "std.normalize" {}
         for k in opairs (_ENV) do
@@ -39,24 +39,33 @@ specify std.normalize:
         "rawset", "require", "select", "setfenv", "setmetatable", "str",
         "tonumber", "tostring", "type", "unpack", "xpcall",
       }, "\n") .. "\n")
-  - it contains named core modules:
+  - it loads named core modules:
       script = [[
         local _ENV = require "std.normalize" {"os", "string"}
-        print (type (_ENV.string))
-        os.exit (next (_ENV.string) and 0 or 1)
+        print (type (string))
+        os.exit (next (string) and 0 or 1)
       ]]
       expect (luaproc (script)).to_succeed_with "table\n"
-  - it loads named modules:
+  - it loads named external modules:
       script = [[
         package.loaded["magic"] = "MAGIC"
         local _ENV = require "std.normalize" {
           "magic",
           "os",
         }
-        print (_ENV.magic)
-        os.exit (_ENV.magic == "MAGIC" and 0 or 1)
+        os.exit (magic == "MAGIC" and 0 or 1)
       ]]
-      expect (luaproc (script)).to_succeed_with "MAGIC\n"
+      expect (luaproc (script)).to_succeed_with ""
+  - it loads named nested modules:
+      script = [[
+        local exit = os.exit
+        package.loaded["std.magic.module"] = "MAGIC"
+        local _ENV = require "std.normalize" {
+          "std.magic.module"
+        }
+        exit (std.magic.module == "MAGIC" and 0 or 1)
+      ]]
+      expect (luaproc (script)).to_succeed_with ""
   - it sets callers environment: |
       script = [[
         local _ENV = require "std.normalize" {
