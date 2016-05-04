@@ -11,9 +11,12 @@ local _ENV = strict {
   getmetatable	= getmetatable,
   select	= select,
   setfenv	= setfenv or function () end,
+  tonumber	= tonumber,
   tostring	= tostring,
   type		= type,
 
+  math_floor	= math.floor,
+  math_tointeger = math.tointeger,
   table_pack	= table.pack,
 }
 
@@ -40,6 +43,14 @@ local pack = table_pack or function (...)
 end
 
 
+local tointeger = math_tointeger or function (x)
+  local i = tonumber (x)
+  if i and i - math_floor (i) == 0.0 then
+    return i
+  end
+end
+
+
 
 --[[ ================= ]]--
 --[[ Public Interface. ]]--
@@ -54,4 +65,8 @@ return {
   --- Return a list of given arguments, with field `n` set to the length.
   -- @see std.normalize.pack
   pack = pack,
+
+  --- Convert to an integer and return if possible, otherwise `nil`.
+  -- @see std.normalize.math.tointeger
+  tointeger = tointeger,
 }

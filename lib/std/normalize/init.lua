@@ -69,7 +69,6 @@ local _ENV = strict {
   debug_setfenv		= debug.setfenv or false,
   debug_setupvalue	= debug.setupvalue,
   debug_upvaluejoin	= debug.upvaluejoin,
-  math_floor		= math.floor,
   io_open		= io.open,
   package_config	= package.config,
   package_searchpath	= package.searchpath,
@@ -84,6 +83,7 @@ local _ENV = strict {
 
   getmetamethod		= _.base.getmetamethod,
   pack			= _.base.pack,
+  tointeger		= _.base.tointeger,
   ARGCHECK_FRAME	= _.typecheck.ARGCHECK_FRAME,
   any			= _.typecheck.any,
   argerror		= _.typecheck.argerror,
@@ -526,6 +526,15 @@ local M = {
   --   pack (("ax1"):find "(%D+)")
   pack = pack,
 
+  math = {
+    --- Convert to an integer and return if possible, otherwise `nil`.
+    -- @function tointeger
+    -- @param x object to act on
+    -- @treturn[1] integer *x* converted to an integer if possible
+    -- @return[2] otherwise `nil`
+    tointeger	= tointeger,
+  },
+
   --- Package module constants for `package.config` substrings.
   -- @table package
   -- @string dirsep directory separator in path elements
@@ -714,6 +723,7 @@ local G = {
     sin		= _G.math.sin,
     sqrt	= _G.math.sqrt,
     tan		= _G.math.tan,
+    tointeger	= M.math.tointeger,
   },
   next		= _G.next,
   opairs	= M.opairs,
@@ -816,8 +826,8 @@ local function normalize (userenv)
     local k, dst = tostring (module), env
 
     -- e.g. { "string", "std.seq" }
-    local i = tonumber (symbol)
-    if i and i - math_floor (i) == 0.0 then
+    local i = tointeger (symbol)
+    if i then
       k = {}
       string_gsub (module, "[^%.]+", function (s) k[#k + 1] = s end)
       while #k > 1 do

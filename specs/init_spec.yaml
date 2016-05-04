@@ -504,6 +504,21 @@ specify std.normalize:
         to_raise '^%[string "teh chunks"%]:1:'
 
 
+- describe math:
+  - describe tointeger:
+    - before:
+        f = M.math.tointeger
+
+    - it converts integer-like floats:
+        expect (f (1.0)).to_be (1)
+    - it converts integer-like strings:
+        expect (f "2").to_be (2)
+    - it returns `nil` for non-integer convertible values:
+        expect (f (false)).to_be (nil)
+        expect (f (1.5)).to_be (nil)
+        expect (f "1.5").to_be (nil)
+
+
 - describe opairs:
   - before:
       __index = function (t, k)

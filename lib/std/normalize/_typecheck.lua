@@ -26,7 +26,6 @@ local _ENV = strict {
   tonumber	= tonumber,
   type		= type,
 
-  math_floor	= math.floor,
   string_format	= string.format,
   table_concat	= table.concat,
   table_sort	= table.sort,
@@ -35,6 +34,7 @@ local _ENV = strict {
   _DEBUG	= require "std.normalize._debug",
   getmetamethod	= _.base.getmetamethod,
   pack		= _.base.pack,
+  tointeger	= _.base.tointeger,
 }
 _ = nil
 
@@ -180,7 +180,7 @@ local types = {
     if type (value) ~= "number" then
       return fail ("integer", argu, i)
     end
-    if value - math_floor (value) > 0.0 then
+    if tointeger (value) == nil then
       return nil, nil, "number has no integer representation"
     end
     return true
