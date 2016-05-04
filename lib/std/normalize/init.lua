@@ -70,7 +70,11 @@ local _ENV = strict {
   debug_setupvalue	= debug.setupvalue,
   debug_upvaluejoin	= debug.upvaluejoin,
   math_floor		= math.floor,
+  io_open		= io.open,
   package_config	= package.config,
+  package_searchpath	= package.searchpath,
+  string_concat		= string.concat,
+  string_gmatch		= string.gmatch,
   string_gsub		= string.gsub,
   string_match		= string.match,
   table_concat		= table.concat,
@@ -257,6 +261,25 @@ local function opairs (t)
       return k, t[k]
     end
   end, _t, nil
+end
+
+
+local pathmatch_patt = "[^" .. pathsep .. "]+"
+
+local searchpath = package_searchpath or function (name, path, sep, rep)
+  name = string_gsub (name, sep or '%.', rep or dirsep)
+
+  local errbuf = {}
+  for template in string_gmatch (path, pathmatch_patt) do
+    local filename = string_gsub (template, pathmark, name)
+    local fh = io_open (filename, "r")
+    if fh then
+      fh:close ()
+      return filename
+    end
+    errbuf[#errbuf + 1] = "\tno file '" .. filename .. "'"
+  end
+  return nil, table_concat (errbuf, "\n")
 end
 
 
@@ -517,6 +540,26 @@ local M = {
     igmark	= igmark,
     pathmark	= pathmark,
     pathsep	= pathsep,
+
+    --- Searches for a named file in a given path.
+    --
+    -- For each @{package.pathsep} delimited template in the given path,
+    -- search for an readable file made by first substituting for *sep*
+    -- with @{package.dirsep}, and then replacing any
+    -- @{package.pathmark} with the result.  The first such file, if any
+    -- is returned.
+    -- @function searchpath
+    -- @string name name of search file
+    -- @string path @{package.pathsep} delimited list of full path templates
+    -- @string[opt="."] sep *name* component separator
+    -- @string[opt=@{package.dirsep}] rep *sep* replacement in template
+    -- @treturn[1] string first template substitution that names a file
+    --   that can be opened in read mode
+    -- @return[2] `nil`
+    -- @treturn[2] string error message listing all failed paths
+    searchpath	= argscheck (
+      "searchpath", T.string, T.string, opt (T.string), opt (T.string)
+    ) .. searchpath,
   },
 
   --- Like Lua `pairs` iterator, but respect `__pairs` even in Lua 5.1.
@@ -700,6 +743,7 @@ local G = {
     pathsep	= M.package.pathsep,
     preload	= _G.package.preload,
     searchers	= _G.package.searchers or _G.package.loaders,
+    searchpath	= M.package.searchpath,
   },
   pairs		= M.pairs,
   pcall		= _G.pcall,

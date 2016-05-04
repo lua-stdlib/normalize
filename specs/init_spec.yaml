@@ -588,6 +588,64 @@ specify std.normalize:
       expect (type (s)).to_be "string"
       expect (#s).not_to_be (0)
 
+  - describe searchpath:
+    - before:
+        tmpdir = Tmpdir ()
+        subdir = tmpdir:subdir "find"
+        findir = subdir:subdir "me"
+
+        tmpdir:file ("find.example", "nothing at all")
+        findir:file ("init.example", "nothing to see")
+
+        templates = tmpdir.path .. "/?/init.example;" ..
+                    tmpdir.path .. "/?.example"
+
+        f = M.package.searchpath
+
+    - after:
+        tmpdir:remove ()
+
+    - context with bad arguments:
+      - 'it diagnoses missing argument #1':
+          expect (f ()).to_raise "string expected, got no value"
+      - 'it diagnoses nil-valued argument #1':
+          expect (f (nil)).to_raise "string expected, got nil"
+      - 'it diagnoses argument #1 type not string':
+          expect (f (false)).to_raise "string expected, got boolean"
+      - 'it diagnoses missing argument #2':
+          expect (f ("str")).to_raise "string expected, got no value"
+      - 'it diagnoses nil-valued argument #2':
+          expect (f ("str", nil)).to_raise "string expected, got nil"
+      - 'it diagnoses argument #2 type not string':
+          expect (f ("str", false)).
+            to_raise "string expected, got boolean"
+      - 'it diagnoses argument #3 type not string':
+          expect (f ("name", "path", false)).
+            to_raise "string expected, got boolean"
+      - 'it diagnoses argument #4 type not string':
+          expect (f ("name", "path", "sep", false)).
+            to_raise "string expected, got boolean"
+
+    - it diagnoses file not found:
+        ok, err = f ("xyz", templates)
+        expect (err).to_contain (
+          "\tno file '" .. tmpdir.path .. "/xyz/init.example'\n" ..
+          "\tno file '" .. tmpdir.path .. "/xyz.example'"
+        )
+    - it returns first matching file:
+        expect (f ("find", templates)).
+          to_be (tmpdir.path .. "/find.example")
+    - it replaces '.' with '/' in name by default:
+        expect (f ("find.me", templates)).
+          to_be (tmpdir.path .. "/find/me/init.example")
+    - it supports alternate separator argument:
+        expect (f ("find_me", templates, "_")).
+          to_be (tmpdir.path .. "/find/me/init.example")
+    - it supports alternate replacement argument:
+        tmpdir:file ("find_me.example", "woo!")
+        expect (f ("find.me", templates, nil, "_")).
+          to_be (tmpdir.path .. "/find_me.example")
+
 
 - describe pairs:
   - before:

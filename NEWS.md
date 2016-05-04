@@ -36,6 +36,8 @@
     Note that, for consistency across host implementations, the optional
     `mode` and `env` arguments are currently **not** supported.
 
+  - `package.searchpath` is available everywhere.
+
   - `str` is a fast specialization of `std.string.render`
     with all helper functions and abstractions inlined.
 

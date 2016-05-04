@@ -115,6 +115,109 @@ function show_apis (argt)
 end
 
 
+--[[ ================ ]]--
+--[[ Tmpfile manager. ]]--
+--[[ ================ ]]--
+
+
+local tmpdir = string.gsub (
+  os.getenv "TMPDIR" or os.getenv "TMP" or "/tmp",
+  "([^/])/*$", "%1"
+) .. "/normalize-" .. math.random (65536)
+
+
+local function append (path, ...)
+  local n = select ("#", ...)
+  if n > 0 then
+    local fh = io.open (path, "a")
+    fh:write (table.concat ({...}, "\n") .. "\n")
+    fh:close ()
+  end
+  return n
+end
+
+
+-- Create a temporary file.
+-- @usage
+--   h = Tmpfile ()        -- empty generated filename
+--   h = Tmpfile (content) -- save *content* to generated filename
+--   h = Tmpfile (name, line, line, line) -- write *line*s to *name*
+Tmpfile = setmetatable ({}, {
+  _type = "Tmpfile",
+
+  __call = function (self, path_or_content, ...)
+    local new = {}
+    if select ("#", ...) == 0 then
+      new.path = os.tmpname ()
+      append (new.path, path_or_content)
+    else
+      new.path = path_or_content
+      append (new.path, ...)
+    end
+    return setmetatable (new, getmetatable (self))
+  end,
+
+  __index = {
+    dirname = function (self)
+      return self.path:gsub ("/[^/]*$", "", 1)
+    end,
+
+    basename = function (self)
+      return self.path:gsub (".*/", "")
+    end,
+
+    append = function (self, ...)
+      return append (self.path, ...)
+    end,
+
+    remove = function (self)
+      return os.remove (self.path)
+    end,
+  },
+})
+
+
+Tmpdir = setmetatable ({}, {
+  _type = "Tmpdir",
+
+  __call = function (self, dirname)
+    local new = {
+      path = dirname or tmpdir,
+      children = {},
+    }
+    os.execute ("mkdir '" .. new.path .. "'")
+    return setmetatable (new, getmetatable (self))
+  end,
+
+  __index = {
+    file = function (self, name, ...)
+      local child = Tmpfile (self.path .. "/" .. name, ...)
+      self.children[#self.children + 1] = child
+      return child
+    end,
+
+    subdir = function (self, name)
+      local child = Tmpdir (self.path .. "/" .. name)
+      self.children[#self.children + 1] = child
+      return child
+    end,
+
+    remove = function (self)
+      for _, child in ipairs (self.children) do
+	child:remove ()
+      end
+      return os.remove (self.path)
+    end,
+  }
+})
+
+
+
+--[[ ================ ]]--
+--[[ Custom Matchers. ]]--
+--[[ ================ ]]--
+
+
 do
   -- Custom matcher for set size and set membership.
 
