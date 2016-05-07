@@ -1,6 +1,6 @@
 # std.normalize NEWS - User visible changes
 
-## Noteworthy changes in release 1.0 (2016-02-09) [stable]
+## Noteworthy changes in release 1.0 (2016-05-08) [stable]
 
 ### New features (since lua-stdlib-41.2)
 
