@@ -528,10 +528,10 @@ local M = {
 
   math = {
     --- Convert to an integer and return if possible, otherwise `nil`.
-    -- @function tointeger
+    -- @function math.tointeger
     -- @param x object to act on
     -- @treturn[1] integer *x* converted to an integer if possible
-    -- @return[2] otherwise `nil`
+    -- @return[2] `nil` otherwise
     tointeger = argscheck ("tointeger", T.arg) .. tointeger,
 
     --- Return "integer", "float" or `nil` according to argument type.
@@ -539,10 +539,11 @@ local M = {
     -- To ensure the same behaviour on all host Lua implementations,
     -- this function returns "float" for integer-equivalent floating
     -- values, even on Lua 5.3.
+    -- @function math.type
     -- @param x object to act on
     -- @treturn[1] string "integer", if *x* is a whole number
     -- @treturn[2] string "float", for other numbers
-    -- @return[3] otherwise, `nil`
+    -- @return[3] `nil` otherwise
     type = argscheck ("type", T.arg) .. math_type,
   },
 
@@ -564,7 +565,7 @@ local M = {
 
   os = {
     --- Exit the program.
-    -- @function exit
+    -- @function os.exit
     -- @tparam bool|number[opt=true] status report back to parent process
     -- @usage
     --   exit (len (records.processed) > 0) 
@@ -582,15 +583,15 @@ local M = {
   --   pack (("ax1"):find "(%D+)")
   pack = pack,
 
-  --- Package module constants for `package.config` substrings.
-  -- @table package
-  -- @string dirsep directory separator in path elements
-  -- @string execdir replaced by the executable's directory in a path
-  -- @string igmark ignore everything before this when building
-  --   `luaopen_` function name
-  -- @string pathmark mark substitution points in a path template
-  -- @string pathsep element separator in a path template
   package = {
+    --- Package module constants for `package.config` substrings.
+    -- @table package
+    -- @string dirsep directory separator in path elements
+    -- @string execdir replaced by the executable's directory in a path
+    -- @string igmark ignore everything before this when building
+    --   `luaopen_` function name
+    -- @string pathmark mark substitution points in a path template
+    -- @string pathsep element separator in a path template
     dirsep	= dirsep,
     execdir	= execdir,
     igmark	= igmark,
@@ -599,16 +600,16 @@ local M = {
 
     --- Searches for a named file in a given path.
     --
-    -- For each @{package.pathsep} delimited template in the given path,
+    -- For each `package.pathsep` delimited template in the given path,
     -- search for an readable file made by first substituting for *sep*
-    -- with @{package.dirsep}, and then replacing any
-    -- @{package.pathmark} with the result.  The first such file, if any
+    -- with `package.dirsep`, and then replacing any
+    -- `package.pathmark` with the result.  The first such file, if any
     -- is returned.
-    -- @function searchpath
+    -- @function package.searchpath
     -- @string name name of search file
-    -- @string path @{package.pathsep} delimited list of full path templates
+    -- @string path `package.pathsep` delimited list of full path templates
     -- @string[opt="."] sep *name* component separator
-    -- @string[opt=@{package.dirsep}] rep *sep* replacement in template
+    -- @string[opt=`package.dirsep`] rep *sep* replacement in template
     -- @treturn[1] string first template substitution that names a file
     --   that can be opened in read mode
     -- @return[2] `nil`
