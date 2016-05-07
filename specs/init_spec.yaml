@@ -509,6 +509,10 @@ specify std.normalize:
     - before:
         f = M.math.tointeger
 
+    - context with bad arguments:
+      - 'it diagnoses missing argument #1':
+           expect (f ()).to_raise "value expected"
+
     - it converts integer-like floats:
         expect (f (1.0)).to_be (1)
     - it converts integer-like strings:
@@ -522,7 +526,12 @@ specify std.normalize:
     - before:
         f = M.math.type
 
+    - context with bad arguments:
+      - 'it diagnoses missing argument #1':
+           expect (f ()).to_raise "value expected"
+
     - it returns nil for non-number values:
+        expect (f (nil)).to_be (nil)
         expect (f (false)).to_be (nil)
         expect (f "str").to_be (nil)
         expect (f {}).to_be (nil)

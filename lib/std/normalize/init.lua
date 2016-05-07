@@ -513,7 +513,7 @@ local M = {
     -- @param x object to act on
     -- @treturn[1] integer *x* converted to an integer if possible
     -- @return[2] otherwise `nil`
-    tointeger = tointeger,
+    tointeger = argscheck ("tointeger", T.arg) .. tointeger,
 
     --- Return "integer", "float" or `nil` according to argument type.
     --
@@ -524,7 +524,7 @@ local M = {
     -- @treturn[1] string "integer", if *x* is a whole number
     -- @treturn[2] string "float", for other numbers
     -- @return[3] otherwise, `nil`
-    type = math_type,
+    type = argscheck ("type", T.arg) .. math_type,
   },
 
   --- Ordered `pairs` iterator, respecting `__pairs` metamethod.

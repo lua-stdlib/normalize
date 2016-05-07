@@ -166,6 +166,14 @@ local types = {
     return true
   end,
 
+  -- Reject missing argument *i*.
+  arg = function (argu, i)
+    if i > argu.n then
+      return nil, "value", nil
+    end
+    return true
+  end,
+
   -- Accept function valued or `__call` metamethod carrying argu[i].
   callable = function (argu, i)
     return check ("callable", argu, i, function (x)
