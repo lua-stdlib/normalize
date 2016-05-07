@@ -518,6 +518,27 @@ specify std.normalize:
         expect (f (1.5)).to_be (nil)
         expect (f "1.5").to_be (nil)
 
+  - describe type:
+    - before:
+        f = M.math.type
+
+    - it returns nil for non-number values:
+        expect (f (false)).to_be (nil)
+        expect (f "str").to_be (nil)
+        expect (f {}).to_be (nil)
+    - it returns "integer" for whole numbers:
+        expect (f (0)).to_be "integer"
+        expect (f (42)).to_be "integer"
+        expect (f (-999999)).to_be "integer"
+    - it returns "integer" for whole number equivalent floats:
+        expect (f (0.0)).to_be "integer"
+        expect (f (42.0)).to_be "integer"
+        expect (f (1.00000000000000009)).to_be "integer"
+        expect (f (1.00000000000000010)).to_be "integer"
+    - it returns "float" for other numbers:
+        expect (f (math.pi)).to_be "float"
+        expect (f (1.0000000000000002)).to_be "float"
+
 
 - describe opairs:
   - before:

@@ -373,6 +373,14 @@ local function str (x, roots)
 end
 
 
+local function math_type (x)
+  if type (x) ~= "number" then
+    return nil
+  end
+  return tointeger (x) and "integer" or "float"
+end
+
+
 local function unpack (t, i, j)
   return table_unpack (t, tonumber (i) or 1, tonumber (j) or len (t))
 end
@@ -499,6 +507,26 @@ local M = {
     "load", any (T.callable, T.stringy), opt (T.stringy)
   ) .. normalize_load,
 
+  math = {
+    --- Convert to an integer and return if possible, otherwise `nil`.
+    -- @function tointeger
+    -- @param x object to act on
+    -- @treturn[1] integer *x* converted to an integer if possible
+    -- @return[2] otherwise `nil`
+    tointeger = tointeger,
+
+    --- Return "integer", "float" or `nil` according to argument type.
+    --
+    -- To ensure the same behaviour on all host Lua implementations,
+    -- this function returns "float" for integer-equivalent floating
+    -- values, even on Lua 5.3.
+    -- @param x object to act on
+    -- @treturn[1] string "integer", if *x* is a whole number
+    -- @treturn[2] string "float", for other numbers
+    -- @return[3] otherwise, `nil`
+    type = math_type,
+  },
+
   --- Ordered `pairs` iterator, respecting `__pairs` metamethod.
   --
   -- Although `__pairs` will be used to collect results, `opairs`
@@ -525,15 +553,6 @@ local M = {
   --   --> {1, 2, "ax", n = 3}
   --   pack (("ax1"):find "(%D+)")
   pack = pack,
-
-  math = {
-    --- Convert to an integer and return if possible, otherwise `nil`.
-    -- @function tointeger
-    -- @param x object to act on
-    -- @treturn[1] integer *x* converted to an integer if possible
-    -- @return[2] otherwise `nil`
-    tointeger	= tointeger,
-  },
 
   --- Package module constants for `package.config` substrings.
   -- @table package
@@ -724,6 +743,7 @@ local G = {
     sqrt	= _G.math.sqrt,
     tan		= _G.math.tan,
     tointeger	= M.math.tointeger,
+    type	= M.math.type,
   },
   next		= _G.next,
   opairs	= M.opairs,

@@ -36,8 +36,9 @@
     Note that, for consistency across host implementations, the optional
     `mode` and `env` arguments are currently **not** supported.
 
-  - `math.tointeger` is available everywhere (within the limitations
-    of representing them as floats on Lua 5.2 and earlier).
+  - `math.tointeger` and `math.type` are available everywhere (within
+    the limitations of representing all number as 53-bit floats on Lua
+    5.2 and earlier).
 
   - `package.searchpath` is available everywhere.
 
