@@ -219,7 +219,7 @@ local types = {
     if argu[i] then
       return true
     end
-    return nil, "value expected", nil
+    return nil, "value", nil
   end,
 }
 
