@@ -598,6 +598,34 @@ specify std.normalize:
       expect (t).to_equal {"bar", "baz", "foo", "qux"}
 
 
+- describe os:
+  - describe exit:
+    - before:
+        preamble = [[
+          exit = require 'std.normalize'.os.exit
+        ]]
+
+        f = M.os.exit
+
+    - context with bad arguments:
+      - 'it diagnoses argument #1 type not boolean or integer':
+          expect (f (nil)).to_raise "boolean or integer expected"
+          expect (f {}).to_raise "boolean or integer expected"
+          expect (f (math.pi)).to_raise "number has no integer representation"
+
+    - it exits successfully by default:
+        expect (luaproc (preamble .. 'exit ()')).to_succeed_with ""
+    - it respects boolean argument:
+        expect (luaproc (preamble .. 'exit (true)')).to_succeed_with ""
+        expect (luaproc (preamble .. 'exit (false)')).to_fail_with ""
+    - it exits with the given integer status:
+        expect (luaproc (preamble .. 'exit (0)')).to_exit (0)
+        expect (luaproc (preamble .. 'exit (42)')).to_exit (42)
+        expect (luaproc (preamble .. 'exit (127)')).to_exit (127)
+    - it exits with the given integer-convertible status:
+        expect (luaproc (preamble .. 'exit "3"')).to_exit (3)
+
+
 - describe pack:
   - before:
       f = M.pack

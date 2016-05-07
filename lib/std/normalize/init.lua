@@ -56,6 +56,7 @@ local _ENV = strict {
   pcall			= pcall,
   rawset		= rawset,
   require		= require,
+  select		= select,
   setfenv		= setfenv or false,
   setmetatable		= setmetatable,
   tonumber		= tonumber,
@@ -70,6 +71,7 @@ local _ENV = strict {
   debug_setupvalue	= debug.setupvalue,
   debug_upvaluejoin	= debug.upvaluejoin,
   io_open		= io.open,
+  os_exit		= os.exit,
   package_config	= package.config,
   package_searchpath	= package.searchpath,
   string_concat		= string.concat,
@@ -110,6 +112,23 @@ local ARGCHECK_FRAME	= ARGCHECK_FRAME
 
 local dirsep, pathsep, pathmark, execdir, igmark =
   string_match (package_config, "^([^\n]+)\n([^\n]+)\n([^\n]+)\n([^\n]+)\n([^\n]+)")
+
+
+-- It's hard to test at require-time whether the host `os.exit` handles
+-- boolean argument properly (ostensibly to defer to it in that case).
+-- We're shutting down anyway, so sacrifice a bit of speed for timely
+-- diagnosis of float and nil valued argument (with the argscheck
+-- annotation, later in the file), since that probably indicates a bug
+-- in your code!
+local function exit (...)
+  local n, status = select ("#", ...), ...
+  if n == 0 or status == true then
+    os_exit (0)
+  elseif status == false then
+    os_exit (1)
+  end
+  os_exit (status)
+end
 
 
 local normalize_getfenv
@@ -543,6 +562,15 @@ local M = {
   --   for k, v in opairs {"b", foo = "c", "a"} do print (k, v) end
   opairs = argscheck ("opairs", T.value) .. opairs,
 
+  os = {
+    --- Exit the program.
+    -- @function exit
+    -- @tparam bool|number[opt=true] status report back to parent process
+    -- @usage
+    --   exit (len (records.processed) > 0) 
+    exit = argscheck ("exit", any (T.bool, T.integer, T.missing)) .. exit,
+  },
+
   --- Return a list of given arguments, with field `n` set to the length.
   -- @function pack
   -- @param ... tuple to act on
@@ -752,7 +780,7 @@ local G = {
     date	= _G.os.date,
     difftime	= _G.os.difftime,
     execute	= _G.os.execute,
-    exit	= _G.os.exit,
+    exit	= M.os.exit,
     getenv	= _G.os.getenv,
     remove	= _G.os.remove,
     rename	= _G.os.rename,

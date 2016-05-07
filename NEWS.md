@@ -40,6 +40,11 @@
     the limitations of representing all number as 53-bit floats on Lua
     5.2 and earlier).
 
+  - New `os.exit` wrapper accepts a boolean argument, even in Lua 5.1;
+    but is slightly slower than the host Lua implementation in order to
+    diagnose explicit `nil` or floating-point arguments (`os.exit ()` is
+    still equivalent to `os.exit (true)`).
+
   - `package.searchpath` is available everywhere.
 
   - `str` is a fast specialization of `std.string.render`

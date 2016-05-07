@@ -169,9 +169,16 @@ local types = {
   -- Reject missing argument *i*.
   arg = function (argu, i)
     if i > argu.n then
-      return nil, "value", nil
+      return nil, nil, "value expected"
     end
     return true
+  end,
+
+  -- Accept boolean valued argu[i].
+  bool = function (argu, i)
+    return check ("boolean", argu, i, function (x)
+      return type (x) == "boolean"
+    end)
   end,
 
   -- Accept function valued or `__call` metamethod carrying argu[i].
@@ -192,6 +199,14 @@ local types = {
       return nil, nil, "number has no integer representation"
     end
     return true
+  end,
+
+  -- Accept missing argument *i* (but not explicit `nil`).
+  missing = function (argu, i)
+    if i > argu.n then
+      return true
+    end
+    return nil, ""
   end,
 
   -- Accept nil valued argu[i].
