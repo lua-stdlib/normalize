@@ -23,10 +23,10 @@ respect to creating strict environments, and validating arguments to
 Writing Lua libraries that target several Lua implementations can be a
 frustrating exercise in working around lots of small differences in APIs
 and semantics they share (or rename, or omit).  _normalize_ provides the
-means to simply access deterministic implementations of those APIs that
-have the the same semantics across all supported host Lua
+means to simply access deterministic implementations of those APIs while
+preserving the the same semantics across all supported host Lua
 implementations.  Each function is as thin and fast an implementation as
-is possible within that host Lua environment, evaluating to the Lua C
+possible within that host Lua environment, evaluating to the Lua C
 implmentation with no overhead where host semantics allow.
 
 The core of this module is to transparently set the environment up with
