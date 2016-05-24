@@ -1,5 +1,5 @@
 package = "std.normalize"
-version = "1.0-1"
+version = "1.0.1-1"
 
 description = {
   summary = "Normalized Lua Functions",
@@ -16,8 +16,8 @@ description = {
 }
 
 source = {
-  url = "http://github.com/lua-stdlib/normalize/archive/v1.0.zip",
-  dir = "normalize-1.0",
+  url = "http://github.com/lua-stdlib/normalize/archive/v1.0.1.zip",
+  dir = "normalize-1.0.1",
 }
 
 dependencies = {
