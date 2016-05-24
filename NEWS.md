@@ -1,5 +1,14 @@
 # std.normalize NEWS - User visible changes
 
+## Noteworthy changes in release 1.0.1 (2016-05-28) [stable]
+
+### Bug fixes
+
+  - `argerror` correctly treats missing or `nil`-valued argument
+    as equivalent to level 1 (i.e. blame the caller of the function
+    that calls `argerror`).
+
+
 ## Noteworthy changes in release 1.0 (2016-05-08) [stable]
 
 ### New features (since lua-stdlib-41.2)

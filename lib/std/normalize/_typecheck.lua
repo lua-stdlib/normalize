@@ -51,18 +51,12 @@ local ARGCHECK_FRAME = 0
 
 
 local function argerror (name, i, extramsg, level)
+  level = level or 1
   local s = string_format ("bad argument #%d to '%s'", i, name)
   if extramsg ~= nil then
     s = s .. " (" .. extramsg .. ")"
   end
-
-  -- So argerror(..., 1) needs 3 adding to it if the message from the
-  -- underlying call to `error` is to blame the correct frame:
-  --  1. calling error with level 1, would cause it to be the source
-  --  2. another level would report argerror itself as the source
-  --  3. we want to blame the function that called argerror, 2
-  --     frames higher
-  error (s, level and level > 0 and level + 2 + ARGCHECK_FRAME or 0)
+  error (s, level > 0 and level + 2 + ARGCHECK_FRAME or 0)
 end
 
 
