@@ -1,5 +1,5 @@
 package = "std.normalize"
-version = "1.0.1-1"
+version = "1.0.1-2"
 
 description = {
   summary = "Normalized Lua Functions",
