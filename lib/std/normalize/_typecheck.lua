@@ -60,6 +60,11 @@ local function argerror (name, i, extramsg, level)
 end
 
 
+local function iscallable (x)
+  return type (x) == "function" or getmetamethod (x, "__call")
+end
+
+
 local argscheck
 do
   -- Set argscheck according to whether argcheck is required.
@@ -84,6 +89,9 @@ do
       local checks = pack (...)
       return setmetatable ({}, {
         __concat = function (_, inner)
+          if not iscallable (inner) then
+            error ("attempt to annotate non-callable value with 'argscheck'", 2)
+          end
           return function (...)
             for i, expected, got in icalls (name, checks, pack (...)) do
               if expected or got then
@@ -177,9 +185,7 @@ local types = {
 
   -- Accept function valued or `__call` metamethod carrying argu[i].
   callable = function (argu, i)
-    return check ("callable", argu, i, function (x)
-      return type (x) == "function" or getmetamethod (x, "__call")
-    end)
+    return check ("callable", argu, i, iscallable)
   end,
 
   -- Accept argu[i] if it is an integer valued number, or can be

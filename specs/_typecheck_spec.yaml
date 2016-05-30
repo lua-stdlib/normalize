@@ -38,6 +38,21 @@ specify std.normalize._typecheck:
         }
         local function exit (x) os.exit (x and 0 or 1) end
       ]]
+
+      f = M.argscheck
+
+  - context with bad arguments:
+    - it diagnoses non-callable annotations:
+        x = nil
+        fn = function () end
+        fntor = setmetatable ({}, {__call = fn})
+        expect (f "callable" .. x).
+          to_raise "attempt to annotate non-callable value with 'argscheck'"
+        expect (f "callable" .. fn).
+          not_to_raise "attempt to annotate non-callable value with 'argscheck'"
+        expect (f "callable" .. fntor).
+          not_to_raise "attempt to annotate non-callable value with 'argscheck'"
+
   - context global _DEBUG is nil:
     - it wraps the inner function:
         expect (luaproc (preamble .. [[
