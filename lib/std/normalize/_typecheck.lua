@@ -183,7 +183,7 @@ local types = {
   end,
 
   -- Accept argu[i] if it is an integer valued number, or can be
-  -- converted to one by `tonumber` (or nil with `.opt` variant).
+  -- converted to one by `tonumber`.
   integer = function (argu, i)
     local value = tonumber (argu[i])
     if type (value) ~= "number" then
