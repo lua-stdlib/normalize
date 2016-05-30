@@ -1,5 +1,13 @@
 # std.normalize NEWS - User visible changes
 
+## Noteworthy changes in release 1.0.2 (2016-??-??) [?]
+
+### Bug fixes
+
+  - `getmetamethod` no longer raises an argerror for nil-valued
+    initial argument.
+
+
 ## Noteworthy changes in release 1.0.1 (2016-05-28) [stable]
 
 ### Bug fixes

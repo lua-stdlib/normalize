@@ -475,7 +475,7 @@ local M = {
   -- @usage
   --   normalize = getmetamethod (require "std.normalize", "__call")
   getmetamethod = argscheck (
-    "getmetamethod", T.value, T.stringy
+    "getmetamethod", T.arg, T.stringy
   ) .. getmetamethod,
 
   --- Iterate over elements of a sequence, until the first `nil` value.
