@@ -569,7 +569,7 @@ local M = {
     -- @tparam bool|number[opt=true] status report back to parent process
     -- @usage
     --   exit (len (records.processed) > 0) 
-    exit = argscheck ("exit", any (T.bool, T.integer, T.missing)) .. exit,
+    exit = argscheck ("exit", any (T.boolean, T.integer, T.missing)) .. exit,
   },
 
   --- Return a list of given arguments, with field `n` set to the length.

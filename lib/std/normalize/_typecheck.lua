@@ -162,7 +162,7 @@ local function check (expected, argu, i, predicate)
 end
 
 
-local types = {
+local types = setmetatable ({
   -- Accept argu[i].
   accept = function ()
     return true
@@ -174,13 +174,6 @@ local types = {
       return nil, nil, "value expected"
     end
     return true
-  end,
-
-  -- Accept boolean valued argu[i].
-  bool = function (argu, i)
-    return check ("boolean", argu, i, function (x)
-      return type (x) == "boolean"
-    end)
   end,
 
   -- Accept function valued or `__call` metamethod carrying argu[i].
@@ -216,24 +209,10 @@ local types = {
     end)
   end,
 
-  -- Accept string valued argu[i].
-  string = function (argu, i)
-    return check ("string", argu, i, function (x)
-      return type (x) == "string"
-    end)
-  end,
-
   -- Accept string valued or `__string` metamethod carrying argu[i].
   stringy = function (argu, i)
     return check ("string", argu, i, function (x)
       return type (x) == "string" or getmetamethod (x, "__tostring")
-    end)
-  end,
-
-  -- Accept table valued argu[i].
-  table = function (argu, i)
-    return check ("table", argu, i, function (x)
-      return type (x) == "table"
     end)
   end,
 
@@ -244,7 +223,16 @@ local types = {
     end
     return nil, "value", nil
   end,
-}
+}, {
+  __index = function (_, k)
+    -- Accept named primitive valued argu[i].
+    return function (argu, i)
+      return check (k, argu, i, function (x)
+        return type (x) == k
+      end)
+    end
+  end,
+})
 
 
 local function any (...)
