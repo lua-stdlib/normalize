@@ -202,13 +202,6 @@ local types = setmetatable ({
     return nil, ""
   end,
 
-  -- Accept nil valued argu[i].
-  none = function (argu, i)
-    return check ("nil", argu, i, function (x)
-      return x == nil
-    end)
-  end,
-
   -- Accept string valued or `__string` metamethod carrying argu[i].
   stringy = function (argu, i)
     return check ("string", argu, i, function (x)
@@ -262,7 +255,7 @@ end
 
 
 local function opt (...)
-  return any (types.none, ...)
+  return any (types["nil"], ...)
 end
 
 
