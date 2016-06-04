@@ -59,7 +59,6 @@ local _ENV = strict {
   select		= select,
   setfenv		= setfenv or false,
   setmetatable		= setmetatable,
-  tonumber		= tonumber,
   tostring		= tostring,
   type			= type,
   xpcall		= xpcall,
@@ -122,7 +121,7 @@ local dirsep, pathsep, pathmark, execdir, igmark =
 -- in your code!
 local function exit (...)
   local n, status = select ("#", ...), ...
-  if n == 0 or status == true then
+  if tointeger (n) == 0 or status == true then
     os_exit (0)
   elseif status == false then
     os_exit (1)
@@ -135,7 +134,7 @@ local normalize_getfenv
 if debug_getfenv then
 
   normalize_getfenv = function (fn)
-    local n = tonumber (fn or 1)
+    local n = tointeger (fn or 1)
     if n then
       if n > 0 then
         -- Adjust for this function's stack frame, if fn is non-zero.
@@ -167,7 +166,7 @@ else
     if fn == 0 then
       return _G
     end
-    local n = tonumber (fn or 1)
+    local n = tointeger (fn or 1)
     if n then
       fn = debug_getinfo (n + 1 + ARGCHECK_FRAME, "f").func
     elseif type (fn) ~= "function" then
@@ -306,7 +305,7 @@ local normalize_setfenv
 if debug_setfenv then
 
   normalize_setfenv = function (fn, env)
-    local n = tonumber (fn or 1)
+    local n = tointeger (fn or 1)
     if n then
       if n > 0 then
 	n = n + 1 + ARGCHECK_FRAME
@@ -323,7 +322,7 @@ else
 
   -- Thanks to http://lua-users.org/lists/lua-l/2010-06/msg00313.html
   normalize_setfenv = function (fn, env)
-    local n = tonumber (fn or 1)
+    local n = tointeger (fn or 1)
     if n then
       if n > 0 then
 	n = n + 1 + ARGCHECK_FRAME
@@ -401,7 +400,7 @@ end
 
 
 local function unpack (t, i, j)
-  return table_unpack (t, tonumber (i) or 1, tonumber (j) or len (t))
+  return table_unpack (t, tointeger (i) or 1, tointeger (j) or len (t))
 end
 
 

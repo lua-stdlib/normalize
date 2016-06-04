@@ -51,8 +51,8 @@ local ARGCHECK_FRAME = 0
 
 
 local function argerror (name, i, extramsg, level)
-  level = level or 1
-  local s = string_format ("bad argument #%d to '%s'", i, name)
+  level = tointeger (level) or 1
+  local s = string_format ("bad argument #%d to '%s'", tointeger (i), name)
   if extramsg ~= nil then
     s = s .. " (" .. extramsg .. ")"
   end
