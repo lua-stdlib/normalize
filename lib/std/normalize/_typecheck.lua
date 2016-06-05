@@ -211,7 +211,7 @@ local types = setmetatable ({
 
   -- Accept non-nil valued argu[i].
   value = function (argu, i)
-    if argu[i] then
+    if argu[i] ~= nil then
       return true
     end
     return nil, "value", nil
