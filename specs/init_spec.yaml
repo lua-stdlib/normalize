@@ -401,11 +401,11 @@ specify std.normalize:
 
   - context with bad arguments:
     - 'it diagnoses missing argument #1':
-         expect (f ()).to_raise "value expected"
+         expect (f ()).to_raise "table expected"
     - 'it diagnoses nil-valued argument #1':
-         expect (f (nil)).to_raise "value expected"
+         expect (f (nil)).to_raise "table expected"
     - 'it diagnoses argument #1 type not table':
-         expect (f (false)).to_raise "value expected"
+         expect (f (false)).to_raise "table expected"
 
   - it works for an empty list:
       for i, v in f {} do t[i] = v end
@@ -599,11 +599,11 @@ specify std.normalize:
 
   - context with bad arguments:
     - 'it diagnoses missing argument #1':
-         expect (f ()).to_raise "value expected"
+         expect (f ()).to_raise "table expected"
     - 'it diagnoses nil-valued argument #1':
-         expect (f (nil)).to_raise "value expected"
+         expect (f (nil)).to_raise "table expected"
     - 'it diagnoses argument #1 type not table':
-         expect (f (false)).to_raise "value expected"
+         expect (f (false)).to_raise "table expected"
 
   - it works for an empty list:
       for i, v in f {} do t[i] = v end

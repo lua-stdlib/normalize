@@ -496,7 +496,7 @@ local M = {
   --   for i, v in ipairs (args) do
   --     print (string.format ("%d=%s", i, v))
   --   end
-  ipairs = argscheck ("ipairs", T.value) .. ipairs,
+  ipairs = argscheck ("ipairs", T.table) .. ipairs,
 
   --- Deterministic, functional version of core Lua `#` operator.
   --
@@ -560,7 +560,7 @@ local M = {
   --   --> 2        a
   --   --> foo      c
   --   for k, v in opairs {"b", foo = "c", "a"} do print (k, v) end
-  opairs = argscheck ("opairs", T.value) .. opairs,
+  opairs = argscheck ("opairs", T.table) .. opairs,
 
   os = {
     --- Exit the program.

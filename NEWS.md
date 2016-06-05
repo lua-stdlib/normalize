@@ -7,6 +7,9 @@
   - `getmetamethod` no longer raises an argerror for nil-valued
     initial argument.
 
+  - `ipairs` and `opairs` now diagnose all non-table valued arguments
+     correctly.
+
 
 ## Noteworthy changes in release 1.0.1 (2016-05-28) [stable]
 
