@@ -20,6 +20,22 @@ pack = table.pack or function (...) return {n = select ("#", ...), ...} end
 unpack = table.unpack or unpack
 
 
+local function getmetamethod (x, n)
+  local m = (getmetatable (x) or {})[tostring (n)]
+  if type (m) == "function" then
+    return m
+  end
+  if type ((getmetatable (m) or {}).__call) == "function" then
+    return m
+  end
+end
+
+
+function callable (x)
+  return type (x) == "function" or getmetamethod (x, "__call")
+end
+
+
 function copy (t)
   local r = {}
   for k, v in next, t do r[k] = v end

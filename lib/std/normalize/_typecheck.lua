@@ -76,11 +76,11 @@ do
       return function (state, i)
         if i < state.checks.n then
           i = i + 1
-          local ok, expected, got = state.checks[i] (state.argu, i)
-          if not ok then
-            return i, expected, got
+          local r = pack (state.checks[i] (state.argu, i))
+          if r.n > 0 then
+            return i, r[1], r[2]
           end
-          return i, nil
+          return i
         end
       end, {argu=argu, checks=checks}, 0
     end
@@ -93,8 +93,8 @@ do
             error ("attempt to annotate non-callable value with 'argscheck'", 2)
           end
           return function (...)
-            for i, expected, got in icalls (name, checks, pack (...)) do
-              if expected or got then
+            for i, got, expected in icalls (name, checks, pack (...)) do
+              if got or expected then
                 local buf, extramsg = {}
                 if expected then
                   buf[#buf +1] = expected .. " expected"
@@ -144,36 +144,34 @@ end
 --[[ ================= ]]--
 
 
-local function fail (expected, argu, i)
-  local got = type (argu[i])
+local function fail (expected, argu, i, got)
   if i > argu.n then
     got = "no value"
+  else
+    got = got or type (argu[i])
   end
-  return nil, expected, "got " .. got
+  return "got " .. got, expected
 end
 
 
 local function check (expected, argu, i, predicate)
   local arg = argu[i]
-  if predicate (arg) then
-    return true
+  local ok, got = predicate (arg)
+  if not ok then
+    return fail (expected, argu, i, got)
   end
-  return fail (expected, argu, i)
 end
 
 
 local types = setmetatable ({
   -- Accept argu[i].
-  accept = function ()
-    return true
-  end,
+  accept = function () end,
 
   -- Reject missing argument *i*.
   arg = function (argu, i)
     if i > argu.n then
-      return nil, nil, "value expected"
+      return "value expected"
     end
-    return true
   end,
 
   -- Accept function valued or `__call` metamethod carrying argu[i].
@@ -189,17 +187,15 @@ local types = setmetatable ({
       return fail ("integer", argu, i)
     end
     if tointeger (value) == nil then
-      return nil, nil, "number has no integer representation"
+      return "number has no integer representation"
     end
-    return true
   end,
 
   -- Accept missing argument *i* (but not explicit `nil`).
   missing = function (argu, i)
-    if i > argu.n then
-      return true
+    if i <= argu.n then
+      return ""
     end
-    return nil, ""
   end,
 
   -- Accept string valued or `__string` metamethod carrying argu[i].
@@ -211,10 +207,9 @@ local types = setmetatable ({
 
   -- Accept non-nil valued argu[i].
   value = function (argu, i)
-    if argu[i] ~= nil then
-      return true
+    if argu[i] == nil then
+      return "value"
     end
-    return nil, "value", nil
   end,
 }, {
   __index = function (_, k)
@@ -231,25 +226,25 @@ local types = setmetatable ({
 local function any (...)
   local fns = {...}
   return function (argu, i)
-    local buf, ok, expected, got = {}
+    local buf, got, expected, r = {}
     for _, predicate in ipairs (fns) do
-      ok, expected, got = predicate (argu, i)
-      if ok then
-        return true
-      end
-      if expected == nil then
-	return nil, nil, got
+      r = pack (predicate (argu, i))
+      got, expected = r[1], r[2]
+      if r.n == 0 then
+        return
+      elseif r.n == 1 and #got > 0 then
+	return got
       elseif expected ~= "nil" then
         buf[#buf + 1] = expected
       end
     end
     if #buf == 0 then
-      return nil, nil, got
+      return got
     elseif #buf > 1 then
       table_sort (buf)
       buf[#buf -1], buf[#buf] = buf[#buf -1] .. " or " .. buf[#buf], nil
     end
-    return nil, table_concat (buf, ", "), got
+    return got, table_concat (buf, ", ")
   end
 end
 
@@ -324,7 +319,7 @@ return {
   -- @tfield ArgCheck accept always succeeds
   -- @tfield ArgCheck callable accept a function or functor
   -- @tfield ArgCheck integer accept integer valued number
-  -- @tfield ArgCheck none accept only `nil`
+  -- @tfield ArgCheck nil accept only `nil`
   -- @tfield ArgCheck stringy accept a string or `__tostring` metamethod
   --   bearing object
   -- @tfield ArgCheck table accept any table
@@ -341,13 +336,9 @@ return {
 -- @function ArgCheck
 -- @tparam table argu a packed table (including `n` field) of all arguments
 -- @int index into *argu* for argument to action
--- @return[1] non-nil if one of the callable arguments succeeded
--- @return[2] nil if all of the callable arguments failed
--- @treturn[2] string the expected types returned by failed calls
--- @treturn[2] string a description of the failed predicate argument
--- @return[3] nil otherwise
--- @treturn[3] nil if expected type list is not relevant to failure
---   description
--- @treturn[3] string error message
+-- @return[1] nothing, to accept `argu[i]` 
+-- @treturn[2] string error message, to reject `argu[i]` immediately
+-- @treturn[3] string a description of rejected `argu[i]`
+-- @treturn[3] string the expected type of `argu[i]`
 -- @usage
 --   len = argscheck ("len", any (types.table, types.string)) .. len
