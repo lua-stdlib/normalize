@@ -147,8 +147,12 @@ end
 local function fail (expected, argu, i, got)
   if i > argu.n then
     got = "no value"
-  else
-    got = got or type (argu[i])
+  elseif got == nil then
+    if getmetamethod (argu[i], "__call") then
+      got = "functor"
+    else
+      got = type (argu[i])
+    end
   end
   return "got " .. got, expected
 end

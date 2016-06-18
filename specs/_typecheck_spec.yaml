@@ -217,7 +217,7 @@ specify std.normalize._typecheck:
     - it rejects non-function values:
         expect (f (false)).to_equal {"got boolean", x}
         expect (f (setmetatable ({}, {__call=f}))).
-          to_equal {"got table", x}
+          to_equal {"got functor", x}
 
   - context integer:
     - before:
