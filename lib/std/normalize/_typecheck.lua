@@ -86,9 +86,8 @@ do
     end
 
     argscheck = function (name, ...)
-      local checks = pack (...)
-      return setmetatable ({}, {
-        __concat = function (_, inner)
+      return setmetatable (pack (...), {
+        __concat = function (checks, inner)
           if not iscallable (inner) then
             error ("attempt to annotate non-callable value with 'argscheck'", 2)
           end
