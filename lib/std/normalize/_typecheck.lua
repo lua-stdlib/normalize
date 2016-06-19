@@ -303,6 +303,23 @@ return {
   --   end
   argscheck = argscheck,
 
+  --- Low-level type conformance check helper.
+  --
+  -- Use this, with a simple @{Predicate} function, to write concise argument
+  -- type check functions.
+  -- @function check
+  -- @string expected name of the expected type
+  -- @tparam table argu a packed table (including `n` field) of all arguments
+  -- @int i index into *argu* for argument to action
+  -- @tparam Predicate predicate check whether `argu[i]` matches `expected`
+  -- @usage
+  --   function callable (argu, i)
+  --     return check ("string", argu, i, function (x)
+  --       return type (x) == "string"
+  --     end)
+  --   end
+  check = check,
+
   --- Create an @{ArgCheck} predicate for an optional argument.
   --
   -- This function satisfies the @{ArgCheck} interface in order to be
@@ -336,13 +353,19 @@ return {
 --- Types
 -- @section types
 
---- Signature of an @{argscheck} predicate callable.
+--- Signature of an @{argscheck} callable.
 -- @function ArgCheck
 -- @tparam table argu a packed table (including `n` field) of all arguments
 -- @int index into *argu* for argument to action
 -- @return[1] nothing, to accept `argu[i]` 
 -- @treturn[2] string error message, to reject `argu[i]` immediately
--- @treturn[3] string a description of rejected `argu[i]`
 -- @treturn[3] string the expected type of `argu[i]`
+-- @treturn[3] string a description of rejected `argu[i]`
 -- @usage
 --   len = argscheck ("len", any (types.table, types.string)) .. len
+
+--- Signature of a @{check} type predicate callable.
+-- @function Predicate
+-- @param x object to action
+-- @treturn boolean `true` if *x* is of the expected type, otherwise `false`
+-- @treturn[opt] string description of the actual type for error message
