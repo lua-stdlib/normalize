@@ -2,6 +2,11 @@
 
 ## Noteworthy changes in release 1.0.2 (2016-??-??) [?]
 
+### New features
+
+  - `pack` sets a `__len` metamethod on its result so that `len` returns
+    the actual number of arguments packed (including `nil`s).
+
 ### Bug fixes
 
   - `getmetamethod` no longer raises an argerror for nil-valued

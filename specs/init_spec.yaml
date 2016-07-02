@@ -671,7 +671,14 @@ specify std.normalize:
       expect (f ().n).not_to_be (nil)
       expect (f (1, 2, 3).n).to_be (3)
   - it packs arguments into the returned table:
-      expect (f (1, 2, 3)).to_equal {1, 2, 3; n = 3}
+      expect (f (1, 2, 3)).to_equal {1, 2, 3; n=3}
+  - it packs nil arguments correctly:
+      expect (f (nil, 2, nil, nil)).to_equal {[2]=2; n=4}
+  - it responds to len:
+      expect (M.len (f ())).to_be (0)
+      expect (M.len (f (nil))).to_be (1)
+      expect (M.len (f (1, 2, 3))).to_be (3)
+      expect (M.len (f (nil, 2, nil, nil))).to_be (4)
 
 
 - describe package:

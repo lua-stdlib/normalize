@@ -11,6 +11,7 @@ local _ENV = strict {
   getmetatable	= getmetatable,
   select	= select,
   setfenv	= setfenv or function () end,
+  setmetatable	= setmetatable,
   tonumber	= tonumber,
   tostring	= tostring,
   type		= type,
@@ -36,6 +37,13 @@ local function getmetamethod (x, n)
     return m
   end
 end
+
+
+local pack_mt = {
+  __len = function (self)
+    return self.n
+  end,
+}
 
 
 local pack = table_pack or function (...)
@@ -64,7 +72,9 @@ return {
 
   --- Return a list of given arguments, with field `n` set to the length.
   -- @see std.normalize.pack
-  pack = pack,
+  pack = function (...)
+    return setmetatable (pack (...), pack_mt)
+  end,
 
   --- Convert to an integer and return if possible, otherwise `nil`.
   -- @see std.normalize.math.tointeger
