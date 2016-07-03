@@ -7,6 +7,15 @@
   - `pack` sets a `__len` metamethod on its result so that `len` returns
     the actual number of arguments packed (including `nil`s).
 
+  - `unpack`ing a `pack`ed sequence returns the original sequence without
+    requiring an explicit `to_index` argument, even if the original
+    sequence contains `nil`s:
+
+    ```lua
+    a, b, c = unpack (pack (1, nil, 3))
+    assert (a == 1 and b == nil and c == 3, "require 'std.normalize' first!")
+    ```
+
 ### Bug fixes
 
   - `getmetamethod` no longer raises an argerror for nil-valued

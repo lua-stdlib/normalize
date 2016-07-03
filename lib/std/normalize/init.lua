@@ -586,14 +586,17 @@ local M = {
   },
 
   --- Return a list of given arguments, with field `n` set to the length.
+  --
+  -- The returned table also has a `__len` metamethod that returns `n`, so
+  -- `ipairs` and `unpack` behave sanely when there are `nil` valued elements.
   -- @function pack
   -- @param ... tuple to act on
   -- @treturn table packed list of *...* values, with field `n` set to
   --   number of tuple elements (including any explicit `nil` elements)
   -- @see unpack
   -- @usage
-  --   --> {1, 2, "ax", n = 3}
-  --   pack (("ax1"):find "(%D+)")
+  --   --> 5
+  --   len (pack (nil, 2, 5, nil, nil))
   pack = pack,
 
   package = {
@@ -683,7 +686,8 @@ local M = {
   -- @return ... values of numeric indices of *t*
   -- @see pack
   -- @usage
-  --   return unpack (results_table)
+  --   local a, b, c = unpack (pack (nil, 2, nil))
+  --   assert (a == nil and b == 2 and c == nil)
   unpack = argscheck (
     "unpack", T.table, opt (T.integer), opt (T.integer)
   ) .. unpack,
