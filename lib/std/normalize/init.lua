@@ -185,16 +185,6 @@ else
 end
 
 
-local function ipairs (l)
-  return function (l, n)
-    n = n + 1
-    if l[n] ~= nil then
-      return n, l[n]
-    end
-  end, l, 0
-end
-
-
 local function rawlen (x)
   -- Lua 5.1 does not implement rawlen, and while # operator ignores
   -- __len metamethod, `nil` in sequence is handled inconsistently.
@@ -220,6 +210,28 @@ local function len (x)
     x = tostring (x)
   end
   return rawlen (x)
+end
+
+
+local function ipairs (l)
+  if getmetamethod (l, "__len") then
+    -- Use a closure to capture len metamethod result if necessary.
+    local n = len (l)
+    return function (l, i)
+      i = i + 1
+      if i <= n then
+        return i, l[i]
+      end
+    end, l, 0
+  end
+
+  -- ...otherwise, find the last item as we go without calling `len()`.
+  return function (l, i)
+    i = i + 1
+    if l[i] ~= nil then
+      return i, l[i]
+    end
+  end, l, 0
 end
 
 
@@ -480,22 +492,24 @@ local M = {
   --- Iterate over elements of a sequence, until the first `nil` value.
   --
   -- Returns successive key-value pairs with integer keys starting at 1,
-  -- up to the last non-`nil` value.  Unlike Lua 5.2+, any `__ipairs`
-  -- metamethod is **ignored**!  Unlike Lua 5.1, any `__index`
-  -- metamethod is respected.
+  -- up to the index returned by the `__len` metamethod if any, or else
+  -- up to last non-`nil` value.
+  --
+  -- Unlike Lua 5.1, any `__index` metamethod is respected.
+  --
+  -- Unlike Lua 5.2+, any `__ipairs` metamethod is **ignored**!
   -- @function ipairs
   -- @tparam table t table to iterate on
   -- @treturn function iterator function
   -- @treturn table *t* the table being iterated over
   -- @treturn int the previous iteration index
   -- @usage
-  --   -- length of sequence
-  --   args = {"first", "second", nil, "last"}
-  --   --> 1=first
-  --   --> 2=second
-  --   for i, v in ipairs (args) do
-  --     print (string.format ("%d=%s", i, v))
-  --   end
+  --   t, u = {}, {}
+  --   for i, v in ipairs {1, 2, nil, 4} do t[i] = v end
+  --   assert (len (t) == 2)
+  --
+  --   for i, v in ipairs (pack (1, 2, nil, 4)) do u[i] = v end
+  --   assert (len (u) == 4)
   ipairs = argscheck ("ipairs", T.table) .. ipairs,
 
   --- Deterministic, functional version of core Lua `#` operator.
@@ -567,7 +581,7 @@ local M = {
     -- @function os.exit
     -- @tparam bool|number[opt=true] status report back to parent process
     -- @usage
-    --   exit (len (records.processed) > 0) 
+    --   exit (len (records.processed) > 0)
     exit = argscheck ("exit", any (T.boolean, T.integer, T.missing)) .. exit,
   },
 

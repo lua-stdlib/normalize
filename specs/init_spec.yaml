@@ -393,7 +393,7 @@ specify std.normalize:
           if i < 5 then return i + 1, x[i] end
         end, {"an", "unused", "proxy", "table"}, 0
       end
-      __len = function (t) return 2 end
+      __len = function (t) return 5 end
       src = {"foo", "bar", 5, 42}
       t = {}
 
@@ -401,11 +401,11 @@ specify std.normalize:
 
   - context with bad arguments:
     - 'it diagnoses missing argument #1':
-         expect (f ()).to_raise "table expected"
+         expect (f ()).to_raise "table expected, got no value"
     - 'it diagnoses nil-valued argument #1':
-         expect (f (nil)).to_raise "table expected"
+         expect (f (nil)).to_raise "table expected, got nil"
     - 'it diagnoses argument #1 type not table':
-         expect (f (false)).to_raise "table expected"
+         expect (f (false)).to_raise "table expected, got boolean"
 
   - it works for an empty list:
       for i, v in f {} do t[i] = v end
@@ -426,13 +426,15 @@ specify std.normalize:
         t[i] = v
       end
       expect (t).to_equal {"abc", "b", "c", "d"}
+  - it respects __len metamethod:
+      for i, v in f (setmetatable (src, {__len = __len})) do
+        t.n, t[i] = i, v
+      end
+      expect (t).to_equal {"foo", "bar", 5, 42; n = 5}
   - it ignores __ipairs metamethod:
       for i, v in f (setmetatable (src, {__ipairs = __ipairs})) do
         t[i] = v
       end
-      expect (t).to_equal (src)
-  - it ignores __len metamethod:
-      for k, v in f (setmetatable (src, {__len = __len})) do t[k] = v end
       expect (t).to_equal (src)
 
 

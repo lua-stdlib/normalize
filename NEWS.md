@@ -15,6 +15,11 @@
   - `ipairs` and `opairs` now diagnose all non-table valued arguments
      correctly.
 
+### Incompatible changes
+
+  - `ipairs` now respects the `__len` metamethod, such as the one set by
+    `pack`.
+
 
 ## Noteworthy changes in release 1.0.1 (2016-05-28) [stable]
 
