@@ -27,7 +27,7 @@ means to simply access deterministic implementations of those APIs while
 preserving the the same semantics across all supported host Lua
 implementations.  Each function is as thin and fast an implementation as
 possible within that host Lua environment, evaluating to the Lua C
-implmentation with no overhead where host semantics allow.
+implementation with no overhead where host semantics allow.
 
 The core of this module is to transparently set the environment up with
 a single API (as opposed to requiring caching functions from a module
