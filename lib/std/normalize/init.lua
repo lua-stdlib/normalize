@@ -442,7 +442,10 @@ end
 local T = types
 
 
-local M = {
+local G = {
+   _VERSION = _G._VERSION,
+   arg = _G.arg,
+
    --- Raise a bad argument error.
    -- Equivalent to luaL_argerror in the Lua C API. This function does not
    -- return.   The `level` argument behaves just like the core `error`
@@ -461,6 +464,36 @@ local M = {
    argerror = argscheck(
       'argerror', T.stringy, T.integer, T.accept, opt(T.integer)
    ) .. argerror,
+
+   assert = _G.assert,
+   collectgarbage = _G.collectgarbage,
+   coroutine = {
+      create = _G.coroutine.create,
+      resume = _G.coroutine.resume,
+      running = _G.coroutine.running,
+      status = _G.coroutine.status,
+      wrap = _G.coroutine.wrap,
+      yield = _G.coroutine.yield,
+   },
+   debug = {
+      debug = _G.debug.debug,
+      gethook = _G.debug.gethook,
+      getinfo = _G.debug.getinfo,
+      getlocal = _G.debug.getlocal,
+      getmetatable = _G.debug.getmetatable,
+      getregistry = _G.debug.getregistry,
+      getupvalue = _G.debug.getupvalue,
+      getuservalue = _G.debug.getuservalue,
+      sethook = _G.debug.sethook,
+      setmetatable = _G.debug.setmetatable,
+      setupvalue = _G.debug.setupvalue,
+      setuservalue = _G.debug.setuservalue,
+      traceback = _G.debug.traceback,
+      upvalueid = _G.debug.upvalueid,
+      upvaluejoin = _G.debug.upvaluejoin,
+   },
+   dofile = _G.dofile,
+   error = _G.error,
 
    --- Get a function or functor environment.
    --
@@ -488,6 +521,24 @@ local M = {
    getmetamethod = argscheck(
       'getmetamethod', T.arg, T.stringy
    ) .. getmetamethod,
+
+   getmetatable = _G.getmetatable,
+   io = {
+      close = _G.io.close,
+      flush = _G.io.flush,
+      input = _G.io.input,
+      lines = _G.io.lines,
+      open = _G.io.open,
+      output = _G.io.output,
+      popen = _G.io.popen,
+      read = _G.io.read,
+      stderr = _G.io.stderr,
+      stdin = _G.io.stdin,
+      stdout = _G.io.stdout,
+      tmpfile = _G.io.tmpfile,
+      type = _G.io.type,
+      write = _G.io.write,
+   },
 
    --- Iterate over elements of a sequence, until the first `nil` value.
    --
@@ -539,7 +590,32 @@ local M = {
       'load', any(T.callable, T.stringy), opt(T.stringy)
    ) .. normalize_load,
 
+   loadfile = _G.loadfile,
+
    math = {
+      abs = _G.math.abs,
+      acos = _G.math.acos,
+      asin = _G.math.asin,
+      atan = _G.math.atan,
+      ceil = _G.math.ceil,
+      cos = _G.math.cos,
+      deg = _G.math.deg,
+      exp = _G.math.exp,
+      floor = _G.math.floor,
+      fmod = _G.math.fmod,
+      huge = _G.math.huge,
+      log = _G.math.log,
+      max = _G.math.max,
+      min = _G.math.min,
+      modf = _G.math.modf,
+      pi = _G.math.pi,
+      rad = _G.math.rad,
+      random = _G.math.random,
+      randomseed = _G.math.randomseed,
+      sin = _G.math.sin,
+      sqrt = _G.math.sqrt,
+      tan = _G.math.tan,
+
       --- Convert to an integer and return if possible, otherwise `nil`.
       -- @function math.tointeger
       -- @param x object to act on
@@ -559,6 +635,7 @@ local M = {
       -- @return[3] `nil` otherwise
       type = argscheck('type', T.arg) .. math_type,
    },
+   next = _G.next,
 
    --- Ordered `pairs` iterator, respecting `__pairs` metamethod.
    --
@@ -577,12 +654,24 @@ local M = {
    opairs = argscheck('opairs', T.table) .. opairs,
 
    os = {
+      clock = _G.os.clock,
+      date = _G.os.date,
+      difftime = _G.os.difftime,
+      execute = _G.os.execute,
+
       --- Exit the program.
       -- @function os.exit
       -- @tparam bool|number[opt=true] status report back to parent process
       -- @usage
       --    exit(len(records.processed) > 0)
       exit = argscheck('exit', any(T.boolean, T.integer, T.missing)) .. exit,
+
+      getenv = _G.os.getenv,
+      remove = _G.os.remove,
+      rename = _G.os.rename,
+      setlocale = _G.os.setlocale,
+      time = _G.os.time,
+      tmpname = _G.os.tmpname,
    },
 
    --- Return a list of given arguments, with field `n` set to the length.
@@ -600,6 +689,9 @@ local M = {
    pack = pack,
 
    package = {
+      config = _G.package.config,
+      cpath = _G.package.cpath,
+
       --- Package module constants for `package.config` substrings.
       -- @table package
       -- @string dirsep directory separator in path elements
@@ -613,6 +705,11 @@ local M = {
       igmark = igmark,
       pathmark = pathmark,
       pathsep = pathsep,
+
+      loadlib = _G.package.loadlib,
+      path = _G.package.path,
+      preload = _G.package.preload,
+      searchers = _G.package.searchers or _G.package.loaders,
 
       --- Searches for a named file in a given path.
       --
@@ -645,6 +742,11 @@ local M = {
    --    for k, v in pairs {'a', b='c', foo=42} do process(k, v) end
    pairs = argscheck('pairs', T.table) .. pairs,
 
+   pcall = _G.pcall,
+   print = _G.print,
+   rawequal = _G.rawequal,
+   rawget = _G.rawget,
+
    --- Length of a string or table object without using any metamethod.
    -- @function rawlen
    -- @tparam string|table x object to act on
@@ -653,6 +755,10 @@ local M = {
    --    --> 0
    --    rawlen(setmetatable({}, {__len=function() return 42}))
    rawlen = argscheck('rawlen', any(T.string, T.table)) .. rawlen,
+
+   rawset = _G.rawset,
+   require = _G.require,
+   select = _G.select,
 
    --- Set a function or functor environment.
    --
@@ -669,6 +775,8 @@ local M = {
       'setfenv', any(T.integer, T.callable), T.table
    ) .. normalize_setfenv,
 
+   setmetatable = _G.setmetatable,
+
    --- Return a compact stringified representation of argument.
    -- @function str
    -- @param x item to act on
@@ -677,6 +785,31 @@ local M = {
    --    -- {baz,5,foo=bar}
    --    print(str{foo='bar','baz', 5})
    str = str,
+
+   string = {
+      byte = _G.string.byte,
+      char = _G.string.char,
+      dump = _G.string.dump,
+      find = _G.string.find,
+      format = _G.string.format,
+      gmatch = _G.string.gmatch,
+      gsub = _G.string.gsub,
+      lower = _G.string.lower,
+      match = _G.string.match,
+      rep = _G.string.rep,
+      reverse = _G.string.reverse,
+      sub = _G.string.sub,
+      upper = _G.string.upper,
+   },
+   table = {
+      concat = _G.table.concat,
+      insert = _G.table.insert,
+      remove = _G.table.remove,
+      sort = _G.table.sort,
+   },
+   tonumber = _G.tonumber,
+   tostring = _G.tostring,
+   type = _G.type,
 
    --- Either `table.unpack` in newer-, or `unpack` in older Lua implementations.
    -- @function unpack
@@ -706,159 +839,6 @@ local M = {
    --    -- Use errh to get a backtrack after curses exits abnormally
    --    xpcall(main, errh, arg, opt)
    xpcall = argscheck('xpcall', T.callable, T.callable) .. xpcall,
-}
-
-
-local G = {
-   _VERSION = _G._VERSION,
-   arg = _G.arg,
-   argerror = M.argerror,
-   assert = _G.assert,
-   collectgarbage = _G.collectgarbage,
-   coroutine = {
-      create = _G.coroutine.create,
-      resume = _G.coroutine.resume,
-      running = _G.coroutine.running,
-      status = _G.coroutine.status,
-      wrap = _G.coroutine.wrap,
-      yield = _G.coroutine.yield,
-   },
-   debug = {
-      debug = _G.debug.debug,
-      gethook = _G.debug.gethook,
-      getinfo = _G.debug.getinfo,
-      getlocal = _G.debug.getlocal,
-      getmetatable = _G.debug.getmetatable,
-      getregistry = _G.debug.getregistry,
-      getupvalue = _G.debug.getupvalue,
-      getuservalue = _G.debug.getuservalue,
-      sethook = _G.debug.sethook,
-      setmetatable = _G.debug.setmetatable,
-      setupvalue = _G.debug.setupvalue,
-      setuservalue = _G.debug.setuservalue,
-      traceback = _G.debug.traceback,
-      upvalueid = _G.debug.upvalueid,
-      upvaluejoin = _G.debug.upvaluejoin,
-   },
-   dofile = _G.dofile,
-   error = _G.error,
-   getfenv = M.getfenv,
-   getmetamethod = M.getmetamethod,
-   getmetatable = _G.getmetatable,
-   io = {
-      close = _G.io.close,
-      flush = _G.io.flush,
-      input = _G.io.input,
-      lines = _G.io.lines,
-      open = _G.io.open,
-      output = _G.io.output,
-      popen = _G.io.popen,
-      read = _G.io.read,
-      stderr = _G.io.stderr,
-      stdin = _G.io.stdin,
-      stdout = _G.io.stdout,
-      tmpfile = _G.io.tmpfile,
-      type = _G.io.type,
-      write = _G.io.write,
-   },
-   ipairs = M.ipairs,
-   len = M.len,
-   load = M.load,
-   loadfile = _G.loadfile,
-   math = {
-      abs = _G.math.abs,
-      acos = _G.math.acos,
-      asin = _G.math.asin,
-      atan = _G.math.atan,
-      ceil = _G.math.ceil,
-      cos = _G.math.cos,
-      deg = _G.math.deg,
-      exp = _G.math.exp,
-      floor = _G.math.floor,
-      fmod = _G.math.fmod,
-      huge = _G.math.huge,
-      log = _G.math.log,
-      max = _G.math.max,
-      min = _G.math.min,
-      modf = _G.math.modf,
-      pi = _G.math.pi,
-      rad = _G.math.rad,
-      random = _G.math.random,
-      randomseed = _G.math.randomseed,
-      sin = _G.math.sin,
-      sqrt = _G.math.sqrt,
-      tan = _G.math.tan,
-      tointeger = M.math.tointeger,
-      type = M.math.type,
-   },
-   next = _G.next,
-   opairs = M.opairs,
-   os = {
-      clock = _G.os.clock,
-      date = _G.os.date,
-      difftime = _G.os.difftime,
-      execute = _G.os.execute,
-      exit = M.os.exit,
-      getenv = _G.os.getenv,
-      remove = _G.os.remove,
-      rename = _G.os.rename,
-      setlocale = _G.os.setlocale,
-      time = _G.os.time,
-      tmpname = _G.os.tmpname,
-   },
-   pack = M.pack,
-   package = {
-      config = _G.package.config,
-      cpath = _G.package.cpath,
-      dirsep = M.package.dirsep,
-      execdir = M.package.execdir,
-      igmark = M.package.igmark,
-      loadlib = _G.package.loadlib,
-      path = _G.package.path,
-      pathmark = M.package.pathmark,
-      pathsep = M.package.pathsep,
-      preload = _G.package.preload,
-      searchers = _G.package.searchers or _G.package.loaders,
-      searchpath = M.package.searchpath,
-   },
-   pairs = M.pairs,
-   pcall = _G.pcall,
-   print = _G.print,
-   rawequal = _G.rawequal,
-   rawget = _G.rawget,
-   rawlen = M.rawlen,
-   rawset = _G.rawset,
-   require = _G.require,
-   select = _G.select,
-   setfenv = M.setfenv,
-   setmetatable = _G.setmetatable,
-   str = M.str,
-   string = {
-      byte = _G.string.byte,
-      char = _G.string.char,
-      dump = _G.string.dump,
-      find = _G.string.find,
-      format = _G.string.format,
-      gmatch = _G.string.gmatch,
-      gsub = _G.string.gsub,
-      lower = _G.string.lower,
-      match = _G.string.match,
-      rep = _G.string.rep,
-      reverse = _G.string.reverse,
-      sub = _G.string.sub,
-      upper = _G.string.upper,
-   },
-   table = {
-      concat = _G.table.concat,
-      insert = _G.table.insert,
-      remove = _G.table.remove,
-      sort = _G.table.sort,
-   },
-   tonumber = _G.tonumber,
-   tostring = _G.tostring,
-   type = _G.type,
-   unpack = M.unpack,
-   xpcall = M.xpcall,
 }
 G._G = G
 G.package.loaded = {
@@ -954,7 +934,7 @@ return setmetatable(G, {
    --       strict = 'std.strict',
    --    }
    __call = function(_, env, level)
-      return strict(normalize(env), 1 +(level or 1)), nil
+      return strict(normalize(env), 1 + (level or 1)), nil
    end,
 
    --- Lazy loading of normalize modules.
