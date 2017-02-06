@@ -5,20 +5,17 @@
  @module std.normalize._base
 ]]
 
-local strict	= require "std.normalize._strict"
 
-local _ENV = strict {
-  getmetatable	= getmetatable,
-  select	= select,
-  setfenv	= setfenv or function () end,
-  setmetatable	= setmetatable,
-  tonumber	= tonumber,
-  tostring	= tostring,
-  type		= type,
-
-  math_floor	= math.floor,
-  math_tointeger = math.tointeger,
-  table_pack	= table.pack,
+local _ENV = require 'std.normalize._strict' {
+   floor = math.floor,
+   getmetatable = getmetatable,
+   pack = table.pack,
+   select = select,
+   setmetatable = setmetatable,
+   tointeger = math.tointeger,
+   tonumber = tonumber,
+   tostring = tostring,
+   type = type,
 }
 
 
@@ -28,34 +25,34 @@ local _ENV = strict {
 --[[ =============== ]]--
 
 
-local function getmetamethod (x, n)
-  local m = (getmetatable (x) or {})[tostring (n)]
-  if type (m) == "function" then
-    return m
-  end
-  if type ((getmetatable (m) or {}).__call) == "function" then
-    return m
-  end
+local function getmetamethod(x, n)
+   local m = (getmetatable(x) or {})[tostring(n)]
+   if type(m) == 'function' then
+      return m
+   end
+   if type((getmetatable(m) or {}).__call) == 'function' then
+      return m
+   end
 end
 
 
 local pack_mt = {
-  __len = function (self)
-    return self.n
-  end,
+   __len = function(self)
+      return self.n
+   end,
 }
 
 
-local pack = table_pack or function (...)
-  return { n = select ("#", ...), ...}
+local pack = pack or function(...)
+   return { n = select('#', ...), ...}
 end
 
 
-local tointeger = math_tointeger or function (x)
-  local i = tonumber (x)
-  if i and i - math_floor (i) == 0.0 then
-    return i
-  end
+local tointeger = tointeger or function(x)
+   local i = tonumber(x)
+   if i and i - floor(i) == 0.0 then
+      return i
+   end
 end
 
 
@@ -66,17 +63,17 @@ end
 
 
 return {
-  --- Return named metamethod, if callable, otherwise `nil`.
-  -- @see std.normalize.getmetamethod
-  getmetamethod = getmetamethod,
+   --- Return named metamethod, if callable, otherwise `nil`.
+   -- @see std.normalize.getmetamethod
+   getmetamethod = getmetamethod,
 
-  --- Return a list of given arguments, with field `n` set to the length.
-  -- @see std.normalize.pack
-  pack = function (...)
-    return setmetatable (pack (...), pack_mt)
-  end,
+   --- Return a list of given arguments, with field `n` set to the length.
+   -- @see std.normalize.pack
+   pack = function(...)
+      return setmetatable(pack(...), pack_mt)
+   end,
 
-  --- Convert to an integer and return if possible, otherwise `nil`.
-  -- @see std.normalize.math.tointeger
-  tointeger = tointeger,
+   --- Convert to an integer and return if possible, otherwise `nil`.
+   -- @see std.normalize.math.tointeger
+   tointeger = tointeger,
 }

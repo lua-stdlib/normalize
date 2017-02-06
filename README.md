@@ -117,6 +117,16 @@ points when proposing changes:
 0. Follow existing code. There are a lot of useful patterns and avoided
    traps there.
 
-1. 2-character indentation using SPACES in Lua sources.
+1. 3-character indentation using SPACES in Lua sources: It makes rogue
+   TABS easier to see, and lines up nicely with 'if' and 'end' keywords.
+
+2. Simple strings are easiest to type using single-quote delimiters,
+   saving double-quotes for where a string contains apostrophes.
+
+3. Save horizontal space by only using SPACES where the parser requires
+   them.
+
+4. Use vertical space to separate out compound statements to help the
+   coverage reports discover untested lines.
 
 [issues]: https://github.com/lua-stdlib/normalize/issues
