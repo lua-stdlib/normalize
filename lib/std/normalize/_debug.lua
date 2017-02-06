@@ -1,4 +1,8 @@
 --[[
+ Normalized Lua API for Lua 5.1, 5.2 & 5.3
+ Coryright (C) 2014-2017 Gary V. Vaughan
+]]
+--[[--
  Depending on whether `std.debug_init` is installed, and on what the
  value of `_DEBUG` is in the global environment, return a table with
  a local `_DEBUG` that has at least `strict` and `argcheck` fields set

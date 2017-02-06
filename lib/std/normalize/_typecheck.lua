@@ -1,4 +1,8 @@
 --[[
+ Normalized Lua API for Lua 5.1, 5.2 & 5.3
+ Coryright (C) 2014-2017 Gary V. Vaughan
+]]
+--[[--
  Depending on the value of _DEBUG is in the global environment, return
  functions for efficient argument type checking.   This is effectively
  a minimal implementation of `typecheck`, limited to the functionality

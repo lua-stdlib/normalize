@@ -1,3 +1,6 @@
+# Normalized Lua API for Lua 5.1, 5.2 & 5.3
+# Copyright (C) 2014-2017 Gary V. Vaughan
+
 # Many of these examples are a lot trickier than they look!
 #
 #  0. Specl is already doing weird things with `require` to ensure

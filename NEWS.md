@@ -1,6 +1,6 @@
 # std.normalize NEWS - User visible changes
 
-## Noteworthy changes in release 1.0.2 (2016-??-??) [?]
+## Noteworthy changes in release 1.0.2 (2017-??-??) [?]
 
 ### New features
 
@@ -12,8 +12,8 @@
     sequence contains `nil`s:
 
     ```lua
-    a, b, c = unpack (pack (1, nil, 3))
-    assert (a == 1 and b == nil and c == 3, "require 'std.normalize' first!")
+    a, b, c = unpack(pack(1, nil, 3))
+    assert(a == 1 and b == nil and c == 3, "require 'std.normalize' first!")
     ```
 
 ### Bug fixes
@@ -52,10 +52,10 @@
     back to `_ENV`:
 
     ```lua
-      local _ENV = require "std.normalize" {
-        "package",
-        "std.prototype",
-        strict = "std.strict",
+      local _ENV = require 'std.normalize' {
+        'package',
+        'std.prototype',
+        strict = 'std.strict',
       }
     ```
 
@@ -81,8 +81,8 @@
 
   - New `os.exit` wrapper accepts a boolean argument, even in Lua 5.1;
     but is slightly slower than the host Lua implementation in order to
-    diagnose explicit `nil` or floating-point arguments (`os.exit ()` is
-    still equivalent to `os.exit (true)`).
+    diagnose explicit `nil` or floating-point arguments (`os.exit()` is
+    still equivalent to `os.exit(true)`).
 
   - `package.searchpath` is available everywhere.
 
@@ -94,7 +94,7 @@
 
 ### Bug fixes
 
-  - `getfenv (0)` now returns the global environment correctly in
+  - `getfenv(0)` now returns the global environment correctly in
     Lua 5.2+.
 
   - `getmetamethod` now handles functor metatable fields correctly,

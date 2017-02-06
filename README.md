@@ -1,18 +1,18 @@
 Normalized Lua Functions
 ========================
 
-Copyright (C) 2002-2016 [std.normalize authors][authors]
+Copyright (C) 2002-2017 [std.normalize authors][authors]
 
 [![License](https://img.shields.io/:license-mit-blue.svg)](https://mit-license.org)
 [![travis-ci status](https://secure.travis-ci.org/lua-stdlib/normalize.png?branch=master)](https://travis-ci.org/lua-stdlib/normalize/builds)
 [![codecov.io](https://codecov.io/gh/lua-stdlib/normalize/branch/master/graph/badge.svg)](https://codecov.io/gh/lua-stdlib/normalize)
 [![Stories in Ready](https://badge.waffle.io/lua-stdlib/normalize.png?label=ready&title=Ready)](https://waffle.io/lua-stdlib/normalize)
 
-
 This is a collection of normalized lua functions for Lua 5.1 (including
-LuaJIT), 5.2 and 5.3. The libraries are copyright by their authors
-2002-2016 (see the [AUTHORS][] file for details), and released under the
-[MIT license][mit] (the same license as Lua itself). There is no warranty.
+LuaJIT), 5.2 and 5.3.  The libraries are copyright by their authors
+(see the [AUTHORS][] file for details), and released under the
+[MIT license][mit] (the same license as Lua itself).  There is no
+warranty.
 
 _normalize_ has no run-time prerequisites beyond a standard Lua system,
 though it will take advantage of [stdlib][] and [std.strict][] if they
@@ -34,20 +34,20 @@ a single API (as opposed to requiring caching functions from a module
 table into module locals):
 
 ```lua
-   local _ENV = require "std.normalize" {
-     "package",
-     "std.prototype",
-     strict = "std.strict",
+   local _ENV = require 'std.normalize' {
+     'package',
+     'std.prototype',
+     strict = 'std.strict',
    }
    
    -- From here pairs, ipairs, setfenv et. al. work the same everywhere!
-   -- While "package" is imported, "debug", "table", et. al. are not
+   -- While 'package' is imported, 'debug', 'table', et. al. are not
    -- preventing undeclared use.  External modules can be loaded into
    -- nested tables (std.prototype) or specific symbols (strict).
 ```
 
 The normalized API is not yet complete, and in contrast to the
-[lua-compat][] libraries, neither does it attempt to provide you with as
+[lua-compat][] libraries, neither does it attempt to provide you with as 
 nearly compatible an API as is possible relative to some specific Lua
 implementation - rather it provides a variation of the "lowest common
 denominator" that can be implemented relatively efficiently in the
