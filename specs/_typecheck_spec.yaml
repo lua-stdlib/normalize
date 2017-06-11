@@ -19,27 +19,27 @@
 # they exercise breaks in surprising ways at first!
 
 before: |
-  this_module = "std.normalize._typecheck"
+  this_module = 'std.normalize._typecheck'
 
-  M = require (this_module)
+  M = require(this_module)
 
 specify std.normalize._typecheck:
 - context when required:
   - it does not touch the global table:
-      expect (show_apis {added_to="_G", by=this_module}).
+      expect(show_apis {added_to='_G', by=this_module}).
         to_equal {}
 
 
 - describe argscheck:
   - before: |
       preamble = [[
-        argscheck = require "std.normalize._typecheck".argscheck
-        function inner () return "MAGIC" end
+        argscheck = require 'std.normalize._typecheck'.argscheck
+        function inner() return 'MAGIC' end
         types = {
-          woot = function () end,
-          ohno = function (t, i) return type (t[i]) .. " unexpected" end,
+          woot = function() end,
+          ohno = function(t, i) return nil, type(t[i]) .. ' unexpected' end,
         }
-        local function exit (x) os.exit (x and 0 or 1) end
+        local function exit(x) os.exit(x and 0 or 1) end
       ]]
 
       f = M.argscheck
@@ -47,25 +47,25 @@ specify std.normalize._typecheck:
   - context with bad arguments:
     - it diagnoses non-callable annotations:
         x = nil
-        fn = function () end
-        fntor = setmetatable ({}, {__call = fn})
-        expect (f "callable" .. x).
+        fn = function() end
+        fntor = setmetatable({}, {__call = fn})
+        expect(f 'callable' .. x).
           to_raise "attempt to annotate non-callable value with 'argscheck'"
-        expect (f "callable" .. fn).
+        expect(f 'callable' .. fn).
           not_to_raise "attempt to annotate non-callable value with 'argscheck'"
-        expect (f "callable" .. fntor).
+        expect(f 'callable' .. fntor).
           not_to_raise "attempt to annotate non-callable value with 'argscheck'"
 
   - context global _DEBUG is nil:
     - it wraps the inner function:
-        expect (luaproc (preamble .. [[
-          magic = argscheck ("magic", types.woot) .. inner
-          print (magic ())
-          exit (magic ~= inner)
-        ]])).to_succeed_with "MAGIC\n"
+        expect(luaproc(preamble .. [[
+          magic = argscheck('magic', types.woot) .. inner
+          print(magic())
+          exit(magic ~= inner)
+        ]])).to_succeed_with 'MAGIC\n'
     - it diagnoses argument validation failures: |
-        expect (luaproc (preamble .. [[
-          (argscheck ("magic", types.ohno) .. inner) "fail"
+        expect(luaproc(preamble .. [[
+          (argscheck('magic', types.ohno) .. inner) 'fail'
         ]])).to_fail_while_matching "bad argument #1 to 'magic' %(string unexpected%)"
   - context global _DEBUG is false:
     - before: |
@@ -73,24 +73,24 @@ specify std.normalize._typecheck:
           _DEBUG = false
         ]] .. preamble
     - it returns a pass-through decorator:
-        expect (luaproc (shamble .. [[
-          magic = argscheck ("magic", types.woot) .. inner
-          exit (magic == inner)
-        ]])).to_succeed_with ""
+        expect(luaproc(shamble .. [[
+          magic = argscheck('magic', types.woot) .. inner
+          exit(magic == inner)
+        ]])).to_succeed_with ''
   - context global _DEBUG is true:
     - before: |
         shamble = [[
           _DEBUG = true
         ]] .. preamble
     - it wraps the inner function:
-        expect (luaproc (shamble .. [[
-          magic = argscheck ("magic", types.woot) .. inner
-          print (magic ())
-          exit (magic ~= inner)
-        ]])).to_succeed_with "MAGIC\n"
+        expect(luaproc(shamble .. [[
+          magic = argscheck('magic', types.woot) .. inner
+          print(magic())
+          exit(magic ~= inner)
+        ]])).to_succeed_with 'MAGIC\n'
     - it diagnoses argument validation failures: |
-        expect (luaproc (shamble .. [[
-          (argscheck ("magic", types.ohno) .. inner) "fail"
+        expect(luaproc(shamble .. [[
+          (argscheck('magic', types.ohno) .. inner) 'fail'
         ]])).to_fail_while_matching "bad argument #1 to 'magic' %(string unexpected%)"
   - context global _DEBUG.argcheck is nil:
     - before: |
@@ -98,14 +98,14 @@ specify std.normalize._typecheck:
           _DEBUG = { argcheck = nil }
         ]] .. preamble
     - it wraps the inner function:
-        expect (luaproc (shamble .. [[
-          magic = argscheck ("magic", types.woot) .. inner
-          print (magic ())
-          exit (magic ~= inner)
-        ]])).to_succeed_with "MAGIC\n"
+        expect(luaproc(shamble .. [[
+          magic = argscheck('magic', types.woot) .. inner
+          print(magic())
+          exit(magic ~= inner)
+        ]])).to_succeed_with 'MAGIC\n'
     - it diagnoses argument validation failures: |
-        expect (luaproc (shamble .. [[
-          (argscheck ("magic", types.ohno) .. inner) "fail"
+        expect(luaproc(shamble .. [[
+          (argscheck('magic', types.ohno) .. inner) 'fail'
         ]])).to_fail_while_matching "bad argument #1 to 'magic' %(string unexpected%)"
   - context global _DEBUG.argcheck is false:
     - before: |
@@ -113,41 +113,36 @@ specify std.normalize._typecheck:
           _DEBUG = { argcheck = false }
         ]] .. preamble
     - it returns a pass-through decorator:
-        expect (luaproc (shamble .. [[
-          magic = argscheck ("magic", types.woot) .. inner
-          exit (magic == inner)
-        ]])).to_succeed_with ""
+        expect(luaproc(shamble .. [[
+          magic = argscheck('magic', types.woot) .. inner
+          exit(magic == inner)
+        ]])).to_succeed_with ''
   - context global _DEBUG.argcheck is true:
     - before: |
         shamble = [[
           _DEBUG = { argcheck = true }
         ]] .. preamble
     - it wraps the inner function:
-        expect (luaproc (shamble .. [[
-          magic = argscheck ("magic", types.woot) .. inner
-          print (magic ())
-          exit (magic ~= inner)
-        ]])).to_succeed_with "MAGIC\n"
+        expect(luaproc(shamble .. [[
+          magic = argscheck('magic', types.woot) .. inner
+          print(magic())
+          exit(magic ~= inner)
+        ]])).to_succeed_with 'MAGIC\n'
     - it diagnoses argument validation failures: |
-        expect (luaproc (shamble .. [[
-          (argscheck ("magic", types.ohno) .. inner) "fail"
+        expect(luaproc(shamble .. [[
+          (argscheck('magic', types.ohno) .. inner) 'fail'
         ]])).to_fail_while_matching "bad argument #1 to 'magic' %(string unexpected%)"
 
 
 - describe types:
   - before:
-      function pack (...)
-        return {n = select ("#", ...), ...}
+      function pack(...)
+        return {n = select('#', ...), ...}
       end
 
-      wrap = function (fn, n)
-        n = n or 1
-        return function (...)
-          local r = pack (fn (pack (...), n))
-          if r.n == 1 then
-            return r[1]
-          end
-          return {r[1], r[2]}
+      wrap = function(fn, n)
+        return function(...)
+          return pack(fn(pack(...), n or 1))
         end
       end
 
@@ -155,195 +150,195 @@ specify std.normalize._typecheck:
 
   - context accept:
     - before:
-        f = wrap (T.accept)
+        f = wrap(T.accept)
     - it accepts a missing value:
-        expect (f ()).to_equal {}
+        expect(f()).to_equal {n=0}
     - it accepts a nil value:
-        expect (f (nil)).to_equal {}
+        expect(f(nil)).to_equal {n=0}
     - it accepts anything else:
-        expect (f (false)).to_equal {}
-        expect (f ("1")).to_equal {}
-        expect (f (f)).to_equal {}
-        expect (f {f=f}).to_equal {}
+        expect(f(false)).to_equal {n=0}
+        expect(f('1')).to_equal {n=0}
+        expect(f(f)).to_equal {n=0}
+        expect(f {f=f}).to_equal {n=0}
 
   - context arg:
     - before:
-        f = wrap (T.arg)
+        f = wrap(T.arg)
     - it rejects a missing value:
-        expect (f ()).to_be "value expected"
+        expect(f()).to_equal {'no value'; n=1}
     - it accepts a nil value:
-        expect (f (nil)).to_equal {}
+        expect(f(nil)).to_equal {n=0}
     - it accepts anything else:
-        expect (f (false)).to_equal {}
-        expect (f ("1")).to_equal {}
-        expect (f (f)).to_equal {}
-        expect (f {f=f}).to_equal {}
+        expect(f(false)).to_equal {n=0}
+        expect(f('1')).to_equal {n=0}
+        expect(f(f)).to_equal {n=0}
+        expect(f {f=f}).to_equal {n=0}
 
   - context boolean:
     - before:
-        x = "boolean"
-        f = wrap (T[x])
+        x = 'boolean'
+        f = wrap(T[x])
     - it accepts a boolean value:
-        expect (f (false)).to_equal {}
-        expect (f (true)).to_equal {}
+        expect(f(false)).to_equal {n=0}
+        expect(f(true)).to_equal {n=0}
     - it rejects missing value:
-        expect (f ()).to_equal {"got no value", x}
+        expect(f()).to_equal {x, 'got no value'; n=2}
     - it rejects nil value:
-        expect (f (nil)).to_equal {"got nil", x}
+        expect(f(nil)).to_equal {x; n=1}
     - it rejects non-boolean values:
-        expect (f {}).to_equal {"got table", x}
+        expect(f {}).to_equal {x; n=1}
 
   - context callable:
     - before:
-        x = "callable"
-        f = wrap (T[x])
+        x = 'callable'
+        f = wrap(T[x])
     - it accepts a callable value:
-        expect (f (f)).to_equal {}
-        expect (f (setmetatable ({}, {__call=f}))).to_equal {}
+        expect(f(f)).to_equal {n=0}
+        expect(f(setmetatable({}, {__call=f}))).to_equal {n=0}
     - it rejects missing value:
-        expect (f ()).to_equal {"got no value", x}
+        expect(f()).to_equal {x, 'got no value'; n=2}
     - it rejects nil value:
-        expect (f (nil)).to_equal {"got nil", x}
+        expect(f(nil)).to_equal {x; n=1}
     - it rejects non-callable values:
-        expect (f (false)).to_equal {"got boolean", x}
+        expect(f(false)).to_equal {x; n=1}
 
   - context function:
     - before:
-        x = "function"
-        f = wrap (T[x])
+        x = 'function'
+        f = wrap(T[x])
     - it accepts a function value:
-        expect (f (f)).to_equal {}
+        expect(f(f)).to_equal {n=0}
     - it rejects missing value:
-        expect (f ()).to_equal {"got no value", x}
+        expect(f()).to_equal {x, 'got no value'; n=2}
     - it rejects nil value:
-        expect (f (nil)).to_equal {"got nil", x}
+        expect(f(nil)).to_equal {x; n=1}
     - it rejects non-function values:
-        expect (f (false)).to_equal {"got boolean", x}
-        expect (f (setmetatable ({}, {__call=f}))).
-          to_equal {"got table", x}
+        expect(f(false)).to_equal {x; n=1}
+        expect(f(setmetatable({}, {__call=f}))).
+          to_equal {x; n=1}
 
   - context integer:
     - before:
-        x = "integer"
-        f = wrap (T[x])
+        x = 'integer'
+        f = wrap(T[x])
     - it accepts an integer-like value:
-        expect (f (1234)).to_equal {}
-        expect (f "1234").to_equal {}
+        expect(f(1234)).to_equal {n=0}
+        expect(f '1234').to_equal {n=0}
     - it rejects missing value:
-        expect (f ()).to_equal {"got no value", x}
+        expect(f()).to_equal {x, 'got no value'; n=2}
     - it rejects nil value:
-        expect (f (nil)).to_equal {"got nil", x}
+        expect(f(nil)).to_equal {x; n=1}
     - it rejects non-integer-like numbers:
-        expect (f "123.000001").
-          to_be "number has no integer representation"
-        expect (f (math.pi)).
-          to_be "number has no integer representation"
+        expect(f '123.000001').
+          to_equal {nil, 'number has no integer representation'; n=2}
+        expect(f(math.pi)).
+          to_equal {nil, 'number has no integer representation'; n=2}
     - it rejects non-integer values:
-        expect (f (false)).to_equal {"got boolean", x}
+        expect(f(false)).to_equal {x; n=1}
 
   - context missing:
     - before:
-        f = wrap (T.missing)
+        f = wrap(T.missing)
     - it accepts a missing value:
-        expect (f ()).to_equal {}
+        expect(f()).to_equal {n=0}
     - it rejects a nil value:
-        expect (f (nil)).to_be ""
+        expect(f(nil)).to_equal {nil; n=1}
     - it rejects anything else:
-        expect (f (false)).to_be ""
-        expect (f ("1")).to_be ""
-        expect (f (f)).to_be ""
-        expect (f {f=f}).to_be ""
+        expect(f(false)).to_equal {nil; n=1}
+        expect(f('1')).to_equal {nil; n=1}
+        expect(f(f)).to_equal {nil; n=1}
+        expect(f {f=f}).to_equal {nil; n=1}
 
   - context nil:
     - before:
-        x = "nil"
-        f = wrap (T[x])
+        x = 'nil'
+        f = wrap(T[x])
     - it accepts a nil value:
-        expect (f (nil)).to_equal {}
+        expect(f(nil)).to_equal {n=0}
     - it accepts a missing value:
-        expect (f ()).to_equal {}
+        expect(f()).to_equal {n=0}
     - it rejects non-nil values:
-        expect (f (false)).to_equal {"got boolean", x}
+        expect(f(false)).to_equal {x; n=1}
 
   - context number:
     - before:
-        x = "number"
-        f = wrap (T[x])
+        x = 'number'
+        f = wrap(T[x])
     - it accepts a numeric value:
-        expect (f (1234)).to_equal {}
-        expect (f (1234.567)).to_equal {}
-        expect (f (12e-34)).to_equal {}
+        expect(f(1234)).to_equal {n=0}
+        expect(f(1234.567)).to_equal {n=0}
+        expect(f(12e-34)).to_equal {n=0}
     - it rejects missing value:
-        expect (f ()).to_equal {"got no value", x}
+        expect(f()).to_equal {x, 'got no value'; n=2}
     - it rejects nil value:
-        expect (f (nil)).to_equal {"got nil", x}
+        expect(f(nil)).to_equal {x; n=1}
     - it rejects non-number-like values:
-        expect (f (false)).to_equal {"got boolean", x}
-        expect (f "1234").to_equal {"got string", x}
-        expect (f "1234.567").to_equal {"got string", x}
+        expect(f(false)).to_equal {x; n=1}
+        expect(f '1234').to_equal {x; n=1}
+        expect(f '1234.567').to_equal {x; n=1}
 
   - context string:
     - before:
-        x = "string"
-        f = wrap (T[x])
+        x = 'string'
+        f = wrap(T[x])
     - it accepts a string value:
-        expect (f "").to_equal {}
-        expect (f "a string").to_equal {}
+        expect(f '').to_equal {n=0}
+        expect(f 'a string').to_equal {n=0}
     - it rejects missing value:
-        expect (f ()).to_equal {"got no value", x}
+        expect(f()).to_equal {x, 'got no value'; n=2}
     - it rejects nil value:
-        expect (f (nil)).to_equal {"got nil", x}
+        expect(f(nil)).to_equal {x; n=1}
     - it rejects non-string values:
-        stringy = function () return "stringy" end
-        expect (f (false)).to_equal {"got boolean", x}
-        expect (f (setmetatable ({}, {__tostring = stringy}))).
-          to_equal {"got table", x}
+        stringy = function() return 'stringy' end
+        expect(f(false)).to_equal {x; n=1}
+        expect(f(setmetatable({}, {__tostring = stringy}))).
+          to_equal {x; n=1}
 
   - context stringy:
     - before:
-        x = "string"
-        f = wrap (T.stringy)
+        x = 'string'
+        f = wrap(T.stringy)
     - it accepts a string-like value:
-        stringy = function () return "stringy" end
-        expect (f "").to_equal {}
-        expect (f "a string").to_equal {}
-        expect (f (setmetatable ({}, {__tostring = stringy}))).
-          to_equal {}
+        stringy = function() return 'stringy' end
+        expect(f '').to_equal {n=0}
+        expect(f 'a string').to_equal {n=0}
+        expect(f(setmetatable({}, {__tostring = stringy}))).
+          to_equal {n=0}
     - it rejects missing value:
-        expect (f ()).to_equal {"got no value", x}
+        expect(f()).to_equal {x, 'got no value'; n=2}
     - it rejects nil value:
-        expect (f (nil)).to_equal {"got nil", x}
+        expect(f(nil)).to_equal {x; n=1}
     - it rejects non-string-like values:
-        expect (f (false)).to_equal {"got boolean", x}
-        expect (f (setmetatable ({}, {__tostring = "stringy"}))).
-          to_equal {"got table", x}
+        expect(f(false)).to_equal {x; n=1}
+        expect(f(setmetatable({}, {__tostring = 'stringy'}))).
+          to_equal {x; n=1}
 
   - context table:
     - before:
-        x = "table"
-        f = wrap (T[x])
+        x = 'table'
+        f = wrap(T[x])
     - it accepts a table value:
-        expect (f {}).to_equal {}
-        expect (f (pack (1, 2, 3))).to_equal {}
+        expect(f {}).to_equal {n=0}
+        expect(f(pack(1, 2, 3))).to_equal {n=0}
     - it rejects missing value:
-        expect (f ()).to_equal {"got no value", x}
+        expect(f()).to_equal {x, 'got no value'; n=2}
     - it rejects nil value:
-        expect (f (nil)).to_equal {"got nil", x}
+        expect(f(nil)).to_equal {x; n=1}
     - it rejects non-table values:
-        expect (f (false)).to_equal {"got boolean", x}
+        expect(f(false)).to_equal {x; n=1}
 
   - context value:
     - before:
-        f = wrap (T.value)
+        f = wrap(T.value)
     - it rejects a missing value:
-        expect (f ()).to_be "value"
+        expect(f()).to_equal {'value', 'got no value'; n=2}
     - it rejects a nil value:
-        expect (f (nil)).to_be "value"
+        expect(f(nil)).to_equal {'value'; n=1}
     - it accepts anything else:
-        expect (f (false)).to_equal {}
-        expect (f ("1")).to_equal {}
-        expect (f (f)).to_equal {}
-        expect (f {f=f}).to_equal {}
+        expect(f(false)).to_equal {n=0}
+        expect(f '1').to_equal {n=0}
+        expect(f(f)).to_equal {n=0}
+        expect(f {f=f}).to_equal {n=0}
 
 
 - describe any:
@@ -351,48 +346,43 @@ specify std.normalize._typecheck:
       T = M.types
       f = M.any
 
-      wrap = function (fn, n)
-        n = n or 1
-        return function (...)
-          local r = pack (fn (pack (...), n))
-          if r.n == 1 then
-            return r[1]
-          end
-          return {r[1], r[2]}
+      wrap = function(fn, n)
+        return function(...)
+          return pack(fn(pack(...), n or 1))
         end
       end
 
       called = {}
-      function spy (x)
-        return function (argu, i)
+      function spy(x)
+        return function(argu, i)
           called[#called + 1] = x
-          return "got " .. type (argu[i]), x
+          return x
         end
       end
 
   - it returns a callable:
-      expect (callable (f ())).not_to_be (false)
+      expect(callable(f())).not_to_be(false)
   - it returns a callable that behaves like a type predicate:
-      r = wrap (T.string)
-      x = wrap (f (T.string))
-      expect (x ()).to_equal (r ())
-      expect (x (nil)).to_equal (r (nil))
-      expect (x "str").to_equal (r "str")
+      r = wrap(T.string)
+      x = wrap(f(T.string))
+      expect(x()).to_equal(r())
+      expect(x(nil)).to_equal(r(nil))
+      expect(x 'str').to_equal(r 'str')
   - it calls each of its own argument callables in order:
-      wrap (f (spy "one", spy "two", spy "five", spy "four")) (pack ("three"), 1)
-      expect (called).to_equal {"one", "two", "five", "four"}
+      wrap(f(spy 'one', spy 'two', spy 'five', spy 'four'))(pack('three'), 1)
+      expect(called).to_equal {'one', 'two', 'five', 'four'}
   - it returns immediately with a single string predicate result:
-      die = function () return "died" end
-      x = wrap (f (spy "before", die, spy "after"))
-      expect (x (false)).to_be "died"
-      expect (called).to_equal {"before"}
+      die = function() return nil, 'died' end
+      x = wrap(f(spy 'before', die, spy 'after'))
+      expect(x(false)).to_equal {nil, 'died'; n=2}
+      expect(called).to_equal {'before'}
   - it collects mismatches into 'expected' result:
-      x = wrap (f (T.table, T.number))
-      expect (x (false)).to_equal {"got boolean", "number or table"}
+      x = wrap(f(T.table, T.number))
+      expect(x(false)).to_equal {'number or table'; n=1}
   - it orders collected mismatches alphabetically:
-      x = wrap (f (T.table, T.number, T["function"], T.string))
-      expect (x (false)).
-        to_equal {"got boolean", "function, number, string or table"}
-  - it does not collect "nil" mismatches:
-      x = wrap (f (T.table, T["nil"], T.string))
-      expect (x (false)).to_equal {"got boolean", "string or table"}
+      x = wrap(f(T.table, T.number, T['function'], T.string))
+      expect(x(false)).
+        to_equal {'function, number, string or table'; n=1}
+  - it does not collect 'nil' mismatches:
+      x = wrap(f(T.table, T['nil'], T.string))
+      expect(x(false)).to_equal {'string or table'; n=1}

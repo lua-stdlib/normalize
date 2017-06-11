@@ -82,16 +82,14 @@ do
                   error("attempt to annotate non-callable value with 'argscheck'", 2)
                end
                return function(...)
-                  for i, got, expected in icalls(name, checks, pack(...)) do
+                  local argu = pack(...)
+                  for i, expected, got in icalls(name, checks, argu) do
                      if got or expected then
                         local buf, extramsg = {}
                         if expected then
-                           buf[#buf +1] = expected .. ' expected'
-                        end
-                        if expected and got then
-                           buf[#buf +1] = ', '
-                        end
-                        if got then
+                           got = got or 'got ' .. type(argu[i])
+                           buf[#buf +1] = expected .. ' expected, ' .. got
+                        elseif got then
                            buf[#buf +1] = got
                         end
                         if #buf > 0 then
@@ -135,11 +133,11 @@ end
 
 local function fail(expected, argu, i, got)
    if i > argu.n then
-      got = 'no value'
-   else
-      got = got or type(argu[i])
+      return expected, 'got no value'
+   elseif got ~= nil then
+      return expected, 'got ' .. got
    end
-   return 'got ' .. got, expected
+   return expected
 end
 
 
@@ -159,7 +157,7 @@ local types = setmetatable({
    -- Reject missing argument *i*.
    arg = function(argu, i)
       if i > argu.n then
-         return 'value expected'
+         return 'no value'
       end
    end,
 
@@ -176,14 +174,14 @@ local types = setmetatable({
          return fail('integer', argu, i)
       end
       if tointeger(value) == nil then
-         return 'number has no integer representation'
+         return nil, 'number has no integer representation'
       end
    end,
 
    -- Accept missing argument *i* (but not explicit `nil`).
    missing = function(argu, i)
       if i <= argu.n then
-         return ''
+         return nil
       end
    end,
 
@@ -196,7 +194,9 @@ local types = setmetatable({
 
    -- Accept non-nil valued argu[i].
    value = function(argu, i)
-      if argu[i] == nil then
+      if i > argu.n then
+         return 'value', 'got no value'
+      elseif argu[i] == nil then
          return 'value'
       end
    end,
@@ -215,15 +215,18 @@ local types = setmetatable({
 local function any(...)
    local fns = {...}
    return function(argu, i)
-      local buf, got, expected, r = {}
+      local buf, expected, got, r = {}
       for _, predicate in ipairs(fns) do
          r = pack(predicate(argu, i))
-         got, expected = r[1], r[2]
+         expected, got = r[1], r[2]
          if r.n == 0 then
+            -- A match!
             return
-         elseif r.n == 1 and #got > 0 then
-	return got
+         elseif r.n == 2 and expected == nil and #got > 0 then
+            -- Return non-type based mismatch immediately.
+            return expected, got
          elseif expected ~= 'nil' then
+            -- Record one of the types we would have matched.
             buf[#buf + 1] = expected
          end
       end
@@ -233,7 +236,11 @@ local function any(...)
          sort(buf)
          buf[#buf -1], buf[#buf] = buf[#buf -1] .. ' or ' .. buf[#buf], nil
       end
-      return got, concat(buf, ', ')
+      expected = concat(buf, ', ')
+      if got ~= nil then
+         return expected, got
+      end
+      return expected
    end
 end
 
