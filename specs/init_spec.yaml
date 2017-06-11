@@ -1111,17 +1111,3 @@ specify std.normalize:
       expect (r).to_be '0'
       _, r = f (fail, tostring, nil, nil, nil)
       expect (r).to_be '3'
-
-
-- describe version:
-  - before:
-      x = M.version
-
-  - it returns a string:
-      expect (type (M.version)).to_be "string"
-  - it contains package description:
-      expect (string.match (M.version, "Normalized Lua Functions")).
-        not_to_be (nil)
-  - it ends with a semantic version number:
-      expect (string.match (M.version, "([%.%d]+)%D*$")).
-        not_to_be (nil)
