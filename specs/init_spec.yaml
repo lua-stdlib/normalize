@@ -961,6 +961,9 @@ specify std.normalize:
   - it renders array elements before dictionary elements:
       expect (f {7, six="five", 4, 3, one=2}).
         to_be '{7, 4, 3; one=2, six=five}'
+  - it renders non-sequences with keys:
+      expect (f {[2] = true, one = 1, [3] = {3}}).
+        to_be '{2=true, 3={3}, one=1}'
   - it renders table keys in table.sort order:
       expect (f { one = 3, two = 5, three = 4, four = 2, five = 1 }).
         to_be '{five=1, four=2, one=3, three=4, two=5}'

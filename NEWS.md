@@ -24,6 +24,8 @@
   - `ipairs` and `opairs` now diagnose all non-table valued arguments
      correctly.
 
+  - `str` now only skips consecutive integer keys in proper sequences.
+
 ### Incompatible changes
 
   - `ipairs` now respects the `__len` metamethod, such as the one set by

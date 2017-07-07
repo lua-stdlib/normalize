@@ -386,13 +386,17 @@ local function str(x, roots)
       local buf = {'{'} -- pre-buffer table open
       roots[x] = tostring(x) -- recursion protection
 
-      local kp, vp -- previous key and value
+      local seqp, kp, vp -- proper sequence?, previous key and value
       for k, v in opairs(x) do
+         if k == 1 then
+            seqp = true
+         end
          if kp ~= nil and k ~= nil then
             -- semi-colon separator after sequence values, or else comma separator
-            buf[#buf + 1] = type(kp) == 'number' and k ~= kp + 1 and '; ' or ', '
+            buf[#buf + 1] = seqp and type(kp) == 'number' and k ~= kp + 1 and '; ' or ', '
+            seqp = seqp and type(kp) == 'number' and k == kp + 1
          end
-         if k == 1 or type(k) == 'number' and k -1 == kp then
+         if seqp then
             -- no key for sequence values
             buf[#buf + 1] = stop_roots(v)
          else
