@@ -1,6 +1,10 @@
 # std.normalize NEWS - User visible changes
 
-## Noteworthy changes in release 1.0.2 (2017-??-??) [?]
+## Noteworthy changes in release ?.? (????-??-??) [?]
+
+
+
+## Noteworthy changes in release 1.0.2 (2017-07-07) [stable]
 
 ### New features
 
