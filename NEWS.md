@@ -16,6 +16,9 @@
     assert(a == 1 and b == nil and c == 3, "require 'std.normalize' first!")
     ```
 
+  - `str` uses C-like escape sequences \a, \b, \t, \n, \v, \f, \r and \\
+    to render the associated bytes.
+
 ### Bug fixes
 
   - `getmetamethod` no longer raises an argerror for nil-valued

@@ -950,6 +950,8 @@ specify std.normalize:
       expect (f (42)).to_be (tostring (42))
       expect (f (f)).to_be (tostring (f))
       expect (f "a string").to_be "a string"
+  - it renders whitespace characters in strings with C-like escape sequences:
+      expect (f '\a\b\t\n\v\f\r\\').to_be [[\a\b\t\n\v\f\r\]]
   - it renders empty tables as a pair of braces:
       expect (f {}).to_be ("{}")
   - it renders table array part compactly:

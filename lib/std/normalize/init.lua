@@ -372,6 +372,24 @@ local function copy(t)
 end
 
 
+local escape = setmetatable({
+   ['\a'] = [[\a]],
+   ['\b'] = [[\b]],
+   ['\t'] = [[\t]],
+   ['\n'] = [[\n]],
+   ['\v'] = [[\v]],
+   ['\f'] = [[\f]],
+   ['\r'] = [[\r]],
+   ['\\'] = [[\\]],
+}, {
+   __call = function(map, x)
+      return gsub(tostring(x), '[\a\b\t\n\v\f\r]', function(c)
+         return map[c]
+      end)
+   end,
+})
+
+
 local function str(x, roots)
    roots = roots or {}
 
@@ -380,7 +398,7 @@ local function str(x, roots)
    end
 
    if type(x) ~= 'table' or getmetamethod(x, '__tostring') then
-      return tostring(x)
+      return escape(x)
 
    else
       local buf = {'{'} -- pre-buffer table open
