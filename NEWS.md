@@ -2,6 +2,11 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+### Incompatible changes
+
+  - `math.tointeger` returns `nil` for string type arguments now, for
+    deterministic behaviour whether or not LUA_NOCVTS2N is defined at
+    compile time.
 
 
 ## Noteworthy changes in release 1.0.2 (2017-07-07) [stable]

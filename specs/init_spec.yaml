@@ -553,10 +553,12 @@ specify std.normalize:
       - 'it diagnoses missing argument #1':
            expect (f ()).to_raise "value expected"
 
+    - it returns any integer argument:
+        expect (f (99)).to_be (99)
     - it converts integer-like floats:
         expect (f (1.0)).to_be (1)
-    - it converts integer-like strings:
-        expect (f "2").to_be (2)
+    - it returns `nil` for integer-like strings:
+        expect (f '2').to_be (nil)
     - it returns `nil` for non-integer convertible values:
         expect (f (false)).to_be (nil)
         expect (f (1.5)).to_be (nil)

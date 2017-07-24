@@ -7,11 +7,12 @@ have_typecheck, typecheck	= pcall (require, "typecheck")
 
 local inprocess			= require "specl.inprocess"
 local hell			= require "specl.shell"
-local std			= require "specl.std"
 
 badargs				= require "specl.badargs"
 
-package.path = std.package.normalize ("./lib/?.lua", "./lib/?/init.lua", package.path)
+local cwd			= os.getenv 'PWD'
+
+package.path = cwd .. '/lib/?.lua;' .. cwd .. '/lib/?/init.lua;' .. package.path
 
 
 -- Allow user override of LUA binary used by hell.spawn, falling

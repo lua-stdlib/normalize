@@ -52,12 +52,27 @@ local pack = pack or function(...)
 end
 
 
-local tointeger = tointeger or function(x)
-   local i = tonumber(x)
-   if i and i - floor(i) == 0.0 then
-      return i
+local tointeger = (function(f)
+   if f == nil then
+      -- No host tointeger implementation, use our own.
+      return function(x)
+        if type(x) == 'number' and x - floor(x) == 0.0 then
+           return x
+        end
+      end
+
+   elseif f '1' ~= nil then
+      -- Don't perform implicit string-to-number conversion!
+      return function(x)
+         if type(x) == 'number' then
+            return tointeger(x)
+         end
+      end
    end
-end
+
+   -- Host tointeger is good!
+   return f
+end)(tointeger)
 
 
 
