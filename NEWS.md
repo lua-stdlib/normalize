@@ -8,6 +8,9 @@
     deterministic behaviour whether or not LUA_NOCVTS2N is defined at
     compile time.
 
+  - `getfenv`, consequently, now diagnoses a bad argument when passed an
+    integer-like string instead of an actual integer.
+
 
 ## Noteworthy changes in release 1.0.2 (2017-07-07) [stable]
 
