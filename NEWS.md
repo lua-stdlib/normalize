@@ -2,6 +2,18 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+### New features
+
+  - `std.normalize` allows assignment of non-string values in its table
+    argument to propagate up to the assigned environment:
+
+    ```lua
+    local _ENV = require 'std.normalize' {
+       ceil = math.ceil,
+       argcheck = require 'typecheck'.argcheck,
+    }
+    ```
+
 ### Incompatible changes
 
   - `math.tointeger` returns `nil` for string type arguments now, for

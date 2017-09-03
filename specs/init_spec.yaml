@@ -75,6 +75,26 @@ specify std.normalize:
         }
         exit (magic == "MAGIC" and 0 or 1)
       ]]).to_succeed_with ""
+  - it assigns loaded modules to named symbols:
+      expect (luaproc [[
+        local exit = os.exit
+        package.loaded["std.magic.module"] = function() return "MAGIC" end
+        local _ENV = require "std.normalize" {
+          magic = package.loaded["std.magic.module"],
+        }
+        exit (magic() == "MAGIC" and 0 or 1)
+      ]]).to_succeed_with ""
+  - it assigns loaded module symbols to names:
+      expect (luaproc [[
+        local exit = os.exit
+        package.loaded["std.magic"] = {
+          method = function() return "MAGIC" end,
+        }
+        local _ENV = require "std.normalize" {
+          magic = require "std.magic".method,
+        }
+        exit (magic() == "MAGIC" and 0 or 1)
+      ]]).to_succeed_with ""
   - it sets callers environment: |
       expect (luaproc [[
         local _ENV = require "std.normalize" {

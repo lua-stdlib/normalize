@@ -365,7 +365,7 @@ end
 
 local function copy(t)
    local r = {}
-   for k, v in pairs(t) do
+   for k, v in next, t do
       r[k] = v
    end
    return r
@@ -486,7 +486,9 @@ local G = {
    -- @usage
    --    local function slurp(file)
    --       local h, err = input_handle(file)
-   --       if h == nil then argerror('std.io.slurp', 1, err, 2) end
+   --       if h == nil then
+   --           argerror('std.io.slurp', 1, err, 2)
+   --       end
    --       ...
    argerror = argscheck(
       'argerror', T.stringy, T.integer, T.accept, opt(T.integer)
@@ -674,8 +676,8 @@ local G = {
    -- @treturn table *t*, the table being iterated over
    -- @return the previous iteration key
    -- @usage
-   --    --> 1            b
-   --    --> 2            a
+   --    --> 1           b
+   --    --> 2           a
    --    --> foo         c
    --    for k, v in opairs {'b', foo='c', 'a'} do print(k, v) end
    opairs = argscheck('opairs', T.table) .. opairs,
@@ -895,12 +897,10 @@ local function normalize(userenv)
    end
 
    -- Top level tables must be required by name.
-   for symbol, module in pairs(userenv) do
-      local k, dst = tostring(module), env
-
+   for symbol, module in next, userenv do
       -- e.g. { 'string', 'std.seq' }
-      local i = tointeger(symbol)
-      if i then
+      local dst, k = env
+      if tointeger(symbol) and type(module) == 'string' then
          k = {}
          gsub(module, '[^%.]+', function(s) k[#k + 1] = s end)
          while #k > 1 do
@@ -913,7 +913,11 @@ local function normalize(userenv)
          k = symbol
       end
 
-      dst[k] = G.package.loaded[module] or require(module)
+      if type(module) == 'string' then
+         module = G.package.loaded[module] or require(module)
+      end
+
+      dst[k] = module
    end
 
    return env
