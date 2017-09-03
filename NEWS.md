@@ -2,6 +2,9 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+
+## Noteworthy changes in release 1.0.3 (2017-09-02) [stable]
+
 ### New features
 
   - `std.normalize` allows assignment of non-string values in its table
