@@ -64,7 +64,9 @@ local _ENV = _.strict {
    debug_setfenv = debug.setfenv or false,
    debug_setupvalue = debug.setupvalue,
    debug_upvaluejoin = debug.upvaluejoin,
+   error = error,
    exit = os.exit,
+   format = string.format,
    getfenv = getfenv or false,
    getmetamethod = _.base.getmetamethod,
    getmetatable = getmetatable,
@@ -363,7 +365,7 @@ else
 end
 
 
-local function copy(t)
+local function shallow_copy(t)
    local r = {}
    for k, v in next, t do
       r[k] = v
@@ -394,7 +396,7 @@ local function str(x, roots)
    roots = roots or {}
 
    local function stop_roots(x)
-      return roots[x] or str(x, copy(roots))
+      return roots[x] or str(x, shallow_copy(roots))
    end
 
    if type(x) ~= 'table' or getmetamethod(x, '__tostring') then
@@ -469,7 +471,7 @@ end
 local T = types
 
 
-local G = {
+local F = {
    _VERSION = _G._VERSION,
    arg = _G.arg,
 
@@ -496,31 +498,6 @@ local G = {
 
    assert = _G.assert,
    collectgarbage = _G.collectgarbage,
-   coroutine = {
-      create = _G.coroutine.create,
-      resume = _G.coroutine.resume,
-      running = _G.coroutine.running,
-      status = _G.coroutine.status,
-      wrap = _G.coroutine.wrap,
-      yield = _G.coroutine.yield,
-   },
-   debug = {
-      debug = _G.debug.debug,
-      gethook = _G.debug.gethook,
-      getinfo = _G.debug.getinfo,
-      getlocal = _G.debug.getlocal,
-      getmetatable = _G.debug.getmetatable,
-      getregistry = _G.debug.getregistry,
-      getupvalue = _G.debug.getupvalue,
-      getuservalue = _G.debug.getuservalue,
-      sethook = _G.debug.sethook,
-      setmetatable = _G.debug.setmetatable,
-      setupvalue = _G.debug.setupvalue,
-      setuservalue = _G.debug.setuservalue,
-      traceback = _G.debug.traceback,
-      upvalueid = _G.debug.upvalueid,
-      upvaluejoin = _G.debug.upvaluejoin,
-   },
    dofile = _G.dofile,
    error = _G.error,
 
@@ -552,22 +529,6 @@ local G = {
    ) .. getmetamethod,
 
    getmetatable = _G.getmetatable,
-   io = {
-      close = _G.io.close,
-      flush = _G.io.flush,
-      input = _G.io.input,
-      lines = _G.io.lines,
-      open = _G.io.open,
-      output = _G.io.output,
-      popen = _G.io.popen,
-      read = _G.io.read,
-      stderr = _G.io.stderr,
-      stdin = _G.io.stdin,
-      stdout = _G.io.stdout,
-      tmpfile = _G.io.tmpfile,
-      type = _G.io.type,
-      write = _G.io.write,
-   },
 
    --- Iterate over elements of a sequence, until the first `nil` value.
    --
@@ -620,7 +581,167 @@ local G = {
    ) .. normalize_load,
 
    loadfile = _G.loadfile,
+   next = _G.next,
 
+   --- Ordered `pairs` iterator, respecting `__pairs` metamethod.
+   --
+   -- Although `__pairs` will be used to collect results, `opairs`
+   -- always returns them in the same order as `str`.
+   -- @function opairs
+   -- @tparam table t table to act on
+   -- @treturn function iterator function
+   -- @treturn table *t*, the table being iterated over
+   -- @return the previous iteration key
+   -- @usage
+   --    --> 1           b
+   --    --> 2           a
+   --    --> foo         c
+   --    for k, v in opairs {'b', foo='c', 'a'} do print(k, v) end
+   opairs = argscheck('opairs', T.table) .. opairs,
+
+   --- Return a list of given arguments, with field `n` set to the length.
+   --
+   -- The returned table also has a `__len` metamethod that returns `n`, so
+   -- `ipairs` and `unpack` behave sanely when there are `nil` valued elements.
+   -- @function pack
+   -- @param ... tuple to act on
+   -- @treturn table packed list of *...* values, with field `n` set to
+   --    number of tuple elements (including any explicit `nil` elements)
+   -- @see unpack
+   -- @usage
+   --    --> 5
+   --    len(pack(nil, 2, 5, nil, nil))
+   pack = pack,
+
+   --- Like Lua `pairs` iterator, but respect `__pairs` even in Lua 5.1.
+   -- @function pairs
+   -- @tparam table t table to act on
+   -- @treturn function iterator function
+   -- @treturn table *t*, the table being iterated over
+   -- @return the previous iteration key
+   -- @usage
+   --    for k, v in pairs {'a', b='c', foo=42} do process(k, v) end
+   pairs = argscheck('pairs', T.table) .. pairs,
+
+   pcall = _G.pcall,
+   print = _G.print,
+   rawequal = _G.rawequal,
+   rawget = _G.rawget,
+
+   --- Length of a string or table object without using any metamethod.
+   -- @function rawlen
+   -- @tparam string|table x object to act on
+   -- @treturn int raw length of *x*
+   -- @usage
+   --    --> 0
+   --    rawlen(setmetatable({}, {__len=function() return 42}))
+   rawlen = argscheck('rawlen', any(T.string, T.table)) .. rawlen,
+
+   rawset = _G.rawset,
+   select = _G.select,
+
+   --- Set a function or functor environment.
+   --
+   -- This version of setfenv works on all supported Lua versions, and
+   -- knows how to unwrap functors.
+   -- @function setfenv
+   -- @tparam function|int fn stack level, C or Lua function or functor
+   --    to act on
+   -- @tparam table env new execution environment for *fn*
+   -- @treturn function function acted upon
+   -- @usage
+   --    function clearenv(fn) return setfenv(fn, {}) end
+   setfenv = argscheck(
+      'setfenv', any(T.integer, T.callable), T.table
+   ) .. normalize_setfenv,
+
+   setmetatable = _G.setmetatable,
+
+   --- Return a compact stringified representation of argument.
+   -- @function str
+   -- @param x item to act on
+   -- @treturn string compact string representing *x*
+   -- @usage
+   --    -- {baz,5,foo=bar}
+   --    print(str{foo='bar','baz', 5})
+   str = str,
+
+   tonumber = _G.tonumber,
+   tostring = _G.tostring,
+   type = _G.type,
+
+   --- Either `table.unpack` in newer-, or `unpack` in older Lua implementations.
+   -- @function unpack
+   -- @tparam table t table to act on
+   -- @int[opt=1] i first index to unpack
+   -- @int[opt=len(t)] j last index to unpack
+   -- @return ... values of numeric indices of *t*
+   -- @see pack
+   -- @usage
+   --    local a, b, c = unpack(pack(nil, 2, nil))
+   --    assert(a == nil and b == 2 and c == nil)
+   unpack = argscheck(
+      'unpack', T.table, opt(T.integer), opt(T.integer)
+   ) .. unpack,
+
+   --- Support arguments to a protected function call, even on Lua 5.1.
+   -- @function xpcall
+   -- @tparam function f protect this function call
+   -- @tparam function errh error object handler callback if *f* raises
+   --    an error
+   -- @param ... arguments to pass to *f*
+   -- @treturn[1] boolean `false` when `f(...)` raised an error
+   -- @treturn[1] string error message
+   -- @treturn[2] boolean `true` when `f(...)` succeeded
+   -- @return ... all return values from *f* follow
+   -- @usage
+   --    -- Use errh to get a backtrack after curses exits abnormally
+   --    xpcall(main, errh, arg, opt)
+   xpcall = argscheck('xpcall', T.callable, T.callable) .. xpcall,
+}
+
+local G = {
+   coroutine = {
+      create = _G.coroutine.create,
+      resume = _G.coroutine.resume,
+      running = _G.coroutine.running,
+      status = _G.coroutine.status,
+      wrap = _G.coroutine.wrap,
+      yield = _G.coroutine.yield,
+   },
+   debug = {
+      debug = _G.debug.debug,
+      gethook = _G.debug.gethook,
+      getinfo = _G.debug.getinfo,
+      getlocal = _G.debug.getlocal,
+      getmetatable = _G.debug.getmetatable,
+      getregistry = _G.debug.getregistry,
+      getupvalue = _G.debug.getupvalue,
+      getuservalue = _G.debug.getuservalue,
+      sethook = _G.debug.sethook,
+      setmetatable = _G.debug.setmetatable,
+      setupvalue = _G.debug.setupvalue,
+      setuservalue = _G.debug.setuservalue,
+      traceback = _G.debug.traceback,
+      upvalueid = _G.debug.upvalueid,
+      upvaluejoin = _G.debug.upvaluejoin,
+   },
+   io = {
+      close = _G.io.close,
+      flush = _G.io.flush,
+      input = _G.io.input,
+      lines = _G.io.lines,
+      open = _G.io.open,
+      output = _G.io.output,
+      popen = _G.io.popen,
+      read = _G.io.read,
+      stderr = _G.io.stderr,
+      stdin = _G.io.stdin,
+      stdout = _G.io.stdout,
+      tmpfile = _G.io.tmpfile,
+      type = _G.io.type,
+      write = _G.io.write,
+   },
    math = {
       abs = _G.math.abs,
       acos = _G.math.acos,
@@ -664,24 +785,6 @@ local G = {
       -- @return[3] `nil` otherwise
       type = argscheck('type', T.arg) .. math_type,
    },
-   next = _G.next,
-
-   --- Ordered `pairs` iterator, respecting `__pairs` metamethod.
-   --
-   -- Although `__pairs` will be used to collect results, `opairs`
-   -- always returns them in the same order as `str`.
-   -- @function opairs
-   -- @tparam table t table to act on
-   -- @treturn function iterator function
-   -- @treturn table *t*, the table being iterated over
-   -- @return the previous iteration key
-   -- @usage
-   --    --> 1           b
-   --    --> 2           a
-   --    --> foo         c
-   --    for k, v in opairs {'b', foo='c', 'a'} do print(k, v) end
-   opairs = argscheck('opairs', T.table) .. opairs,
-
    os = {
       clock = _G.os.clock,
       date = _G.os.date,
@@ -702,21 +805,6 @@ local G = {
       time = _G.os.time,
       tmpname = _G.os.tmpname,
    },
-
-   --- Return a list of given arguments, with field `n` set to the length.
-   --
-   -- The returned table also has a `__len` metamethod that returns `n`, so
-   -- `ipairs` and `unpack` behave sanely when there are `nil` valued elements.
-   -- @function pack
-   -- @param ... tuple to act on
-   -- @treturn table packed list of *...* values, with field `n` set to
-   --    number of tuple elements (including any explicit `nil` elements)
-   -- @see unpack
-   -- @usage
-   --    --> 5
-   --    len(pack(nil, 2, 5, nil, nil))
-   pack = pack,
-
    package = {
       config = _G.package.config,
       cpath = _G.package.cpath,
@@ -760,61 +848,6 @@ local G = {
          'searchpath', T.string, T.string, opt(T.string), opt(T.string)
       ) .. searchpath,
    },
-
-   --- Like Lua `pairs` iterator, but respect `__pairs` even in Lua 5.1.
-   -- @function pairs
-   -- @tparam table t table to act on
-   -- @treturn function iterator function
-   -- @treturn table *t*, the table being iterated over
-   -- @return the previous iteration key
-   -- @usage
-   --    for k, v in pairs {'a', b='c', foo=42} do process(k, v) end
-   pairs = argscheck('pairs', T.table) .. pairs,
-
-   pcall = _G.pcall,
-   print = _G.print,
-   rawequal = _G.rawequal,
-   rawget = _G.rawget,
-
-   --- Length of a string or table object without using any metamethod.
-   -- @function rawlen
-   -- @tparam string|table x object to act on
-   -- @treturn int raw length of *x*
-   -- @usage
-   --    --> 0
-   --    rawlen(setmetatable({}, {__len=function() return 42}))
-   rawlen = argscheck('rawlen', any(T.string, T.table)) .. rawlen,
-
-   rawset = _G.rawset,
-   require = _G.require,
-   select = _G.select,
-
-   --- Set a function or functor environment.
-   --
-   -- This version of setfenv works on all supported Lua versions, and
-   -- knows how to unwrap functors.
-   -- @function setfenv
-   -- @tparam function|int fn stack level, C or Lua function or functor
-   --    to act on
-   -- @tparam table env new execution environment for *fn*
-   -- @treturn function function acted upon
-   -- @usage
-   --    function clearenv(fn) return setfenv(fn, {}) end
-   setfenv = argscheck(
-      'setfenv', any(T.integer, T.callable), T.table
-   ) .. normalize_setfenv,
-
-   setmetatable = _G.setmetatable,
-
-   --- Return a compact stringified representation of argument.
-   -- @function str
-   -- @param x item to act on
-   -- @treturn string compact string representing *x*
-   -- @usage
-   --    -- {baz,5,foo=bar}
-   --    print(str{foo='bar','baz', 5})
-   str = str,
-
    string = {
       byte = _G.string.byte,
       char = _G.string.char,
@@ -836,38 +869,6 @@ local G = {
       remove = _G.table.remove,
       sort = _G.table.sort,
    },
-   tonumber = _G.tonumber,
-   tostring = _G.tostring,
-   type = _G.type,
-
-   --- Either `table.unpack` in newer-, or `unpack` in older Lua implementations.
-   -- @function unpack
-   -- @tparam table t table to act on
-   -- @int[opt=1] i first index to unpack
-   -- @int[opt=len(t)] j last index to unpack
-   -- @return ... values of numeric indices of *t*
-   -- @see pack
-   -- @usage
-   --    local a, b, c = unpack(pack(nil, 2, nil))
-   --    assert(a == nil and b == 2 and c == nil)
-   unpack = argscheck(
-      'unpack', T.table, opt(T.integer), opt(T.integer)
-   ) .. unpack,
-
-   --- Support arguments to a protected function call, even on Lua 5.1.
-   -- @function xpcall
-   -- @tparam function f protect this function call
-   -- @tparam function errh error object handler callback if *f* raises
-   --    an error
-   -- @param ... arguments to pass to *f*
-   -- @treturn[1] boolean `false` when `f(...)` raised an error
-   -- @treturn[1] string error message
-   -- @treturn[2] boolean `true` when `f(...)` succeeded
-   -- @return ... all return values from *f* follow
-   -- @usage
-   --    -- Use errh to get a backtrack after curses exits abnormally
-   --    xpcall(main, errh, arg, opt)
-   xpcall = argscheck('xpcall', T.callable, T.callable) .. xpcall,
 }
 G._G = G
 G.package.loaded = {
@@ -881,43 +882,129 @@ G.package.loaded = {
    string = G.string,
    table = G.table,
 }
+for k, v in next, _G.package.loaded do
+   G.package.loaded[k] = G.package.loaded[k] or v
+end
+F.require = function(modname)
+   return G.package.loaded[modname] or _G.require(modname)
+end
+for k, v in next, F do
+   G[k] = G[k] or v
+end
+
+
+local function split(s, matching)
+   local r = {}
+   gsub(s, matching, function(segment)
+      r[#r + 1] = segment
+   end)
+   return r
+end
+
+
+-- Dereference table *env* with *keylist* making missing subtables as we go.
+-- The last element of *keylist* is assumed to be the final key at which
+-- some value will be loaded, and is not followed, but is the second return
+-- value.
+-- @tparam table env environment table to start from
+-- @tparam table keylist a list of subtables to recursively walk from *env*
+-- @treturn table innermost table having followed *keylist* from *env*
+-- @treturn string the last element of *keylist*
+local function mksubtables(env, keylist)
+   while #keylist > 1 do
+      local subkey = remove(keylist, 1)
+      env[subkey] = env[subkey] or {}
+      env = env[subkey]
+   end
+   keylist = remove(keylist, 1)
+   return env, keylist
+end
+
+
+-- Return dot-delimited segments of elements of t between indexes i and j.
+-- @tparam table t a list of segments
+-- @int i first element to return
+-- @int j last element to return
+-- @treturn string selected segments of *t* concatenated with '.'s between
+local function slice(t, i, j)
+   return concat({unpack(t, i, j)}, '.')
+end
+
+
+-- Convert a string into a loadable module, optionally followed by table keys.
+-- Initially with the whole of *spec* as a module name, then splitting *spec*
+-- at each dot from right to left, search for a module named after the left
+-- half and containing nested keys named after the right half, and return
+-- that.
+-- @string spec dot delimited symbol name to import
+-- @int level call depth for error message stack traces
+-- @return value of a module, after dereferencing optional following
+--    table keys
+local function stringimport(spec, level)
+   local v = split(spec, '[^%.]+')
+   local vlen, err = #v, {}
+
+   for i = vlen, 1, -1 do
+      local module, j = slice(v, 1, i), i + 1
+      local ok, pkg = pcall(G.require, module)
+      if not ok then
+         err[#err + 1] = pkg
+      else
+         while pkg ~= nil and j <= vlen do
+            local subkey = v[j]
+            pkg, j = pkg[subkey], j + 1
+         end
+         if pkg == nil then
+            err[#err + 1] = format(
+               "\tno entry for '%s' in module '%s'", slice(v, i + 1, vlen), module
+            )
+         else
+            return pkg
+         end
+      end
+   end
+   error(concat(err, '\n'), level + 1)
+end
+
+
+-- Import value into name key of env table.
+-- String values are replaced by the equivalent symbol they name in the
+-- normalized module table.
+-- @tparam table env environment table
+-- @string name key to index into *env*
+-- @param value value to store at *name* in *env*
+-- @int level call depth for error message stack traces
+-- @treturn table modified *env*
+local function import(env, name, value, level)
+   local dst, k = mksubtables(env, split(name, '[^%.]+'))
+   if type(value) == 'string' and name:upper() ~= name then
+      value = stringimport(value, level + 1)
+   end
+   dst[k] = value
+   return env
+end
 
 
 -- Replace host Lua functions with normalized equivalents.
 -- @tparam table userenv user's lexical environment table
 -- @treturn table *userenv* with normalized functions
-local function normalize(userenv)
-   local env = {}
-
+local function normalize(userenv, level)
    -- Top level functions are always available.
-   for k, v in next, G do
-      if G.package.loaded[k] == nil then
-         env[k] = v
-      end
-   end
+   local env = shallow_copy(F)
 
-   -- Top level tables must be required by name.
-   for symbol, module in next, userenv do
-      -- e.g. { 'string', 'std.seq' }
-      local dst, k = env
-      if tointeger(symbol) and type(module) == 'string' then
-         k = {}
-         gsub(module, '[^%.]+', function(s) k[#k + 1] = s end)
-         while #k > 1 do
-            local subkey = remove(k, 1)
-            dst[subkey] = dst[subkey] or {}
-            dst = dst[subkey]
+   -- Everything else must be requested by name.
+   for name, value in next, userenv do
+      local i = tointeger(name)
+      if i and type(value) == 'string' then
+         name = match(value, '[^%.]+$')
+         if name == nil then
+            error(
+              "could not infer name from module '" .. value .. "' at #" .. i,
+              level + 1
+            )
          end
-         k = remove(k, 1)
-      else
-         k = symbol
       end
-
-      if type(module) == 'string' then
-         module = G.package.loaded[module] or require(module)
-      end
-
-      dst[k] = module
+      env = import(env, name, value, level + 1)
    end
 
    return env
@@ -965,7 +1052,8 @@ return setmetatable(G, {
    --       strict = 'std.strict',
    --    }
    __call = function(_, env, level)
-      return strict(normalize(env), 1 + (level or 1)), nil
+      level = 1 + (level or 1)
+      return strict(normalize(env, level), level), nil
    end,
 
    --- Lazy loading of normalize modules.

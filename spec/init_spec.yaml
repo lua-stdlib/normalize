@@ -42,6 +42,20 @@ specify std.normalize:
         "rawset", "require", "select", "setfenv", "setmetatable", "str",
         "tonumber", "tostring", "type", "unpack", "xpcall",
       }, "\n") .. "\n")
+  - it diagnoses missed symbol dereferences in right-to-left order:
+      expect (luaproc [[
+        local exit = os.exit
+        package.loaded["sorcery"] = {["not"] = {}}
+        package.loaded["sorcery.not"] = {}
+        local _ENV = require "std.normalize" {
+          "sorcery.not.magick",
+        }
+        exit (magic() == sorcery() and 0 or 1)
+      ]]).to_fail_while_matching(table.concat({
+        "module 'sorcery.not.magick' not found",
+        "no entry for 'magick' in module 'sorcery.not'",
+        "no entry for 'not.magick' in module 'sorcery'",
+      }, '.+'))
   - it loads named core modules:
       expect (luaproc [[
         local _ENV = require "std.normalize" {"os", "string"}
@@ -64,16 +78,40 @@ specify std.normalize:
         local _ENV = require "std.normalize" {
           "std.magic.module",
         }
-        exit (std.magic.module == "MAGIC" and 0 or 1)
+        exit (module == "MAGIC" and 0 or 1)
       ]]).to_succeed_with ""
   - it loads nested modules into alternate symbols:
       expect (luaproc [[
         local exit = os.exit
-        package.loaded["std.magic.module"] = "MAGIC"
         local _ENV = require "std.normalize" {
-          magic = "std.magic.module",
+          int = "math.tointeger",
         }
-        exit (magic == "MAGIC" and 0 or 1)
+        exit (int(1234) and 0 or 1)
+      ]]).to_succeed_with ""
+  - it leaves assignments to ALLCAPS names unchanged:
+      expect(luaproc [[
+        local exit = os.exit
+        local _ENV = require 'std.normalize' {
+          INT = 'math.tointeger',
+        }
+        exit(INT == 'math.tointeger' and 0 or 1)
+      ]]).to_succeed_with ''
+  - it searches module and symbols partitions:
+      expect (luaproc [[
+        local exit = os.exit
+        package.loaded["std.magic"] = {
+          method = function() return "MAGIC" end,
+        }
+        package.loaded["sorcery"] = {
+          ["not"] = {
+            magic = function() return "MAGIC" end,
+          },
+        }
+        local _ENV = require "std.normalize" {
+          sorcery = "std.magic.method",
+          "sorcery.not.magic",
+        }
+        exit (magic() == sorcery() and 0 or 1)
       ]]).to_succeed_with ""
   - it assigns loaded modules to named symbols:
       expect (luaproc [[

@@ -2,6 +2,34 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+### New features
+
+  - `std.normalize` has been rewritten, in addition to maintaining
+    backwards compatibility, also allowing easier loading of symbols
+    into the module environment:
+
+    ```lua
+    local _ENV = require 'std.normalize' {
+       -- local string = require 'std.normalize.string'
+       'string',
+       -- local math = require 'math'
+       math = math,
+       -- local ceil = require 'math'.ceil
+       ceil = math.ceil,
+       -- local floor = require 'std.normalize.math'.floor
+       'math.floor',
+       -- local int = require 'std.normalize.math'.tointeger
+       int = 'math.tointeger',
+       -- local MODNAME = 'math.tointeger'
+       MODNAME = 'math.tointeger'
+    ```
+
+    Note that dot-delimited strings are searched in the 'std.normalize'
+    table, and can be followed by optional nested table references to
+    drill into that table.  Otherwise the references are filled from
+    the host Lua _G as the table is populated before it is even passed
+    to the 'std.normalize' loader.
+
 
 ## Noteworthy changes in release 1.0.3 (2017-09-02) [stable]
 
