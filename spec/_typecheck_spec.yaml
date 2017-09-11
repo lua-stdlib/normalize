@@ -7,13 +7,13 @@
 #     that it runs in the context of the example and not in the
 #     environment of the Specl implementation code, so things are
 #     weird even before we touch anything here!
-#  1. We need to capture (into local symbols) anything we still need
+#  1. We need to capture(into local symbols) anything we still need
 #     access to after calling `_strict`, because at that point
 #     the execution environment is obliterated...
 #  2. But, we can't capture `require` blindly, because some examples
 #     rely on changing the global `require` used inside the `_typecheck`
 #     implementation... and yet other examples call `require` after
-#     calling `_strict` (and obliterating the environment).
+#     calling `_strict`(and obliterating the environment).
 #
 # Don't be surprised if fiddling with these examples, or the code
 # they exercise breaks in surprising ways at first!
@@ -27,19 +27,19 @@ specify std.normalize._typecheck:
 - context when required:
   - it does not touch the global table:
       expect(show_apis {added_to='_G', by=this_module}).
-        to_equal {}
+         to_equal {}
 
 
 - describe argscheck:
   - before: |
       preamble = [[
-        argscheck = require 'std.normalize._typecheck'.argscheck
-        function inner() return 'MAGIC' end
-        types = {
-          woot = function() end,
-          ohno = function(t, i) return nil, type(t[i]) .. ' unexpected' end,
-        }
-        local function exit(x) os.exit(x and 0 or 1) end
+         argscheck = require 'std.normalize._typecheck'.argscheck
+         function inner() return 'MAGIC' end
+         types = {
+            woot = function() end,
+            ohno = function(t, i) return nil, type(t[i]) .. ' unexpected' end,
+         }
+         local function exit(x) os.exit(x and 0 or 1) end
       ]]
 
       f = M.argscheck
@@ -48,102 +48,102 @@ specify std.normalize._typecheck:
     - it diagnoses non-callable annotations:
         x = nil
         fn = function() end
-        fntor = setmetatable({}, {__call = fn})
+        fntor = setmetatable({}, {__call=fn})
         expect(f 'callable' .. x).
-          to_raise "attempt to annotate non-callable value with 'argscheck'"
+           to_raise "attempt to annotate non-callable value with 'argscheck'"
         expect(f 'callable' .. fn).
-          not_to_raise "attempt to annotate non-callable value with 'argscheck'"
+           not_to_raise "attempt to annotate non-callable value with 'argscheck'"
         expect(f 'callable' .. fntor).
-          not_to_raise "attempt to annotate non-callable value with 'argscheck'"
+           not_to_raise "attempt to annotate non-callable value with 'argscheck'"
 
   - context global _DEBUG is nil:
     - it wraps the inner function:
         expect(luaproc(preamble .. [[
-          magic = argscheck('magic', types.woot) .. inner
-          print(magic())
-          exit(magic ~= inner)
+           magic = argscheck('magic', types.woot) .. inner
+           print(magic())
+           exit(magic ~= inner)
         ]])).to_succeed_with 'MAGIC\n'
     - it diagnoses argument validation failures: |
         expect(luaproc(preamble .. [[
-          (argscheck('magic', types.ohno) .. inner) 'fail'
+           (argscheck('magic', types.ohno) .. inner) 'fail'
         ]])).to_fail_while_matching "bad argument #1 to 'magic' %(string unexpected%)"
   - context global _DEBUG is false:
     - before: |
         shamble = [[
-          _DEBUG = false
+           _DEBUG = false
         ]] .. preamble
     - it returns a pass-through decorator:
         expect(luaproc(shamble .. [[
-          magic = argscheck('magic', types.woot) .. inner
-          exit(magic == inner)
+           magic = argscheck('magic', types.woot) .. inner
+           exit(magic == inner)
         ]])).to_succeed_with ''
   - context global _DEBUG is true:
     - before: |
         shamble = [[
-          _DEBUG = true
+           _DEBUG = true
         ]] .. preamble
     - it wraps the inner function:
         expect(luaproc(shamble .. [[
-          magic = argscheck('magic', types.woot) .. inner
-          print(magic())
-          exit(magic ~= inner)
+           magic = argscheck('magic', types.woot) .. inner
+           print(magic())
+           exit(magic ~= inner)
         ]])).to_succeed_with 'MAGIC\n'
     - it diagnoses argument validation failures: |
         expect(luaproc(shamble .. [[
-          (argscheck('magic', types.ohno) .. inner) 'fail'
+           (argscheck('magic', types.ohno) .. inner) 'fail'
         ]])).to_fail_while_matching "bad argument #1 to 'magic' %(string unexpected%)"
   - context global _DEBUG.argcheck is nil:
     - before: |
         shamble = [[
-          _DEBUG = { argcheck = nil }
+           _DEBUG = {argcheck=nil}
         ]] .. preamble
     - it wraps the inner function:
         expect(luaproc(shamble .. [[
-          magic = argscheck('magic', types.woot) .. inner
-          print(magic())
-          exit(magic ~= inner)
+           magic = argscheck('magic', types.woot) .. inner
+           print(magic())
+           exit(magic ~= inner)
         ]])).to_succeed_with 'MAGIC\n'
     - it diagnoses argument validation failures: |
         expect(luaproc(shamble .. [[
-          (argscheck('magic', types.ohno) .. inner) 'fail'
+           (argscheck('magic', types.ohno) .. inner) 'fail'
         ]])).to_fail_while_matching "bad argument #1 to 'magic' %(string unexpected%)"
   - context global _DEBUG.argcheck is false:
     - before: |
         shamble = [[
-          _DEBUG = { argcheck = false }
+           _DEBUG = {argcheck=false}
         ]] .. preamble
     - it returns a pass-through decorator:
         expect(luaproc(shamble .. [[
-          magic = argscheck('magic', types.woot) .. inner
-          exit(magic == inner)
+           magic = argscheck('magic', types.woot) .. inner
+           exit(magic == inner)
         ]])).to_succeed_with ''
   - context global _DEBUG.argcheck is true:
     - before: |
         shamble = [[
-          _DEBUG = { argcheck = true }
+           _DEBUG = {argcheck=true}
         ]] .. preamble
     - it wraps the inner function:
         expect(luaproc(shamble .. [[
-          magic = argscheck('magic', types.woot) .. inner
-          print(magic())
-          exit(magic ~= inner)
+           magic = argscheck('magic', types.woot) .. inner
+           print(magic())
+           exit(magic ~= inner)
         ]])).to_succeed_with 'MAGIC\n'
     - it diagnoses argument validation failures: |
         expect(luaproc(shamble .. [[
-          (argscheck('magic', types.ohno) .. inner) 'fail'
+           (argscheck('magic', types.ohno) .. inner) 'fail'
         ]])).to_fail_while_matching "bad argument #1 to 'magic' %(string unexpected%)"
 
 
 - describe types:
   - before:
       function pack(...)
-        return {n = select('#', ...), ...}
+         return {n=select('#', ...), ...}
       end
 
       wrap = function(fn, n)
-        return function(...)
-          return pack(fn(pack(...), n or 1))
-        end
+         return function(...)
+            return pack(fn(pack(...), n or 1))
+         end
       end
 
       T = M.types
@@ -215,7 +215,7 @@ specify std.normalize._typecheck:
     - it rejects non-function values:
         expect(f(false)).to_equal {x; n=1}
         expect(f(setmetatable({}, {__call=f}))).
-          to_equal {x; n=1}
+           to_equal {x; n=1}
 
   - context integer:
     - before:
@@ -230,9 +230,9 @@ specify std.normalize._typecheck:
         expect(f(nil)).to_equal {x; n=1}
     - it rejects non-integer-like numbers:
         expect(f '123.000001').
-          to_equal {nil, 'number has no integer representation'; n=2}
+           to_equal {nil, 'number has no integer representation'; n=2}
         expect(f(math.pi)).
-          to_equal {nil, 'number has no integer representation'; n=2}
+           to_equal {nil, 'number has no integer representation'; n=2}
     - it rejects non-integer values:
         expect(f(false)).to_equal {x; n=1}
 
@@ -291,8 +291,8 @@ specify std.normalize._typecheck:
     - it rejects non-string values:
         stringy = function() return 'stringy' end
         expect(f(false)).to_equal {x; n=1}
-        expect(f(setmetatable({}, {__tostring = stringy}))).
-          to_equal {x; n=1}
+        expect(f(setmetatable({}, {__tostring=stringy}))).
+           to_equal {x; n=1}
 
   - context stringy:
     - before:
@@ -302,16 +302,16 @@ specify std.normalize._typecheck:
         stringy = function() return 'stringy' end
         expect(f '').to_equal {n=0}
         expect(f 'a string').to_equal {n=0}
-        expect(f(setmetatable({}, {__tostring = stringy}))).
-          to_equal {n=0}
+        expect(f(setmetatable({}, {__tostring=stringy}))).
+           to_equal {n=0}
     - it rejects missing value:
         expect(f()).to_equal {x, 'got no value'; n=2}
     - it rejects nil value:
         expect(f(nil)).to_equal {x; n=1}
     - it rejects non-string-like values:
         expect(f(false)).to_equal {x; n=1}
-        expect(f(setmetatable({}, {__tostring = 'stringy'}))).
-          to_equal {x; n=1}
+        expect(f(setmetatable({}, {__tostring='stringy'}))).
+           to_equal {x; n=1}
 
   - context table:
     - before:
@@ -347,17 +347,17 @@ specify std.normalize._typecheck:
       f = M.any
 
       wrap = function(fn, n)
-        return function(...)
-          return pack(fn(pack(...), n or 1))
-        end
+         return function(...)
+            return pack(fn(pack(...), n or 1))
+         end
       end
 
       called = {}
       function spy(x)
-        return function(argu, i)
-          called[#called + 1] = x
-          return x
-        end
+         return function(argu, i)
+            called[#called + 1] = x
+            return x
+         end
       end
 
   - it returns a callable:
@@ -382,7 +382,7 @@ specify std.normalize._typecheck:
   - it orders collected mismatches alphabetically:
       x = wrap(f(T.table, T.number, T['function'], T.string))
       expect(x(false)).
-        to_equal {'function, number, string or table'; n=1}
+         to_equal {'function, number, string or table'; n=1}
   - it does not collect 'nil' mismatches:
       x = wrap(f(T.table, T['nil'], T.string))
       expect(x(false)).to_equal {'string or table'; n=1}

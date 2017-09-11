@@ -2,26 +2,26 @@
 # Copyright (C) 2014-2017 Gary V. Vaughan
 
 before:
-  this_module   = "std.normalize"
+  this_module   = 'std.normalize'
 
-  M = require (this_module)
+  M = require(this_module)
   M.version = nil               -- previous specs may have autoloaded it
 
 
 specify std.normalize:
 - context when required:
   - it returns a functor:
-      expect (type (getmetatable (M).__call)).to_be "function"
+      expect(type(getmetatable(M).__call)).to_be 'function'
   - it does not touch the global table:
-      expect (show_apis {added_to="_G", by=this_module}).
-        to_equal {}
+      expect(show_apis {added_to='_G', by=this_module}).
+         to_equal {}
 
 - context when lazy loading:
   - it has no unexpected submodules on initial load:
-      expect (rawget (M, "version")).to_be (nil)
+      expect(rawget(M, 'version')).to_be(nil)
   - it loads submodules on demand:
       lazy = M.version
-      expect (lazy).to_be (require "std.normalize.version")
+      expect(lazy).to_be(require 'std.normalize.version')
 
 - context when called:
   - before:
@@ -29,293 +29,293 @@ specify std.normalize:
 
   - it loads core functions:
       script = [[
-        local _ENV = require "std.normalize" {}
-        for k in opairs (_ENV) do
-          print (k)
-        end
+         local _ENV = require 'std.normalize' {}
+          for k in opairs(_ENV) do
+             print(k)
+          end
       ]]
-      expect (luaproc (script)).to_output (table.concat ({
-        "_VERSION", "arg", "argerror", "assert", "collectgarbage",
-        "dofile", "error", "getfenv", "getmetamethod", "getmetatable",
-        "ipairs", "len", "load", "loadfile", "next", "opairs", "pack",
-        "pairs", "pcall", "print", "rawequal", "rawget", "rawlen",
-        "rawset", "require", "select", "setfenv", "setmetatable", "str",
-        "tonumber", "tostring", "type", "unpack", "xpcall",
-      }, "\n") .. "\n")
+      expect(luaproc(script)).to_output(table.concat({
+         '_VERSION', 'arg', 'argerror', 'assert', 'collectgarbage',
+         'dofile', 'error', 'getfenv', 'getmetamethod', 'getmetatable',
+         'ipairs', 'len', 'load', 'loadfile', 'next', 'opairs', 'pack',
+         'pairs', 'pcall', 'print', 'rawequal', 'rawget', 'rawlen',
+         'rawset', 'require', 'select', 'setfenv', 'setmetatable', 'str',
+         'tonumber', 'tostring', 'type', 'unpack', 'xpcall',
+      }, '\n') .. '\n')
   - it diagnoses missed symbol dereferences in right-to-left order:
-      expect (luaproc [[
+      expect(luaproc [[
         local exit = os.exit
-        package.loaded["sorcery"] = {["not"] = {}}
-        package.loaded["sorcery.not"] = {}
-        local _ENV = require "std.normalize" {
-          "sorcery.not.magick",
+        package.loaded['sorcery'] = {['not'] = {}}
+        package.loaded['sorcery.not'] = {}
+        local _ENV = require 'std.normalize' {
+           'sorcery.not.magick',
         }
-        exit (magic() == sorcery() and 0 or 1)
+        exit(magic() == sorcery() and 0 or 1)
       ]]).to_fail_while_matching(table.concat({
-        "module 'sorcery.not.magick' not found",
-        "no entry for 'magick' in module 'sorcery.not'",
-        "no entry for 'not.magick' in module 'sorcery'",
+         "module 'sorcery.not.magick' not found",
+         "no entry for 'magick' in module 'sorcery.not'",
+         "no entry for 'not.magick' in module 'sorcery'",
       }, '.+'))
   - it loads named core modules:
-      expect (luaproc [[
-        local _ENV = require "std.normalize" {"os", "string"}
-        print (type (string))
-        os.exit (next (string) and 0 or 1)
-      ]]).to_succeed_with "table\n"
+      expect(luaproc [[
+         local _ENV = require 'std.normalize' {'os', 'string'}
+         print(type(string))
+         os.exit(next(string) and 0 or 1)
+      ]]).to_succeed_with 'table\n'
   - it loads named external modules:
-      expect (luaproc [[
-        package.loaded["magic"] = "MAGIC"
-        local _ENV = require "std.normalize" {
-          "magic",
-          "os",
-        }
-        os.exit (magic == "MAGIC" and 0 or 1)
-      ]]).to_succeed_with ""
+      expect(luaproc [[
+         package.loaded['magic'] = 'MAGIC'
+         local _ENV = require 'std.normalize' {
+            'magic',
+            'os',
+         }
+         os.exit(magic == 'MAGIC' and 0 or 1)
+      ]]).to_succeed_with ''
   - it loads named nested modules:
-      expect (luaproc [[
-        local exit = os.exit
-        package.loaded["std.magic.module"] = "MAGIC"
-        local _ENV = require "std.normalize" {
-          "std.magic.module",
-        }
-        exit (module == "MAGIC" and 0 or 1)
-      ]]).to_succeed_with ""
+      expect(luaproc [[
+         local exit = os.exit
+         package.loaded['std.magic.module'] = 'MAGIC'
+         local _ENV = require 'std.normalize' {
+            'std.magic.module',
+         }
+         exit(module == 'MAGIC' and 0 or 1)
+      ]]).to_succeed_with ''
   - it loads nested modules into alternate symbols:
       expect (luaproc [[
-        local exit = os.exit
-        local _ENV = require "std.normalize" {
-          int = "math.tointeger",
-        }
-        exit (int(1234) and 0 or 1)
+         local exit = os.exit
+         local _ENV = require "std.normalize" {
+            int = "math.tointeger",
+         }
+         exit (int(1234) and 0 or 1)
       ]]).to_succeed_with ""
   - it leaves assignments to ALLCAPS names unchanged:
       expect(luaproc [[
-        local exit = os.exit
-        local _ENV = require 'std.normalize' {
-          INT = 'math.tointeger',
-        }
-        exit(INT == 'math.tointeger' and 0 or 1)
+         local exit = os.exit
+         local _ENV = require 'std.normalize' {
+            INT = 'math.tointeger',
+         }
+         exit(INT == 'math.tointeger' and 0 or 1)
       ]]).to_succeed_with ''
   - it searches module and symbols partitions:
-      expect (luaproc [[
-        local exit = os.exit
-        package.loaded["std.magic"] = {
-          method = function() return "MAGIC" end,
-        }
-        package.loaded["sorcery"] = {
-          ["not"] = {
-            magic = function() return "MAGIC" end,
-          },
-        }
-        local _ENV = require "std.normalize" {
-          sorcery = "std.magic.method",
-          "sorcery.not.magic",
-        }
-        exit (magic() == sorcery() and 0 or 1)
-      ]]).to_succeed_with ""
+      expect(luaproc [[
+         local exit = os.exit
+         package.loaded['std.magic'] = {
+            method = function() return 'MAGIC' end,
+         }
+         package.loaded['sorcery'] = {
+            ['not'] = {
+               magic = function() return 'MAGIC' end,
+            },
+         }
+         local _ENV = require 'std.normalize' {
+            sorcery = 'std.magic.method',
+            'sorcery.not.magic',
+         }
+         exit(magic() == sorcery() and 0 or 1)
+      ]]).to_succeed_with ''
   - it assigns loaded modules to named symbols:
-      expect (luaproc [[
-        local exit = os.exit
-        package.loaded["std.magic.module"] = function() return "MAGIC" end
-        local _ENV = require "std.normalize" {
-          magic = package.loaded["std.magic.module"],
-        }
-        exit (magic() == "MAGIC" and 0 or 1)
-      ]]).to_succeed_with ""
+      expect(luaproc [[
+         local exit = os.exit
+         package.loaded['std.magic.module'] = function() return 'MAGIC' end
+         local _ENV = require 'std.normalize' {
+            magic = package.loaded['std.magic.module'],
+         }
+         exit(magic() == 'MAGIC' and 0 or 1)
+      ]]).to_succeed_with ''
   - it assigns loaded module symbols to names:
-      expect (luaproc [[
-        local exit = os.exit
-        package.loaded["std.magic"] = {
-          method = function() return "MAGIC" end,
-        }
-        local _ENV = require "std.normalize" {
-          magic = require "std.magic".method,
-        }
-        exit (magic() == "MAGIC" and 0 or 1)
-      ]]).to_succeed_with ""
+      expect(luaproc [[
+         local exit = os.exit
+         package.loaded['std.magic'] = {
+            method = function() return 'MAGIC' end,
+         }
+         local _ENV = require 'std.normalize' {
+            magic = require 'std.magic'.method,
+         }
+         exit(magic() == 'MAGIC' and 0 or 1)
+      ]]).to_succeed_with ''
   - it sets callers environment: |
-      expect (luaproc [[
-        local _ENV = require "std.normalize" {
-           "os",
-           "package",
-        }
-        print (getmetamethod)
-        os.exit (package.dirsep == "/" and 0 or 1)
-      ]]).to_succeed_while_matching "^function: 0x"
+      expect(luaproc [[
+         local _ENV = require 'std.normalize' {
+            'os',
+            'package',
+         }
+         print(getmetamethod)
+         os.exit(package.dirsep == '/' and 0 or 1)
+      ]]).to_succeed_while_matching '^function: 0x'
 
 
 - describe argerror:
   - before: |
       preamble = [[
-        argerror = require "std.normalize".argerror	-- line 2
-        badfunc = function (n)				-- line 3
-          argerror ("badfunc", 1, nil, n)		-- line 4
-        end						-- line 5
-        inner = function (n)				-- line 6
-          local r = badfunc (n)				-- line 7
-          return "not a tail call"			-- line 8
-        end						-- line 9
-        caller = function (n)				-- line 10
-          local r = inner (n)				-- line 11
-          return "not a tail call"			-- line 12
-        end						-- line 13
+         argerror = require 'std.normalize'.argerror	-- line 2
+         badfunc = function(n)				-- line 3
+            argerror('badfunc', 1, nil, n)		-- line 4
+         end						-- line 5
+         inner = function(n)				-- line 6
+            local r = badfunc(n)			-- line 7
+            return 'not a tail call'			-- line 8
+         end						-- line 9
+         caller = function(n)				-- line 10
+            local r = inner(n)				-- line 11
+            return 'not a tail call'			-- line 12
+         end						-- line 13
       ]]
 
       f = M.argerror
 
   - context with bad arguments:
     - 'it diagnoses missing argument #1':
-         expect (f ()).to_raise "string expected, got no value"
+         expect(f()).to_raise 'string expected, got no value'
     - 'it diagnoses argument #1 type not string':
-         stringy = setmetatable ({}, {__tostring = function () end})
-         expect (f (nil)).to_raise "string expected, got nil"
-         expect (f (stringy)).not_to_raise "string expected"
+         stringy = setmetatable({}, {__tostring = function() end})
+         expect(f(nil)).to_raise 'string expected, got nil'
+         expect(f(stringy)).not_to_raise 'string expected'
     - 'it diagnoses missing argument #2':
-         expect (f "X").to_raise "integer expected, got no value"
+         expect(f 'X').to_raise 'integer expected, got no value'
     - 'it diagnoses argument #2 type not number':
-         expect (f ("X", nil)).to_raise "integer expected, got nil"
-         expect (f ("X", '1')).not_to_raise "integer expected"
+         expect(f('X', nil)).to_raise 'integer expected, got nil'
+         expect(f('X', '1')).not_to_raise 'integer expected'
     - 'it diagnoses argument #2 type not integer':
-         expect (f ("X", 1.0001)).to_raise "number has no integer representation"
-         expect (f ("X", '1.0001')).to_raise "number has no integer representation"
+         expect(f('X', 1.0001)).to_raise 'number has no integer representation'
+         expect(f('X', '1.0001')).to_raise 'number has no integer representation'
     - 'it diagnoses argument #4 type not number': |
-         expect (f ("X", 1, "ohnoes", false)).
+         expect(f('X', 1, 'ohnoes', false)).
            to_raise "bad argument #4 to 'argerror' (integer expected, got boolean)"
     - 'it diagnoses argument #4 type not integer': |
-         expect (f ("X", 99999.0, "ohnoes", 0.99999)).
-           to_raise "bad argument #4 to 'argerror' (number has no integer representation)"
+         expect(f('X', 99999.0, 'ohnoes', 0.99999)).
+            to_raise "bad argument #4 to 'argerror' (number has no integer representation)"
 
   - it raises an argument error: |
-      expect (f ("myfunc", 1)).to_raise "bad argument #1 to 'myfunc'"
+      expect(f('myfunc', 1)).to_raise "bad argument #1 to 'myfunc'"
   - it supports optional extramsg argument: |
-      expect (f ("another", 3, "oh noes")).
-        to_raise "bad argument #3 to 'another' (oh noes)"
+      expect(f('another', 3, 'oh noes')).
+         to_raise "bad argument #3 to 'another' (oh noes)"
 
   - context global _DEBUG is nil:
     - before: |
         shamble = [[
-          _DEBUG = nil					-- line 1
+           _DEBUG = nil					-- line 1
         ]] .. preamble
     - it blames the call site by default: |
-        expect (luaproc (shamble .. [[
-           caller ()					-- line 14
-        ]])).to_contain_error ":7: bad argument"
+        expect(luaproc(shamble .. [[
+           caller()					-- line 14
+        ]])).to_contain_error ':7: bad argument'
     - it reports correct source line with optional stack level argument: |
-        expect (luaproc (shamble .. [[
-          caller (1)					-- line 14
-        ]])).to_fail_while_matching ":7: bad argument"
-        expect (luaproc (shamble .. [[
-          caller (2)					-- line 14
-        ]])).to_fail_while_matching ":11: bad argument"
+        expect(luaproc(shamble .. [[
+           caller(1)					-- line 14
+        ]])).to_fail_while_matching ':7: bad argument'
+        expect(luaproc(shamble .. [[
+           caller(2)					-- line 14
+        ]])).to_fail_while_matching ':11: bad argument'
     - it suppresses position information at level 0: |
-        expect (luaproc (shamble .. [[
-           caller (0)					-- line 14
-        ]])).to_fail_while_matching "^[^:]+: bad argument"
+        expect(luaproc(shamble .. [[
+           caller(0)					-- line 14
+        ]])).to_fail_while_matching '^[^:]+: bad argument'
 
   - context global _DEBUG is false:
     - before: |
         shamble = [[
-          _DEBUG = false				-- line 1
+           _DEBUG = false				-- line 1
         ]] .. preamble
     - it blames the call site by default: |
-        expect (luaproc (shamble .. [[
-           caller ()					-- line 14
-        ]])).to_contain_error ":7: bad argument"
+        expect(luaproc(shamble .. [[
+           caller()					-- line 14
+        ]])).to_contain_error ':7: bad argument'
     - it reports correct source line with optional stack level argument: |
-        expect (luaproc (shamble .. [[
-          caller (1)					-- line 14
-        ]])).to_fail_while_matching ":7: bad argument"
-        expect (luaproc (shamble .. [[
-          caller (2)					-- line 14
-        ]])).to_fail_while_matching ":11: bad argument"
+        expect(luaproc(shamble .. [[
+           caller(1)					-- line 14
+        ]])).to_fail_while_matching ':7: bad argument'
+        expect(luaproc(shamble .. [[
+           caller(2)					-- line 14
+        ]])).to_fail_while_matching ':11: bad argument'
     - it suppresses position information at level 0: |
-        expect (luaproc (shamble .. [[
-           caller (0)					-- line 14
-        ]])).to_fail_while_matching "^[^:]+: bad argument"
+        expect(luaproc(shamble .. [[
+           caller(0)					-- line 14
+        ]])).to_fail_while_matching '^[^:]+: bad argument'
 
   - context global _DEBUG is true:
     - before: |
         shamble = [[
-          _DEBUG = true					-- line 1
+           _DEBUG = true					-- line 1
         ]] .. preamble
     - it blames the call site by default: |
-        expect (luaproc (shamble .. [[
-           caller ()					-- line 14
-        ]])).to_contain_error ":7: bad argument"
+        expect(luaproc(shamble .. [[
+           caller()					-- line 14
+        ]])).to_contain_error ':7: bad argument'
     - it reports correct source line with optional stack level argument: |
-        expect (luaproc (shamble .. [[
-          caller (1)					-- line 14
-        ]])).to_fail_while_matching ":7: bad argument"
-        expect (luaproc (shamble .. [[
-          caller (2)					-- line 14
-        ]])).to_fail_while_matching ":11: bad argument"
+        expect(luaproc(shamble .. [[
+           caller(1)					-- line 14
+        ]])).to_fail_while_matching ':7: bad argument'
+        expect(luaproc(shamble .. [[
+           caller(2)					-- line 14
+        ]])).to_fail_while_matching ':11: bad argument'
     - it suppresses position information at level 0: |
-        expect (luaproc (shamble .. [[
-           caller (0)					-- line 14
-        ]])).to_fail_while_matching "^[^:]+: bad argument"
+        expect(luaproc(shamble .. [[
+           caller(0)					-- line 14
+        ]])).to_fail_while_matching '^[^:]+: bad argument'
 
   - context global _DEBUG.argcheck is nil:
     - before: |
         shamble = [[
-          _DEBUG = { argcheck = nil }			-- line 1
+           _DEBUG = { argcheck = nil }			-- line 1
         ]] .. preamble
     - it blames the call site by default: |
-        expect (luaproc (shamble .. [[
-           caller ()					-- line 14
-        ]])).to_contain_error ":7: bad argument"
+        expect(luaproc(shamble .. [[
+           caller()					-- line 14
+        ]])).to_contain_error ':7: bad argument'
     - it reports correct source line with optional stack level argument: |
-        expect (luaproc (shamble .. [[
-          caller (1)					-- line 14
-        ]])).to_fail_while_matching ":7: bad argument"
-        expect (luaproc (shamble .. [[
-          caller (2)					-- line 14
-        ]])).to_fail_while_matching ":11: bad argument"
+        expect(luaproc(shamble .. [[
+           caller(1)					-- line 14
+        ]])).to_fail_while_matching ':7: bad argument'
+        expect(luaproc(shamble .. [[
+           caller(2)					-- line 14
+        ]])).to_fail_while_matching ':11: bad argument'
     - it suppresses position information at level 0: |
-        expect (luaproc (shamble .. [[
-           caller (0)					-- line 14
-        ]])).to_fail_while_matching "^[^:]+: bad argument"
+        expect(luaproc(shamble .. [[
+           caller(0)					-- line 14
+        ]])).to_fail_while_matching '^[^:]+: bad argument'
 
   - context global _DEBUG.argcheck is false:
     - before: |
         shamble = [[
-          _DEBUG = { argcheck = false }			-- line 1
+           _DEBUG = { argcheck = false }		-- line 1
         ]] .. preamble
     - it blames the call site by default: |
-        expect (luaproc (shamble .. [[
-           caller ()					-- line 14
-        ]])).to_contain_error ":7: bad argument"
+        expect(luaproc(shamble .. [[
+           caller()					-- line 14
+        ]])).to_contain_error ':7: bad argument'
     - it reports correct source line with optional stack level argument: |
-        expect (luaproc (shamble .. [[
-          caller (1)					-- line 14
-        ]])).to_fail_while_matching ":7: bad argument"
-        expect (luaproc (shamble .. [[
-          caller (2)					-- line 14
-        ]])).to_fail_while_matching ":11: bad argument"
+        expect(luaproc(shamble .. [[
+           caller(1)					-- line 14
+        ]])).to_fail_while_matching ':7: bad argument'
+        expect(luaproc(shamble .. [[
+           caller(2)					-- line 14
+        ]])).to_fail_while_matching ':11: bad argument'
     - it suppresses position information at level 0: |
-        expect (luaproc (shamble .. [[
-           caller (0)					-- line 14
-        ]])).to_fail_while_matching "^[^:]+: bad argument"
+        expect(luaproc(shamble .. [[
+           caller(0)					-- line 14
+        ]])).to_fail_while_matching '^[^:]+: bad argument'
 
   - context global _DEBUG.argcheck is true:
     - before: |
         shamble = [[
-          _DEBUG = { argcheck = true }			-- line 1
+           _DEBUG = { argcheck = true }			-- line 1
         ]] .. preamble
     - it blames the call site by default: |
-        expect (luaproc (shamble .. [[
-           caller ()					-- line 14
-        ]])).to_contain_error ":7: bad argument"
+        expect(luaproc(shamble .. [[
+           caller()					-- line 14
+        ]])).to_contain_error ':7: bad argument'
     - it reports correct source line with optional stack level argument: |
-        expect (luaproc (shamble .. [[
-          caller (1)					-- line 14
-        ]])).to_fail_while_matching ":7: bad argument"
-        expect (luaproc (shamble .. [[
-          caller (2)					-- line 14
-        ]])).to_fail_while_matching ":11: bad argument"
+        expect(luaproc(shamble .. [[
+           caller(1)					-- line 14
+        ]])).to_fail_while_matching ':7: bad argument'
+        expect(luaproc(shamble .. [[
+           caller(2)					-- line 14
+        ]])).to_fail_while_matching ':11: bad argument'
     - it suppresses position information at level 0: |
-        expect (luaproc (shamble .. [[
-           caller (0)					-- line 14
-        ]])).to_fail_while_matching "^[^:]+: bad argument"
+        expect(luaproc(shamble .. [[
+           caller(0)					-- line 14
+        ]])).to_fail_while_matching '^[^:]+: bad argument'
 
 
 - describe getfenv:
@@ -324,85 +324,85 @@ specify std.normalize:
 
   - context with bad arguments:
     - 'it diagnoses argument #1 type not callable or integer':
-        expect (f (false)).
-          to_raise "callable or integer expected, got boolean"
+        expect(f(false)).
+           to_raise 'callable or integer expected, got boolean'
     - 'it diagnoses argument #1 type not integer':
-         expect (f (1.0001)).to_raise "number has no integer representation"
-         expect (f '1.0001').to_raise "number has no integer representation"
+         expect(f(1.0001)).to_raise 'number has no integer representation'
+         expect(f '1.0001').to_raise 'number has no integer representation'
 
   - it returns a table:
-      expect (type (f ())).to_be "table"
-      expect (type (f (0))).to_be "table"
-      expect (type (f (f))).to_be "table"
+      expect(type(f())).to_be 'table'
+      expect(type(f(0))).to_be 'table'
+      expect(type(f(f))).to_be 'table'
 
   - context when _DEBUG.argcheck is true:
     - before:
-        fn = function (n) return getfenv (n), nil end
+        fn = function(n) return getfenv(n), nil end
         fnenv = {getfenv = f}
-        M.setfenv (fn, fnenv)
-        gn = function (n) return fn (n), nil end
+        M.setfenv(fn, fnenv)
+        gn = function(n) return fn(n), nil end
         gnenv = {fn = fn}
-        M.setfenv (gn, gnenv)
+        M.setfenv(gn, gnenv)
 
     - it returns the environment of a function:
-        expect (f (fn)).to_be (fnenv)
+        expect(f(fn)).to_be(fnenv)
     - it returns the environment of a functor:
-        ftor = setmetatable ({}, {__call = fn})
-        expect (f (ftor)).to_be (fnenv)
+        ftor = setmetatable({}, {__call = fn})
+        expect(f(ftor)).to_be(fnenv)
     - it returns the global environment:
         # FIXME: don't break out of the sandbox in Lua 5.1
-        #  expect (f (0)).to_be (_G)
-        expect (f (0) == f (0)._G).to_be (true)
+        #  expect(f(0)).to_be(_G)
+        expect(f(0) == f(0)._G).to_be(true)
     - it returns the callers environment:
-        expect (fn (1)).to_be (fnenv)
-        expect (gn (1)).to_be (fnenv)
+        expect(fn(1)).to_be(fnenv)
+        expect(gn(1)).to_be(fnenv)
     - it returns the callers environment by default:
-        expect (fn ()).to_be (fn (1))
+        expect(fn()).to_be(fn(1))
     - it returns the environment of higher stack frames:
-        expect (gn(2)).to_be (gnenv)
+        expect(gn(2)).to_be(gnenv)
 
   - context when _DEBUG.argcheck is false:
     - before:
         preamble = [[
-          _DEBUG = { argcheck = false }
-          M = require "std.normalize"
-          f = M.getfenv
-          fn = function (n) return getfenv (n), nil end
-          fnenv = {getfenv = f}
-          M.setfenv (fn, fnenv)
-          gn = function (n) return fn (n), nil end
-          gnenv = {fn = fn}
-          M.setfenv (gn, gnenv)
+           _DEBUG = { argcheck = false }
+           M = require 'std.normalize'
+           f = M.getfenv
+           fn = function(n) return getfenv(n), nil end
+           fnenv = {getfenv = f}
+           M.setfenv(fn, fnenv)
+           gn = function(n) return fn(n), nil end
+           gnenv = {fn = fn}
+           M.setfenv(gn, gnenv)
         ]]
     - it returns the environment of a function:
-        expect (luaproc (preamble .. [[
-          os.exit (f (fn) == fnenv and 0 or 1)
-        ]])).to_succeed_with ""
+        expect(luaproc(preamble .. [[
+          os.exit(f(fn) == fnenv and 0 or 1)
+        ]])).to_succeed_with ''
     - it returns the environment of a functor:
-        expect (luaproc (preamble .. [[
-          ftor = setmetatable ({}, {__call = fn})
-          os.exit (f (ftor) == fnenv and 0 or 1)
-        ]])).to_succeed_with ""
+        expect(luaproc(preamble .. [[
+          ftor = setmetatable({}, {__call = fn})
+          os.exit(f(ftor) == fnenv and 0 or 1)
+        ]])).to_succeed_with ''
     - it returns the global environment:
         # FIXME: don't break out of the sandbox in Lua 5.1
-        expect (luaproc (preamble .. [[
-          os.exit (f (0) == f (0)._G and 0 or 1)
-        ]])).to_succeed_with ""
+        expect(luaproc(preamble .. [[
+          os.exit(f(0) == f(0)._G and 0 or 1)
+        ]])).to_succeed_with ''
     - it returns the callers environment:
-        expect (luaproc (preamble .. [[
-          os.exit (fn (1) == fnenv and 0 or 1)
-        ]])).to_succeed_with ""
-        expect (luaproc (preamble .. [[
-          os.exit (gn (1) == fnenv and 0 or 1)
-        ]])).to_succeed_with ""
+        expect(luaproc(preamble .. [[
+          os.exit(fn(1) == fnenv and 0 or 1)
+        ]])).to_succeed_with ''
+        expect(luaproc(preamble .. [[
+          os.exit(gn(1) == fnenv and 0 or 1)
+        ]])).to_succeed_with ''
     - it returns the callers environment by default:
-        expect (luaproc (preamble .. [[
-          os.exit (fn () == fn (1) and 0 or 1)
-        ]])).to_succeed_with ""
+        expect(luaproc(preamble .. [[
+          os.exit(fn() == fn(1) and 0 or 1)
+        ]])).to_succeed_with ''
     - it returns the environment of higher stack frames:
-        expect (luaproc (preamble .. [[
-          os.exit (gn (2) == gnenv and 0 or 1)
-        ]])).to_succeed_with ""
+        expect(luaproc(preamble .. [[
+          os.exit(gn(2) == gnenv and 0 or 1)
+        ]])).to_succeed_with ''
 
 
 - describe getmetamethod:
@@ -411,194 +411,194 @@ specify std.normalize:
 
   - context with bad arguments:
     - 'it diagnoses missing argument #1':
-         expect (f ()).to_raise "value expected"
-         expect (f (nil)).not_to_raise "value expected"
+         expect(f()).to_raise 'value expected'
+         expect(f(nil)).not_to_raise 'value expected'
     - 'it diagnoses missing argument #2':
-         expect (f ({})).to_raise "string expected, got no value"
+         expect(f({})).to_raise 'string expected, got no value'
     - 'it diagnoses argument #2 type not string':
-         stringy = setmetatable ({}, {__tostring = function () end})
-         expect (f ({}, nil)).to_raise "string expected, got nil"
-         expect (f ({}, stringy)).not_to_raise "string expected"
+         stringy = setmetatable({}, {__tostring = function() end})
+         expect(f({}, nil)).to_raise 'string expected, got nil'
+         expect(f({}, stringy)).not_to_raise 'string expected'
 
   - context with a table:
     - before:
-        fn = function () return "uh-oh" end
-        method = function () return "called" end
-        functor = setmetatable ({}, {__call = method})
-        t = setmetatable (
-          {field = 0, fn = fn, morefn = fn},
-          {field = 1, fn = functor, method = method}
+        fn = function() return 'uh-oh' end
+        method = function() return 'called' end
+        functor = setmetatable({}, {__call = method})
+        t = setmetatable(
+           {field = 0, fn = fn, morefn = fn},
+           {field = 1, fn = functor, method = method}
         )
     - it returns nil for missing metamethods:
-        expect (f (t, "morefn")).to_be (nil)
+        expect(f(t, 'morefn')).to_be(nil)
     - it returns nil for non-callable metatable entries:
-        expect (f (t, "field")).to_be (nil)
+        expect(f(t, 'field')).to_be(nil)
     - it returns a function metamethod:
-        expect (f (t, "method")).to_be (method)
-        expect (f (t, "method")()).to_be "called"
+        expect(f(t, 'method')).to_be(method)
+        expect(f(t, 'method')()).to_be 'called'
     - it returns a functor metamethod:
-        expect (f (t, "fn")).to_be (functor)
-        expect (f (t, "fn")()).to_be "called"
+        expect(f(t, 'fn')).to_be(functor)
+        expect(f(t, 'fn')()).to_be 'called'
 
 
 - describe ipairs:
   - before: |
-      __index = function (t, n)
-        if n <= #t[1] then
-          return string.sub (t[1], n ,n)
-        end
+      __index = function(t, n)
+         if n <= #t[1] then
+            return string.sub(t[1], n ,n)
+         end
       end
-      __ipairs = function (t)
-        return function (x, i)
-          if i < 5 then return i + 1, x[i] end
-        end, {"an", "unused", "proxy", "table"}, 0
+      __ipairs = function(t)
+         return function(x, i)
+            if i < 5 then return i + 1, x[i] end
+         end, {'an', 'unused', 'proxy', 'table'}, 0
       end
-      __len = function (t) return 5 end
-      src = {"foo", "bar", 5, 42}
+      __len = function(t) return 5 end
+      src = {'foo', 'bar', 5, 42}
       t = {}
 
       f = M.ipairs
 
   - context with bad arguments:
     - 'it diagnoses missing argument #1':
-         expect (f ()).to_raise "table expected, got no value"
+         expect(f()).to_raise 'table expected, got no value'
     - 'it diagnoses nil-valued argument #1':
-         expect (f (nil)).to_raise "table expected, got nil"
+         expect(f(nil)).to_raise 'table expected, got nil'
     - 'it diagnoses argument #1 type not table':
-         expect (f (false)).to_raise "table expected, got boolean"
+         expect(f(false)).to_raise 'table expected, got boolean'
 
   - it works for an empty list:
       for i, v in f {} do t[i] = v end
-      expect (t).to_equal {}
+      expect(t).to_equal {}
   - it is an iterator over integer-keyed table values:
-      for i, v in f (src) do t[i] = v end
-      expect (t).to_equal (src)
+      for i, v in f(src) do t[i] = v end
+      expect(t).to_equal(src)
   - it iterates from 1 up to element before the first nil:
       for i, v in f {1, 2, nil, nil, 5, 6} do t[i] = v end
-      expect (t).to_equal {1, 2}
+      expect(t).to_equal {1, 2}
   - it ignores the dictionary part of a table:
-      for i, v in f {"foo", 42; bar = "baz", qux = "quux"} do
-        t[i] = v
+      for i, v in f {'foo', 42; bar='baz', qux='quux'} do
+         t[i] = v
       end
-      expect (t).to_equal {"foo", 42}
+      expect(t).to_equal {'foo', 42}
   - it respects __index metamethod:
-      for i, v in f (setmetatable ({"abc", [4]="d"}, {__index = __index})) do
-        t[i] = v
+      for i, v in f(setmetatable({'abc', [4]='d'}, {__index = __index})) do
+         t[i] = v
       end
-      expect (t).to_equal {"abc", "b", "c", "d"}
+      expect(t).to_equal {'abc', 'b', 'c', 'd'}
   - it respects __len metamethod:
-      for i, v in f (setmetatable (src, {__len = __len})) do
-        t.n, t[i] = i, v
+      for i, v in f(setmetatable(src, {__len = __len})) do
+         t.n, t[i] = i, v
       end
-      expect (t).to_equal {"foo", "bar", 5, 42; n = 5}
+      expect(t).to_equal {'foo', 'bar', 5, 42; n = 5}
   - it ignores __ipairs metamethod:
-      for i, v in f (setmetatable (src, {__ipairs = __ipairs})) do
-        t[i] = v
+      for i, v in f(setmetatable(src, {__ipairs = __ipairs})) do
+         t[i] = v
       end
-      expect (t).to_equal (src)
+      expect(t).to_equal(src)
 
 
 - describe len:
   - before:
-      __len = function () return 42 end
-      __tostring = function () return "string" end
+      __len = function() return 42 end
+      __tostring = function() return 'string' end
 
       f = M.len
 
   - context with bad arguments:
     - 'it diagnoses missing argument #1':
-        expect (f ()).to_raise "string or table expected, got no value"
+        expect(f()).to_raise 'string or table expected, got no value'
     - 'it diagnoses nil-valued argument #1':
-        expect (f (nil)).to_raise "string or table expected, got nil"
+        expect(f(nil)).to_raise 'string or table expected, got nil'
     - 'it diagnoses argument #1 type not string or table':
-         stringy = setmetatable ({}, {__tostring = function () end})
-         expect (f (false)).to_raise "string or table expected, got boolean"
-         expect (f (stringy)).not_to_raise "string expected"
+        stringy = setmetatable({}, {__tostring = function() end})
+        expect(f(false)).to_raise 'string or table expected, got boolean'
+          expect(f(stringy)).not_to_raise 'string expected'
 
   - it works for an empty list:
       src = {}
-      expect (f (src)).to_be (#src)
+      expect(f(src)).to_be(#src)
   - it works for an empty string:
-      src = ""
-      expect (f (src)).to_be (#src)
+      src = ''
+      expect(f(src)).to_be(#src)
   - it counts embedded zeros in strings:
-      expect (f "ab\0c\0").to_be (5)
+      expect(f 'ab\0c\0').to_be(5)
   - it respects __len metamethod:
-      expect (f (setmetatable ({}, {__len = __len}))).to_be (42)
+      expect(f(setmetatable({}, {__len = __len}))).to_be(42)
   - it respects __tostring metamethod:
-      expect (f (setmetatable ({}, {__tostring = __tostring}))).to_be (6)
+      expect(f(setmetatable({}, {__tostring = __tostring}))).to_be(6)
   - it counts embedded zeros in __string results:
-      src = setmetatable ({}, {__tostring = function () return "ab\0c\0" end})
-      expect (f (src)).to_be (5)
+      src = setmetatable({}, {__tostring = function() return 'ab\0c\0' end})
+      expect(f(src)).to_be(5)
   - it prioritizes __len over __tostring:
-      x = setmetatable ({}, { __len = __len, __tostring = __tostring})
-      expect (f (x)).to_be (42)
+      x = setmetatable({}, { __len = __len, __tostring = __tostring})
+      expect(f(x)).to_be(42)
   - it does not count nil valued array part elements:
-      expect (f {1, 2, 3, nil, nil, 6}).to_be (3)
+      expect(f {1, 2, 3, nil, nil, 6}).to_be(3)
   - 'it defers to the # operator':
-      expect (f "abc").to_be (3)
+      expect(f 'abc').to_be(3)
 
 
 - describe load:
   - before:
-      chunky = coroutine.wrap (function ()
-        for _, v in ipairs {"return\n", "math.pi\n"} do
-          coroutine.yield (v)
-        end
+      chunky = coroutine.wrap(function()
+         for _, v in ipairs {'return\n', 'math.pi\n'} do
+            coroutine.yield(v)
+         end
       end)
 
       f = M.load
 
   - context with bad arguments:
     - 'it diagnoses missing argument #1':
-        expect (f ()).to_raise "callable or string expected, got no value"
+        expect(f()).to_raise 'callable or string expected, got no value'
     - 'it diagnoses nil-valued argument #1':
-        expect (f (nil)).to_raise "callable or string expected, got nil"
+        expect(f(nil)).to_raise 'callable or string expected, got nil'
     - 'it diagnoses argument #1 type not callable or string':
-        expect (f (false)).to_raise "callable or string expected, got boolean"
-        stringy = setmetatable ({}, {__tostring = function () end})
-        expect (f (stringy)).not_to_raise "callable or string expected"
-        funky = setmetatable ({}, {__call = function () end})
-        expect (f (funky)).not_to_raise "callable or string expected"
+        expect(f(false)).to_raise 'callable or string expected, got boolean'
+        stringy = setmetatable({}, {__tostring = function() end})
+        expect(f(stringy)).not_to_raise 'callable or string expected'
+        funky = setmetatable({}, {__call = function() end})
+        expect(f(funky)).not_to_raise 'callable or string expected'
     - 'it diagnoses argument #2 type not string':
-        expect (f ("_=1", false)).to_raise "string expected, got boolean"
+        expect(f('_=1', false)).to_raise 'string expected, got boolean'
 
   - it returns a function:
-      expect (type (f "return 1")).to_be "function"
+      expect(type(f 'return 1')).to_be 'function'
   - it compiles a string into a callable function:
-      fn = f "return 42"
-      expect (fn ()).to_be (42)
+      fn = f 'return 42'
+      expect(fn()).to_be(42)
   - it compiles a string-like table into a callable function:
-      __tostring = function () return "return math.pi" end
-      stringy = setmetatable ({}, {__tostring = __tostring})
-      fn = f (stringy)
-      expect (fn ()).to_be (math.pi)
+      __tostring = function() return 'return math.pi' end
+      stringy = setmetatable({}, {__tostring = __tostring})
+      fn = f(stringy)
+      expect(fn()).to_be(math.pi)
   - it calls a function for successive chunks:
-      fn = f (chunky)
-      expect (fn ()).to_be (math.pi)
+      fn = f(chunky)
+      expect(fn()).to_be(math.pi)
   - it calls a functor for successive chunks:
-      fn = f (setmetatable ({}, {__call  = chunky}))
-      expect (fn ()).to_be (math.pi)
+      fn = f(setmetatable({}, {__call  = chunky}))
+      expect(fn()).to_be(math.pi)
   - it uses chunk string for error messages by default: |
-      pending "specl release with working load interception"
-      expect (assert (f ("blow"))).to_raise '%[string "blow"%]:1:'
+      pending 'specl release with working load interception'
+      expect(assert(f('blow'))).to_raise '%[string "blow"%]:1:'
   - it uses '(load)' for function error messages by default: |
-      pending "specl release with working load interception"
-      expect (assert (f (chunky))).to_raise '%(load%):1:'
+      pending 'specl release with working load interception'
+      expect(assert(f(chunky))).to_raise '%(load%):1:'
   - it uses chunkname for error messages: |
-      pending "specl release with working load interception"
-      expect (assert (f ("blow", "the chunks"))).
-        to_raise '^%[string "the chunks"%]:1:'
-      expect (assert (f (chunky, "the chunks"))).
-        to_raise '^%[string "the chunks"%]:1:'
+      pending 'specl release with working load interception'
+      expect(assert(f('blow', 'the chunks'))).
+         to_raise '^%[string "the chunks"%]:1:'
+      expect(assert(f(chunky, 'the chunks'))).
+         to_raise '^%[string "the chunks"%]:1:'
   - it supports string-like chunkname: |
-      pending "specl release with working load interception"
-      __tostring = function () return "teh chunks" end
-      chunkname = setmetatable ({}, {__tostring = __tostring})
-      expect (assert (f ("blow", chunkname))).
-        to_raise '^%[string "teh chunks"%]:1:'
-      expect (assert (f (chunky, chunkname))).
-        to_raise '^%[string "teh chunks"%]:1:'
+      pending 'specl release with working load interception'
+      __tostring = function() return 'teh chunks' end
+      chunkname = setmetatable({}, {__tostring = __tostring})
+      expect(assert(f('blow', chunkname))).
+         to_raise '^%[string "teh chunks"%]:1:'
+      expect(assert(f(chunky, chunkname))).
+         to_raise '^%[string "teh chunks"%]:1:'
 
 
 - describe math:
@@ -608,18 +608,18 @@ specify std.normalize:
 
     - context with bad arguments:
       - 'it diagnoses missing argument #1':
-           expect (f ()).to_raise "value expected"
+           expect(f()).to_raise 'value expected'
 
     - it returns any integer argument:
-        expect (f (99)).to_be (99)
+        expect(f(99)).to_be(99)
     - it converts integer-like floats:
-        expect (f (1.0)).to_be (1)
+        expect(f(1.0)).to_be(1)
     - it returns `nil` for integer-like strings:
-        expect (f '2').to_be (nil)
+        expect(f '2').to_be(nil)
     - it returns `nil` for non-integer convertible values:
-        expect (f (false)).to_be (nil)
-        expect (f (1.5)).to_be (nil)
-        expect (f "1.5").to_be (nil)
+        expect(f(false)).to_be(nil)
+        expect(f(1.5)).to_be(nil)
+        expect(f '1.5').to_be(nil)
 
   - describe type:
     - before:
@@ -627,102 +627,102 @@ specify std.normalize:
 
     - context with bad arguments:
       - 'it diagnoses missing argument #1':
-           expect (f ()).to_raise "value expected"
+           expect(f()).to_raise 'value expected'
 
     - it returns nil for non-number values:
-        expect (f (nil)).to_be (nil)
-        expect (f (false)).to_be (nil)
-        expect (f "str").to_be (nil)
-        expect (f {}).to_be (nil)
-    - it returns "integer" for whole numbers:
-        expect (f (0)).to_be "integer"
-        expect (f (42)).to_be "integer"
-        expect (f (-999999)).to_be "integer"
-    - it returns "integer" for whole number equivalent floats:
-        expect (f (0.0)).to_be "integer"
-        expect (f (42.0)).to_be "integer"
-        expect (f (1.00000000000000009)).to_be "integer"
-        expect (f (1.00000000000000010)).to_be "integer"
-    - it returns "float" for other numbers:
-        expect (f (math.pi)).to_be "float"
-        expect (f (1.0000000000000002)).to_be "float"
+        expect(f(nil)).to_be(nil)
+        expect(f(false)).to_be(nil)
+        expect(f 'str').to_be(nil)
+        expect(f {}).to_be(nil)
+    - it returns 'integer' for whole numbers:
+        expect(f(0)).to_be 'integer'
+        expect(f(42)).to_be 'integer'
+        expect(f(-999999)).to_be 'integer'
+    - it returns 'integer' for whole number equivalent floats:
+        expect(f(0.0)).to_be 'integer'
+        expect(f(42.0)).to_be 'integer'
+        expect(f(1.00000000000000009)).to_be 'integer'
+        expect(f(1.00000000000000010)).to_be 'integer'
+    - it returns 'float' for other numbers:
+        expect(f(math.pi)).to_be 'float'
+        expect(f(1.0000000000000002)).to_be 'float'
 
 
 - describe opairs:
   - before:
-      __index = function (t, k)
-        if type(k) == "number" and k < 10 then return 1 end
+      __index = function(t, k)
+         if type(k) == 'number' and k < 10 then return 1 end
       end
-      __pairs = function (t)
-        return next, {"a", [5] = "proxy", "table"; foo=3, bar=1, baz=2, qux=4}
+      __pairs = function(t)
+         return next, {'a', [5]='proxy', 'table'; foo=3, bar=1, baz=2, qux=4}
       end
-      src = {"foo", bar = "baz", [5] = "quux", 42}
+      src = {'foo', bar='baz', [5] = 'quux', 42}
       t = {}
 
       f = M.opairs
 
   - context with bad arguments:
     - 'it diagnoses missing argument #1':
-         expect (f ()).to_raise "table expected"
+         expect(f()).to_raise 'table expected'
     - 'it diagnoses nil-valued argument #1':
-         expect (f (nil)).to_raise "table expected"
+         expect(f(nil)).to_raise 'table expected'
     - 'it diagnoses argument #1 type not table':
-         expect (f (false)).to_raise "table expected"
+         expect(f(false)).to_raise 'table expected'
 
   - it works for an empty list:
       for i, v in f {} do t[i] = v end
-      expect (t).to_equal {}
+      expect(t).to_equal {}
   - it is an iterator over all table values:
-      for k, v in f (src) do t[k] = v end
-      expect (t).to_equal (src)
+      for k, v in f(src) do t[k] = v end
+      expect(t).to_equal(src)
   - it returns numeric keys in order:
-      for k in f (src) do table.insert (t, k) end
-      expect (t).to_equal {1, 2, 5, "bar"}
+      for k in f(src) do table.insert(t, k) end
+      expect(t).to_equal {1, 2, 5, 'bar'}
   - it returns non-numeric keys in asciibetical order:
-      for k in f {foo=1, bar=2, baz=3, quux=4} do table.insert (t, k) end
-      expect (t).to_equal {"bar", "baz", "foo", "quux"}
+      for k in f {foo=1, bar=2, baz=3, quux=4} do table.insert(t, k) end
+      expect(t).to_equal {'bar', 'baz', 'foo', 'quux'}
   - it respects __pairs metamethod:
-      for k, v in f (setmetatable (src, {__pairs = __pairs})) do t[k] = v end
-      expect (t).
-        to_equal {"a", [5] = "proxy", "table", foo=3, bar=1, baz=2, qux=4}
+      for k, v in f(setmetatable(src, {__pairs = __pairs})) do t[k] = v end
+      expect(t).
+         to_equal {'a', [5]='proxy', 'table', foo=3, bar=1, baz=2, qux=4}
   - it returns __pairs numeric keys in order:
-      for k in f (setmetatable (src, {__pairs = __pairs})) do
-        if type (k) == "number" then table.insert (t, k) end
+      for k in f(setmetatable(src, {__pairs = __pairs})) do
+         if type(k) == 'number' then table.insert(t, k) end
       end
-      expect (t).to_equal {1, 2, 5}
+      expect(t).to_equal {1, 2, 5}
   - it returns __pairs non-numeric keys in asciibetical order:
-      for k in f (setmetatable (src, {__pairs = __pairs})) do
-        if type (k) ~= "number" then table.insert (t, k) end
+      for k in f(setmetatable(src, {__pairs = __pairs})) do
+         if type(k) ~= 'number' then table.insert(t, k) end
       end
-      expect (t).to_equal {"bar", "baz", "foo", "qux"}
+      expect(t).to_equal {'bar', 'baz', 'foo', 'qux'}
 
 
 - describe os:
   - describe exit:
     - before:
         preamble = [[
-          exit = require 'std.normalize'.os.exit
+           exit = require 'std.normalize'.os.exit
         ]]
 
         f = M.os.exit
 
     - context with bad arguments:
       - 'it diagnoses argument #1 type not boolean or integer':
-          expect (f (nil)).to_raise "boolean or integer expected"
-          expect (f {}).to_raise "boolean or integer expected"
-          expect (f (math.pi)).to_raise "number has no integer representation"
+          expect(f(nil)).to_raise 'boolean or integer expected'
+          expect(f {}).to_raise 'boolean or integer expected'
+          expect(f(math.pi)).to_raise 'number has no integer representation'
 
     - it exits successfully by default:
-        expect (luaproc (preamble .. 'exit ()')).to_succeed_with ""
+        expect(luaproc(preamble .. 'exit()')).to_succeed_with ''
     - it respects boolean argument:
-        expect (luaproc (preamble .. 'exit (true)')).to_succeed_with ""
-        expect (luaproc (preamble .. 'exit (false)')).to_fail_with ""
+        expect(luaproc(preamble .. 'exit(true)')).to_succeed_with ''
+        expect(luaproc(preamble .. 'exit(false)')).to_fail_with ''
     - it exits with the given integer status:
-        expect (luaproc (preamble .. 'exit (0)')).to_exit (0)
-        expect (luaproc (preamble .. 'exit (42)')).to_exit (42)
-        expect (luaproc (preamble .. 'exit (127)')).to_exit (127)
+        expect(luaproc(preamble .. 'exit(0)')).to_exit(0)
+        expect(luaproc(preamble .. 'exit(42)')).to_exit(42)
+        expect(luaproc(preamble .. 'exit(127)')).to_exit(127)
     - it exits with the given integer-convertible status:
-        expect (luaproc (preamble .. 'exit "3"')).to_exit (3)
+        expect(luaproc(preamble .. "exit '3'")).to_exit(3)
 
 
 - describe pack:
@@ -730,168 +730,168 @@ specify std.normalize:
       f = M.pack
 
   - it returns a table:
-      expect (type (f ())).to_be "table"
+      expect(type(f())).to_be 'table'
   - it sets the 'n' field:
-      expect (f ().n).not_to_be (nil)
-      expect (f (1, 2, 3).n).to_be (3)
+      expect(f().n).not_to_be(nil)
+      expect(f(1, 2, 3).n).to_be(3)
   - it packs arguments into the returned table:
-      expect (f (1, 2, 3)).to_equal {1, 2, 3; n=3}
+      expect(f(1, 2, 3)).to_equal {1, 2, 3; n=3}
   - it packs nil arguments correctly:
-      expect (f (nil, 2, nil, nil)).to_equal {[2]=2; n=4}
+      expect(f(nil, 2, nil, nil)).to_equal {[2]=2; n=4}
   - it responds to len:
-      expect (M.len (f ())).to_be (0)
-      expect (M.len (f (nil))).to_be (1)
-      expect (M.len (f (1, 2, 3))).to_be (3)
-      expect (M.len (f (nil, 2, nil, nil))).to_be (4)
+      expect(M.len(f())).to_be(0)
+      expect(M.len(f(nil))).to_be(1)
+      expect(M.len(f(1, 2, 3))).to_be(3)
+      expect(M.len(f(nil, 2, nil, nil))).to_be(4)
 
 
 - describe package:
   - it sets dirsep string:
       s = M.package.dirsep
-      expect (type (s)).to_be "string"
-      expect (#s).not_to_be (0)
+      expect(type(s)).to_be 'string'
+      expect(#s).not_to_be(0)
   - it sets execdir string:
       s = M.package.execdir
-      expect (type (s)).to_be "string"
-      expect (#s).not_to_be (0)
+      expect(type(s)).to_be 'string'
+      expect(#s).not_to_be(0)
   - it sets igmark string:
       s = M.package.igmark
-      expect (type (s)).to_be "string"
-      expect (#s).not_to_be (0)
+      expect(type(s)).to_be 'string'
+      expect(#s).not_to_be(0)
   - it sets pathmark string:
       s = M.package.pathmark
-      expect (type (s)).to_be "string"
-      expect (#s).not_to_be (0)
+      expect(type(s)).to_be 'string'
+      expect(#s).not_to_be(0)
   - it sets pathsep string:
       s = M.package.pathsep
-      expect (type (s)).to_be "string"
-      expect (#s).not_to_be (0)
+      expect(type(s)).to_be 'string'
+      expect(#s).not_to_be(0)
 
   - describe searchpath:
     - before:
-        tmpdir = Tmpdir ()
-        subdir = tmpdir:subdir "find"
-        findir = subdir:subdir "me"
+        tmpdir = Tmpdir()
+        subdir = tmpdir:subdir 'find'
+        findir = subdir:subdir 'me'
 
-        tmpdir:file ("find.example", "nothing at all")
-        findir:file ("init.example", "nothing to see")
+        tmpdir:file('find.example', 'nothing at all')
+        findir:file('init.example', 'nothing to see')
 
-        templates = tmpdir.path .. "/?/init.example;" ..
-                    tmpdir.path .. "/?.example"
+        templates = tmpdir.path .. '/?/init.example;' ..
+                    tmpdir.path .. '/?.example'
 
         f = M.package.searchpath
 
     - after:
-        tmpdir:remove ()
+        tmpdir:remove()
 
     - context with bad arguments:
       - 'it diagnoses missing argument #1':
-          expect (f ()).to_raise "string expected, got no value"
+          expect(f()).to_raise 'string expected, got no value'
       - 'it diagnoses nil-valued argument #1':
-          expect (f (nil)).to_raise "string expected, got nil"
+          expect(f(nil)).to_raise 'string expected, got nil'
       - 'it diagnoses argument #1 type not string':
-          expect (f (false)).to_raise "string expected, got boolean"
+          expect(f(false)).to_raise 'string expected, got boolean'
       - 'it diagnoses missing argument #2':
-          expect (f ("str")).to_raise "string expected, got no value"
+          expect(f('str')).to_raise 'string expected, got no value'
       - 'it diagnoses nil-valued argument #2':
-          expect (f ("str", nil)).to_raise "string expected, got nil"
+          expect(f('str', nil)).to_raise 'string expected, got nil'
       - 'it diagnoses argument #2 type not string':
-          expect (f ("str", false)).
-            to_raise "string expected, got boolean"
+          expect(f('str', false)).
+             to_raise 'string expected, got boolean'
       - 'it diagnoses argument #3 type not string':
-          expect (f ("name", "path", false)).
-            to_raise "string expected, got boolean"
+          expect(f('name', 'path', false)).
+             to_raise 'string expected, got boolean'
       - 'it diagnoses argument #4 type not string':
-          expect (f ("name", "path", "sep", false)).
-            to_raise "string expected, got boolean"
+          expect(f('name', 'path', 'sep', false)).
+             to_raise 'string expected, got boolean'
 
     - it diagnoses file not found:
-        ok, err = f ("xyz", templates)
-        expect (err).to_contain (
-          "\tno file '" .. tmpdir.path .. "/xyz/init.example'\n" ..
-          "\tno file '" .. tmpdir.path .. "/xyz.example'"
+        ok, err = f('xyz', templates)
+        expect(err).to_contain(
+           "\tno file '" .. tmpdir.path .. "/xyz/init.example'\n" ..
+           "\tno file '" .. tmpdir.path .. "/xyz.example'"
         )
     - it returns first matching file:
-        expect (f ("find", templates)).
-          to_be (tmpdir.path .. "/find.example")
+        expect(f('find', templates)).
+           to_be(tmpdir.path .. '/find.example')
     - it replaces '.' with '/' in name by default:
-        expect (f ("find.me", templates)).
-          to_be (tmpdir.path .. "/find/me/init.example")
+        expect(f('find.me', templates)).
+           to_be(tmpdir.path .. '/find/me/init.example')
     - it supports alternate separator argument:
-        expect (f ("find_me", templates, "_")).
-          to_be (tmpdir.path .. "/find/me/init.example")
+        expect(f('find_me', templates, '_')).
+           to_be(tmpdir.path .. '/find/me/init.example')
     - it supports alternate replacement argument:
-        tmpdir:file ("find_me.example", "woo!")
-        expect (f ("find.me", templates, nil, "_")).
-          to_be (tmpdir.path .. "/find_me.example")
+        tmpdir:file('find_me.example', 'woo!')
+        expect(f('find.me', templates, nil, '_')).
+           to_be(tmpdir.path .. '/find_me.example')
 
 
 - describe pairs:
   - before:
-      __index = function (t, k)
-        if type(k) == "number" and k < 10 then return 1 end
+      __index = function(t, k)
+         if type(k) == 'number' and k < 10 then return 1 end
       end
-      __pairs = function (t)
-        return next, {"a", "proxy", "table"}
+      __pairs = function(t)
+         return next, {'a', 'proxy', 'table'}
       end
-      src = {"foo", bar = "baz", [5] = "qux", 42}
+      src = {'foo', bar='baz', [5]='qux', 42}
       t = {}
 
       f = M.pairs
 
   - context with bad arguments:
     - 'it diagnoses missing argument #1':
-         expect (f ()).to_raise "table expected, got no value"
+         expect(f()).to_raise 'table expected, got no value'
     - 'it diagnoses nil-valued argument #1':
-         expect (f (nil)).to_raise "table expected, got nil"
+         expect(f(nil)).to_raise 'table expected, got nil'
     - 'it diagnoses argument #1 type not table':
-         expect (f (false)).to_raise "table expected, got boolean"
+         expect(f(false)).to_raise 'table expected, got boolean'
 
   - it works for an empty list:
       for i, v in f {} do t[i] = v end
-      expect (t).to_equal {}
+      expect(t).to_equal {}
   - it is an iterator over all table values:
-      for k, v in f (src) do t[k] = v end
-      expect (t).to_equal (src)
+      for k, v in f(src) do t[k] = v end
+      expect(t).to_equal(src)
   - it respects __pairs metamethod:
-      for k, v in f (setmetatable (src, {__pairs = __pairs})) do t[k] = v end
-      expect (t).to_equal {"a", "proxy", "table"}
+      for k, v in f(setmetatable(src, {__pairs = __pairs})) do t[k] = v end
+      expect(t).to_equal {'a', 'proxy', 'table'}
 
 
 - describe rawlen:
   - before:
-      __len = function () return 42 end
-      __tostring = function () return "string" end
+      __len = function() return 42 end
+      __tostring = function() return 'string' end
 
       f = M.rawlen
 
   - context with bad arguments:
     - 'it diagnoses missing argument #1':
-        expect (f ()).to_raise "string or table expected, got no value"
+        expect(f()).to_raise 'string or table expected, got no value'
     - 'it diagnoses nil-valued argument #1':
-        expect (f (nil)).to_raise "string or table expected, got nil"
+        expect(f(nil)).to_raise 'string or table expected, got nil'
     - 'it diagnoses argument #1 type not string or table':
-         expect (f (false)).to_raise "string or table expected, got boolean"
+        expect(f(false)).to_raise 'string or table expected, got boolean'
 
   - it works for an empty list:
       src = {}
-      expect (f (src)).to_be (0)
+      expect(f(src)).to_be(0)
   - it works for an empty string:
-      src = ""
-      expect (f (src)).to_be (0)
+      src = ''
+      expect(f(src)).to_be(0)
   - it counts embedded zeros in strings:
-      expect (f "ab\0c\0").to_be (5)
+      expect(f 'ab\0c\0').to_be(5)
   - it ignores __len metamethod:
-      expect (f (setmetatable ({}, {__len = __len}))).to_be (0)
+      expect(f(setmetatable({}, {__len = __len}))).to_be(0)
   - it ignores __tostring metamethod:
-      expect (f (setmetatable ({}, {__tostring = __tostring}))).to_be (0)
+      expect(f(setmetatable({}, {__tostring = __tostring}))).to_be(0)
   - it even ignores __len and __tostring together:
-      x = setmetatable ({}, { __len = __len, __tostring = __tostring})
-      expect (f (x)).to_be (0)
+      x = setmetatable({}, { __len = __len, __tostring = __tostring})
+      expect(f(x)).to_be(0)
   - it does not count nil valued array part elements:
-      expect (f {1, 2, 3, nil, nil, 6}).to_be (3)
+      expect(f {1, 2, 3, nil, nil, 6}).to_be(3)
   - 'it defers to the # operator':
-      expect (f "abc").to_be (3)
+      expect(f 'abc').to_be(3)
 
 
 - describe setfenv:
@@ -900,103 +900,103 @@ specify std.normalize:
 
   - context with bad arguments:
     - 'it diagnoses missing argument #1':
-        expect (f ()).to_raise "callable or integer expected, got no value"
+        expect(f()).to_raise 'callable or integer expected, got no value'
     - 'it diagnoses nil-valued argument #1':
-        expect (f (nil)).to_raise "callable or integer expected, got nil"
+        expect(f(nil)).to_raise 'callable or integer expected, got nil'
     - 'it diagnoses argument #1 type not callable or number':
-        expect (f (false)).
-          to_raise "callable or integer expected, got boolean"
+        expect(f(false)).
+           to_raise 'callable or integer expected, got boolean'
     - 'it diagnoses argument #1 type not integer':
-        expect (f (2/3)).
-          to_raise "number has no integer representation"
-        expect (f '2.3').
-          to_raise "number has no integer representation"
+        expect(f(2/3)).
+           to_raise 'number has no integer representation'
+        expect(f '2.3').
+           to_raise 'number has no integer representation'
     - 'it diagnoses missing argument #2':
-        expect (f (0)).to_raise "table expected, got no value"
+        expect(f(0)).to_raise 'table expected, got no value'
     - 'it diagnoses nil-valued argument #2':
-        expect (f (0, nil)).to_raise "table expected, got nil"
+        expect(f(0, nil)).to_raise 'table expected, got nil'
     - 'it diagnoses argument #2 type not table':
-        expect (f (0, boolean)).to_raise "table expected, got nil"
+        expect(f(0, boolean)).to_raise 'table expected, got nil'
 
   - it returns nothing after setting the global environment:
-      expect (luaproc [[
-        setfenv = require "std.normalize".setfenv
-        print (tostring (setfenv (0, _G)))
-      ]]).to_succeed_with "nil\n"
+      expect(luaproc [[
+         setfenv = require 'std.normalize'.setfenv
+         print(tostring(setfenv(0, _G)))
+      ]]).to_succeed_with 'nil\n'
   - it returns the actioned function otherwise:
-      fn = function (env) return f (1, env), nil end
-      expect (fn {}).to_be (fn)
-      expect (f (fn, {})).to_be (fn)
+      fn = function(env) return f(1, env), nil end
+      expect(fn {}).to_be(fn)
+      expect(f(fn, {})).to_be(fn)
 
   - context when _DEBUG.argcheck is true:
     - before:
-        fn = function (env) return f (1, env), nil end
+        fn = function(env) return f(1, env), nil end
         fnenv = {f = f}
 
     - it sets the environment of a function:
-        r = f (fn, fnenv)
-        expect (fn {}).to_be (r)
+        r = f(fn, fnenv)
+        expect(fn {}).to_be(r)
     - it sets the environment of a functor:
-        ftor = setmetatable ({}, {__call = fn})
-        r = f (ftor, fnenv)
-        expect (ftor {}).to_be (r)
+        ftor = setmetatable({}, {__call = fn})
+        r = f(ftor, fnenv)
+        expect(ftor {}).to_be(r)
     - it sets the global environment: |
-        pending "what is this supposed to do, anyway?"
-        expect (luaproc [[
-          local os, print, setfenv = os, print, require "std.normalize".setfenv
-          _G.x = "ohnoes"
-          setfenv (0, {x = "woo!"})
-          print (_G.x)
-          os.exit (_G.x == "woo!" and 0 or 1)
-        ]]).to_succeed_with "woo!\n"
+        pending 'what is this supposed to do, anyway?'
+        expect(luaproc [[
+           local os, print, setfenv = os, print, require 'std.normalize'.setfenv
+           _G.x = 'ohnoes'
+           setfenv(0, {x = 'woo!'})
+           print(_G.x)
+           os.exit(_G.x == 'woo!' and 0 or 1)
+        ]]).to_succeed_with 'woo!\n'
     - it sets the callers environment:
-        fn = function (n, env) return f (n, env), nil end
-        expect (fn (1, fnenv)).to_be (fn)
-        gn = function (n, env) return fn (n, env), nil end
-        expect (gn (1, fnenv)).to_be (fn)
-        expect (gn (2, {fn = fn})).to_be (gn)
+        fn = function(n, env) return f(n, env), nil end
+        expect(fn(1, fnenv)).to_be(fn)
+        gn = function(n, env) return fn(n, env), nil end
+        expect(gn(1, fnenv)).to_be(fn)
+        expect(gn(2, {fn = fn})).to_be(gn)
 
   - context when _DEBUG.argcheck is false:
     - before:
         preamble = [[
-          _DEBUG = { argcheck = false }
-          M = require "std.normalize"
-          f = M.setfenv
-          fn = function (env) return f (1, env), nil end
-          fnenv = {f = f}
+           _DEBUG = { argcheck = false }
+           M = require 'std.normalize'
+           f = M.setfenv
+           fn = function(env) return f(1, env), nil end
+           fnenv = {f = f}
         ]]
 
     - it sets the environment of a function:
-        expect (luaproc (preamble .. [[
-          r = f (fn, fnenv)
-          os.exit (fn {} == r and 0 or 1)
-        ]])).to_succeed_with ""
+        expect(luaproc(preamble .. [[
+           r = f(fn, fnenv)
+           os.exit(fn {} == r and 0 or 1)
+        ]])).to_succeed_with ''
     - it sets the environment of a functor:
-        expect (luaproc (preamble .. [[
-          ftor = setmetatable ({}, {__call = fn})
-          r = f (ftor, fnenv)
-          os.exit (ftor {} == r and 0 or 1)
-        ]])).to_succeed_with ""
+        expect(luaproc(preamble .. [[
+           ftor = setmetatable({}, {__call = fn})
+           r = f(ftor, fnenv)
+           os.exit(ftor {} == r and 0 or 1)
+        ]])).to_succeed_with ''
     - it sets the global environment: |
-        pending "what is this supposed to do, anyway?"
-        expect (luaproc [[
-          local os, print, setfenv = os, print, require "std.normalize".setfenv
-          _G.x = "ohnoes"
-          setfenv (0, {x = "woo!"})
-          print (_G.x)
-          os.exit (_G.x == "woo!" and 0 or 1)
-        ]]).to_succeed_with "woo!\n"
+        pending 'what is this supposed to do, anyway?'
+        expect(luaproc [[
+           local os, print, setfenv = os, print, require 'std.normalize'.setfenv
+           _G.x = 'ohnoes'
+           setfenv(0, {x='woo!'})
+           print(_G.x)
+           os.exit(_G.x == 'woo!' and 0 or 1)
+        ]]).to_succeed_with 'woo!\n'
     - it sets the callers environment:
-        expect (luaproc (preamble .. [[
-          fn = function (n, env) return f (n, env), nil end
-          os.exit (fn (1, fnenv) == fn and 0 or 1)
-        ]])).to_succeed_with ""
-        expect (luaproc (preamble .. [[
-          fn = function (n, env) return f (n, env), nil end
-          gn = function (n, env) return fn (n, env), nil end
-          print (gn (1, fnenv) == fn)
-          os.exit (gn (2, {fn = fn}) == gn and 0 or 1)
-        ]])).to_succeed_with "true\n"
+        expect(luaproc(preamble .. [[
+           fn = function(n, env) return f(n, env), nil end
+           os.exit(fn(1, fnenv) == fn and 0 or 1)
+        ]])).to_succeed_with ''
+        expect(luaproc(preamble .. [[
+           fn = function(n, env) return f(n, env), nil end
+           gn = function(n, env) return fn(n, env), nil end
+           print(gn(1, fnenv) == fn)
+           os.exit(gn(2, {fn = fn}) == gn and 0 or 1)
+        ]])).to_succeed_with 'true\n'
 
 
 - describe str:
@@ -1004,174 +1004,174 @@ specify std.normalize:
       f = M.str
 
   - it renders primitives exactly like system tostring:
-      expect (f (nil)).to_be (tostring (nil))
-      expect (f (false)).to_be (tostring (false))
-      expect (f (42)).to_be (tostring (42))
-      expect (f (f)).to_be (tostring (f))
-      expect (f "a string").to_be "a string"
+      expect(f(nil)).to_be(tostring(nil))
+      expect(f(false)).to_be(tostring(false))
+      expect(f(42)).to_be(tostring(42))
+      expect(f(f)).to_be(tostring(f))
+      expect(f 'a string').to_be 'a string'
   - it renders whitespace characters in strings with C-like escape sequences:
-      expect (f '\a\b\t\n\v\f\r\\').to_be [[\a\b\t\n\v\f\r\]]
+      expect(f '\a\b\t\n\v\f\r\\').to_be [[\a\b\t\n\v\f\r\]]
   - it renders empty tables as a pair of braces:
-      expect (f {}).to_be ("{}")
+      expect(f {}).to_be('{}')
   - it renders table array part compactly:
-      expect (f {"one", "two", "five"}).
-        to_be '{one, two, five}'
+      expect(f {'one', 'two', 'five'}).
+         to_be '{one, two, five}'
   - it renders a table dictionary part compactly:
-      expect (f { one = true, two = 2, three = {3}}).
-        to_be '{one=true, three={3}, two=2}'
+      expect(f {one=true, two=2, three={3}}).
+         to_be '{one=true, three={3}, two=2}'
   - it renders array elements before dictionary elements:
-      expect (f {7, six="five", 4, 3, one=2}).
-        to_be '{7, 4, 3; one=2, six=five}'
+      expect(f {7, six='five', 4, 3, one=2}).
+         to_be '{7, 4, 3; one=2, six=five}'
   - it renders non-sequences with keys:
-      expect (f {[2] = true, one = 1, [3] = {3}}).
-        to_be '{2=true, 3={3}, one=1}'
+      expect(f {[2]=true, one=1, [3]={3}}).
+         to_be '{2=true, 3={3}, one=1}'
   - it renders table keys in table.sort order:
-      expect (f { one = 3, two = 5, three = 4, four = 2, five = 1 }).
-        to_be '{five=1, four=2, one=3, three=4, two=5}'
+      expect(f {one=3, two=5, three=4, four=2, five=1}).
+         to_be '{five=1, four=2, one=3, three=4, two=5}'
   - it renders keys with invalid symbol names compactly:
-      expect (f { _ = 0, word = 0, ["?"] = 1, ["a-key"] = 1, ["[]"] = 1 }).
-        to_be '{?=1, []=1, _=0, a-key=1, word=0}'
+      expect(f {_=0, word=0, ['?']=1, ['a-key']=1, ['[]']=1 }).
+         to_be '{?=1, []=1, _=0, a-key=1, word=0}'
 
 
 - describe unpack:
   - before:
-      q = setmetatable ({1, 2, 5}, {__len = function () return 5 end})
+      q = setmetatable({1, 2, 5}, {__len = function() return 5 end})
       t = {1, 2, 5}
       u = {1, 2, 5; n=3}
-      f = function (...) return pack (M.unpack (...)) end
+      f = function(...) return pack(M.unpack(...)) end
 
   - context with bad arguments:
     - 'it diagnoses missing argument #1':
-         expect (f ()).to_raise "table expected, got no value"
+         expect(f()).to_raise 'table expected, got no value'
     - 'it diagnoses nil-valued argument #1':
-         expect (f (nil)).to_raise "table expected, got nil"
+         expect(f(nil)).to_raise 'table expected, got nil'
     - 'it diagnoses argument #1 type not table':
-         expect (f (false)).to_raise "table expected, got boolean"
+         expect(f(false)).to_raise 'table expected, got boolean'
     - 'it diagnoses argument #2 type not number': |
-         expect (f (t, false)).
-           to_raise "bad argument #2 to 'unpack' (integer expected, got boolean)"
+         expect(f(t, false)).
+            to_raise "bad argument #2 to 'unpack' (integer expected, got boolean)"
     - 'it diagnoses argument #2 type not integer': |
-         expect (f (t, 1.5)).
-           to_raise "bad argument #2 to 'unpack' (number has no integer representation)"
-         expect (f (t, '1.5')).
-           to_raise "bad argument #2 to 'unpack' (number has no integer representation)"
+         expect(f(t, 1.5)).
+            to_raise "bad argument #2 to 'unpack' (number has no integer representation)"
+         expect(f(t, '1.5')).
+            to_raise "bad argument #2 to 'unpack' (number has no integer representation)"
     - 'it diagnoses argument #3 type not number': |
-         expect (f (t, 1, false)).
-           to_raise "bad argument #3 to 'unpack' (integer expected, got boolean)"
+         expect(f(t, 1, false)).
+            to_raise "bad argument #3 to 'unpack' (integer expected, got boolean)"
     - 'it diagnoses argument #3 type not integer': |
-         expect (f (t, 1, 1.5)).
-           to_raise "bad argument #3 to 'unpack' (number has no integer representation)"
-         expect (f (t, '1', '1.5')).
-           to_raise "bad argument #3 to 'unpack' (number has no integer representation)"
+         expect(f(t, 1, 1.5)).
+            to_raise "bad argument #3 to 'unpack' (number has no integer representation)"
+         expect(f(t, '1', '1.5')).
+            to_raise "bad argument #3 to 'unpack' (number has no integer representation)"
 
   - it works with an empty sequence:
-      expect (f {}).to_equal {n=0}
+      expect(f {}).to_equal {n=0}
   - it returns all elements of a sequence:
-      expect (f (t)).to_equal (u)
+      expect(f(t)).to_equal(u)
   - it stops before the first `nil` valued element:
-      expect (f {1, 2, 5, nil}).to_equal (u)
-      expect (f {1, 2, 5, nil, 3}).to_equal (u)
-      expect (f {nil, 1, nil, 2}).to_equal {n=0}
+      expect(f {1, 2, 5, nil}).to_equal(u)
+      expect(f {1, 2, 5, nil, 3}).to_equal(u)
+      expect(f {nil, 1, nil, 2}).to_equal {n=0}
   - it ignores non-sequence elements:
-      expect (f {1, 2, 5; n=2}).to_equal (u)
-      expect (f {1, foo='bar', 2, baz={4}, 5}).to_equal (u)
+      expect(f {1, 2, 5; n=2}).to_equal(u)
+      expect(f {1, foo='bar', 2, baz={4}, 5}).to_equal(u)
   - it respects optional `from_index` argument:
-      expect (f (t, 1)).to_equal (u)
-      expect (f (t, 2)).to_equal {2, 5; n=2}
-      expect (f (t, 3)).to_equal {5; n=1}
-      expect (f (t, 4)).to_equal {n=0}
-      expect (f (t, 42)).to_equal {n=0}
+      expect(f(t, 1)).to_equal(u)
+      expect(f(t, 2)).to_equal {2, 5; n=2}
+      expect(f(t, 3)).to_equal {5; n=1}
+      expect(f(t, 4)).to_equal {n=0}
+      expect(f(t, 42)).to_equal {n=0}
   - it stops before first `nil` even if `from_index` is larger:
-      expect (f ({[42]=1}, 42)).to_equal {n=0}
+      expect(f({[42]=1}, 42)).to_equal {n=0}
   - it returns initial `nils` when `from_index` is smaller than 1:
-      expect (f (t, 0)).to_equal {nil, 1, 2, 5; n=4}
-      expect (f (t, -1)).to_equal {nil, nil, 1, 2, 5; n=5}
+      expect(f(t, 0)).to_equal {nil, 1, 2, 5; n=4}
+      expect(f(t, -1)).to_equal {nil, nil, 1, 2, 5; n=5}
   - it respects `__len` metamethod:
-      expect (f (q)).to_equal {1, 2, 5; n=5}
+      expect(f(q)).to_equal {1, 2, 5; n=5}
   - it respects optional `to_index` argument:
-      expect (f (t, nil, 3)).to_equal (u)
-      expect (f (t, nil, 2)).to_equal {1, 2; n=2}
-      expect (f (t, nil, 1)).to_equal {1; n=1}
-      expect (f (t, nil, 0)).to_equal {n=0}
+      expect(f(t, nil, 3)).to_equal(u)
+      expect(f(t, nil, 2)).to_equal {1, 2; n=2}
+      expect(f(t, nil, 1)).to_equal {1; n=1}
+      expect(f(t, nil, 0)).to_equal {n=0}
   - it respects optional `to_index` argument over `__len` metamethod:
-      expect (f (q, nil, 3)).to_equal (u)
-      expect (f (q, nil, 2)).to_equal {1, 2; n=2}
-      expect (f (q, nil, 1)).to_equal {1; n=1}
-      expect (f (q, nil, 0)).to_equal {n=0}
+      expect(f(q, nil, 3)).to_equal(u)
+      expect(f(q, nil, 2)).to_equal {1, 2; n=2}
+      expect(f(q, nil, 1)).to_equal {1; n=1}
+      expect(f(q, nil, 0)).to_equal {n=0}
   - it returns additional `nils` when `to_index` is greater than sequence length:
-      expect (f (t, nil, 4)).to_equal {1, 2, 5; n=4}
-      expect (f (t, nil, 42)).to_equal {1, 2, 5; n=42}
+      expect(f(t, nil, 4)).to_equal {1, 2, 5; n=4}
+      expect(f(t, nil, 42)).to_equal {1, 2, 5; n=42}
   - it accepts `from_index` and `to_index` together:
-      expect (f (t, 1, 3)).to_equal (u)
-      expect (f (t, 0, 4)).to_equal {nil, 1, 2, 5; n=5}
-      expect (f (t, 0, 2)).to_equal {nil, 1, 2; n=3}
-      expect (f (t, 1, 2)).to_equal {1, 2; n=2}
-      expect (f (t, 2, 3)).to_equal {2, 5; n=2}
-      expect (f (t, 2, 4)).to_equal {2, 5; n=3}
+      expect(f(t, 1, 3)).to_equal(u)
+      expect(f(t, 0, 4)).to_equal {nil, 1, 2, 5; n=5}
+      expect(f(t, 0, 2)).to_equal {nil, 1, 2; n=3}
+      expect(f(t, 1, 2)).to_equal {1, 2; n=2}
+      expect(f(t, 2, 3)).to_equal {2, 5; n=2}
+      expect(f(t, 2, 4)).to_equal {2, 5; n=3}
   - it returns nothing if `from_index` is larger than `to_index`:
-      expect (f (t, 3, 1)).to_equal {n=0}
-      expect (f (t, 1, -1)).to_equal {n=0}
-      expect (f (t, -1, -2)).to_equal {n=0}
+      expect(f(t, 3, 1)).to_equal {n=0}
+      expect(f(t, 1, -1)).to_equal {n=0}
+      expect(f(t, -1, -2)).to_equal {n=0}
   - it returns `nils` if `from_index` and `to_index` are out-of-bounds:
-      expect (f (t, -1, -1)).to_equal {n=1}
-      expect (f (t, -2, -1)).to_equal {n=2}
-      expect (f (t, 100, 199)).to_equal {n=100}
+      expect(f(t, -1, -1)).to_equal {n=1}
+      expect(f(t, -2, -1)).to_equal {n=2}
+      expect(f(t, 100, 199)).to_equal {n=100}
   - it is the inverse operation to `pack`:
-      expect (M.pack (M.unpack (M.pack (1, nil, 3, nil)))).
-        to_equal {1, nil, 3; n=4}
+      expect(M.pack(M.unpack(M.pack(1, nil, 3, nil)))).
+         to_equal {1, nil, 3; n=4}
 
 
 - describe xpcall:
   - before:
-      errh = function (...) return 'errh ' .. table.concat {...} end
-      fail = function (...) error ('fail ' .. table.concat {...}) end
-      id = function (...) return ... end
+      errh = function(...) return 'errh ' .. table.concat {...} end
+      fail = function(...) error('fail ' .. table.concat {...}) end
+      id = function(...) return ... end
 
       f = M.xpcall
 
   - context with bad arguments:
     - 'it diagnoses missing argument #1': |
-        expect (f ()).to_raise
-          "bad argument #1 to 'xpcall' (callable expected, got no value)"
+        expect(f()).to_raise
+           "bad argument #1 to 'xpcall' (callable expected, got no value)"
     - 'it diagnoses nil-valued argument #1': |
-        expect (f (nil)).to_raise
-          "bad argument #1 to 'xpcall' (callable expected, got nil)"
+        expect(f(nil)).to_raise
+           "bad argument #1 to 'xpcall' (callable expected, got nil)"
     - 'it diagnoses argument #1 type not function': |
-        expect (f {}).to_raise
-          "bad argument #1 to 'xpcall' (callable expected, got table)"
+        expect(f {}).to_raise
+           "bad argument #1 to 'xpcall' (callable expected, got table)"
     - 'it diagnoses missing argument #2': |
-        expect (f (id)).to_raise
-          "bad argument #2 to 'xpcall' (callable expected, got no value)"
+        expect(f(id)).to_raise
+           "bad argument #2 to 'xpcall' (callable expected, got no value)"
     - 'it diagnoses nil-valued argument #2': |
-        expect (f (id, nil)).to_raise
-          "bad argument #2 to 'xpcall' (callable expected, got nil)"
+        expect(f(id, nil)).to_raise
+           "bad argument #2 to 'xpcall' (callable expected, got nil)"
     - 'it diagnoses argument #2 type not function': |
-        expect (f (id, {})).to_raise
-          "bad argument #2 to 'xpcall' (callable expected, got table)"
+        expect(f(id, {})).to_raise
+           "bad argument #2 to 'xpcall' (callable expected, got table)"
 
   - it returns true if the protected call succeeds:
-      expect (f (id, id)).to_be (true)
+      expect(f(id, id)).to_be(true)
   - it returns false if the protected call errors:
-      expect (f (fail, id)).to_be (false)
+      expect(f(fail, id)).to_be(false)
   - it calls the handler if the protected call errors:
-      t = {"MAGIC"}
-      ok, r = f (error, function () return t end)
-      expect (ok).to_be (false)
-      expect (r).to_be (t)
+      t = {'MAGIC'}
+      ok, r = f(error, function() return t end)
+      expect(ok).to_be(false)
+      expect(r).to_be(t)
   - it passes the protected call failure object to the handler:
-      t = {"MAGIC"}
-      fail = function () error (t) end
-      errh = function (obj) return obj end
-      ok, r = f (fail, errh)
-      expect (ok).to_be (false)
-      expect (r).to_be (t)
+      t = {'MAGIC'}
+      fail = function() error(t) end
+      errh = function(obj) return obj end
+      ok, r = f(fail, errh)
+      expect(ok).to_be(false)
+      expect(r).to_be(t)
   - it passes additional args to the protected call: |
-      ok, r = f (fail, errh, 'a', 'b', 'c')
-      expect (ok).to_be (false)
-      expect (r).to_contain ': fail abc'
+      ok, r = f(fail, errh, 'a', 'b', 'c')
+      expect(ok).to_be(false)
+      expect(r).to_contain ': fail abc'
   - it propagates nil arguments correctly:
-      fail = function (...) error (select ("#", ...), 0) end
-      _, r = f (fail, tostring)
-      expect (r).to_be '0'
-      _, r = f (fail, tostring, nil, nil, nil)
-      expect (r).to_be '3'
+      fail = function(...) error(select('#', ...), 0) end
+      _, r = f(fail, tostring)
+      expect(r).to_be '0'
+      _, r = f(fail, tostring, nil, nil, nil)
+      expect(r).to_be '3'
