@@ -3,7 +3,7 @@
 <html>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
 <head>
-    <title>std.normalize 1.0.3 Reference</title>
+    <title>std.normalize 1.0.4 Reference</title>
     <link rel="stylesheet" href="ldoc.css" type="text/css" />
 </head>
 <body>
@@ -24,7 +24,7 @@
 
 <div id="navigation">
 <br/>
-<h1>std.normalize 1.0.3</h1>
+<h1>std.normalize 1.0.4</h1>
 
 
 <h2>Contents</h2>
@@ -109,28 +109,12 @@
 	<td class="summary">Load a string or a function, just like Lua 5.2+.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#math.tointeger">math.tointeger (x)</a></td>
-	<td class="summary">Convert to an integer and return if possible, otherwise <code>nil</code>.</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#math.type">math.type (x)</a></td>
-	<td class="summary">Return 'integer', 'float' or <code>nil</code> according to argument type.</td>
-	</tr>
-	<tr>
 	<td class="name" nowrap><a href="#opairs">opairs (t)</a></td>
 	<td class="summary">Ordered <code>pairs</code> iterator, respecting <code>__pairs</code> metamethod.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#os.exit">os.exit (status)</a></td>
-	<td class="summary">Exit the program.</td>
-	</tr>
-	<tr>
 	<td class="name" nowrap><a href="#pack">pack (...)</a></td>
 	<td class="summary">Return a list of given arguments, with field <code>n</code> set to the length.</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#package.searchpath">package.searchpath (name, path[, sep='.'[, rep=`package.dirsep`]])</a></td>
-	<td class="summary">Searches for a named file in a given path.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#pairs">pairs (t)</a></td>
@@ -155,6 +139,22 @@
 	<tr>
 	<td class="name" nowrap><a href="#xpcall">xpcall (f, errh, ...)</a></td>
 	<td class="summary">Support arguments to a protected function call, even on Lua 5.1.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#math.tointeger">math.tointeger (x)</a></td>
+	<td class="summary">Convert to an integer and return if possible, otherwise <code>nil</code>.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#math.type">math.type (x)</a></td>
+	<td class="summary">Return 'integer', 'float' or <code>nil</code> according to argument type.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#os.exit">os.exit (status)</a></td>
+	<td class="summary">Exit the program.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#package.searchpath">package.searchpath (name, path[, sep='.'[, rep=`package.dirsep`]])</a></td>
+	<td class="summary">Searches for a named file in a given path.</td>
 	</tr>
 </table>
 <h2><a href="#Tables">Tables</a></h2>
@@ -435,78 +435,6 @@
 
 </dd>
     <dt>
-    <a name = "math.tointeger"></a>
-    <strong>math.tointeger (x)</strong>
-    </dt>
-    <dd>
-    Convert to an integer and return if possible, otherwise <code>nil</code>.
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">x</span>
-         object to act on
-        </li>
-    </ul>
-
-    <h3>Returns:</h3>
-    <ol>
-
-           <span class="types"><span class="type">integer</span></span>
-        <em>x</em> converted to an integer if possible
-    </ol>
-     <h3>Or</h3>
-    <ol>
-
-        <code>nil</code> otherwise
-    </ol>
-
-
-
-
-</dd>
-    <dt>
-    <a name = "math.type"></a>
-    <strong>math.type (x)</strong>
-    </dt>
-    <dd>
-    Return 'integer', 'float' or <code>nil</code> according to argument type. </p>
-
-<p> To ensure the same behaviour on all host Lua implementations,
- this function returns 'float' for integer-equivalent floating
- values, even on Lua 5.3.
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">x</span>
-         object to act on
-        </li>
-    </ul>
-
-    <h3>Returns:</h3>
-    <ol>
-
-           <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
-        'integer', if <em>x</em> is a whole number
-    </ol>
-     <h3>Or</h3>
-    <ol>
-
-           <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
-        'float', for other numbers
-    </ol>
-     <h3>Or</h3>
-    <ol>
-
-        <code>nil</code> otherwise
-    </ol>
-
-
-
-
-</dd>
-    <dt>
     <a name = "opairs"></a>
     <strong>opairs (t)</strong>
     </dt>
@@ -545,31 +473,6 @@
 </span><span class="comment">--&gt; 2           a
 </span><span class="comment">--&gt; foo         c
 </span><span class="keyword">for</span> k, v <span class="keyword">in</span> opairs {<span class="string">'b'</span>, foo=<span class="string">'c'</span>, <span class="string">'a'</span>} <span class="keyword">do</span> <span class="global">print</span>(k, v) <span class="keyword">end</span></pre>
-    </ul>
-
-</dd>
-    <dt>
-    <a name = "os.exit"></a>
-    <strong>os.exit (status)</strong>
-    </dt>
-    <dd>
-    Exit the program.
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">status</span>
-            <span class="types"><span class="type">bool</span> or <span class="type">number[opt=true]</span></span>
-         report back to parent process
-        </li>
-    </ul>
-
-
-
-
-    <h3>Usage:</h3>
-    <ul>
-        <pre class="example">exit(len(records.processed) &gt; <span class="number">0</span>)</pre>
     </ul>
 
 </dd>
@@ -613,65 +516,6 @@
         <pre class="example"><span class="comment">--&gt; 5
 </span>len(pack(<span class="keyword">nil</span>, <span class="number">2</span>, <span class="number">5</span>, <span class="keyword">nil</span>, <span class="keyword">nil</span>))</pre>
     </ul>
-
-</dd>
-    <dt>
-    <a name = "package.searchpath"></a>
-    <strong>package.searchpath (name, path[, sep='.'[, rep=`package.dirsep`]])</strong>
-    </dt>
-    <dd>
-    Searches for a named file in a given path. </p>
-
-<p> For each <code>package.pathsep</code> delimited template in the given path,
- search for an readable file made by first substituting for <em>sep</em>
- with <code>package.dirsep</code>, and then replacing any
- <code>package.pathmark</code> with the result.   The first such file, if any
- is returned.
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">name</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
-         name of search file
-        </li>
-        <li><span class="parameter">path</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
-         <code>package.pathsep</code> delimited list of full path templates
-        </li>
-        <li><span class="parameter">sep</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
-         <em>name</em> component separator
-         (<em>default</em> '.')
-        </li>
-        <li><span class="parameter">rep</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
-         <em>sep</em> replacement in template
-         (<em>default</em> `package.dirsep`)
-        </li>
-    </ul>
-
-    <h3>Returns:</h3>
-    <ol>
-
-           <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
-
-<p>first template substitution that names a file</p>
-<pre><code>that can be opened in read mode
-</code></pre>
-
-    </ol>
-     <h3>Or</h3>
-    <ol>
-        <li>
-        <code>nil</code></li>
-        <li>
-           <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
-        error message listing all failed paths</li>
-    </ol>
-
-
-
 
 </dd>
     <dt>
@@ -917,6 +761,162 @@
     </ul>
 
 </dd>
+    <dt>
+    <a name = "math.tointeger"></a>
+    <strong>math.tointeger (x)</strong>
+    </dt>
+    <dd>
+    Convert to an integer and return if possible, otherwise <code>nil</code>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         object to act on
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">integer</span></span>
+        <em>x</em> converted to an integer if possible
+    </ol>
+     <h3>Or</h3>
+    <ol>
+
+        <code>nil</code> otherwise
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "math.type"></a>
+    <strong>math.type (x)</strong>
+    </dt>
+    <dd>
+    Return 'integer', 'float' or <code>nil</code> according to argument type. </p>
+
+<p> To ensure the same behaviour on all host Lua implementations,
+ this function returns 'float' for integer-equivalent floating
+ values, even on Lua 5.3.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         object to act on
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+        'integer', if <em>x</em> is a whole number
+    </ol>
+     <h3>Or</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+        'float', for other numbers
+    </ol>
+     <h3>Or</h3>
+    <ol>
+
+        <code>nil</code> otherwise
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "os.exit"></a>
+    <strong>os.exit (status)</strong>
+    </dt>
+    <dd>
+    Exit the program.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">status</span>
+            <span class="types"><span class="type">bool</span> or <span class="type">number[opt=true]</span></span>
+         report back to parent process
+        </li>
+    </ul>
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">exit(len(records.processed) &gt; <span class="number">0</span>)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "package.searchpath"></a>
+    <strong>package.searchpath (name, path[, sep='.'[, rep=`package.dirsep`]])</strong>
+    </dt>
+    <dd>
+    Searches for a named file in a given path. </p>
+
+<p> For each <code>package.pathsep</code> delimited template in the given path,
+ search for an readable file made by first substituting for <em>sep</em>
+ with <code>package.dirsep</code>, and then replacing any
+ <code>package.pathmark</code> with the result.   The first such file, if any
+ is returned.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">name</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+         name of search file
+        </li>
+        <li><span class="parameter">path</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+         <code>package.pathsep</code> delimited list of full path templates
+        </li>
+        <li><span class="parameter">sep</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+         <em>name</em> component separator
+         (<em>default</em> '.')
+        </li>
+        <li><span class="parameter">rep</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+         <em>sep</em> replacement in template
+         (<em>default</em> `package.dirsep`)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+
+<p>first template substitution that names a file</p>
+<pre><code>that can be opened in read mode
+</code></pre>
+
+    </ol>
+     <h3>Or</h3>
+    <ol>
+        <li>
+        <code>nil</code></li>
+        <li>
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+        error message listing all failed paths</li>
+    </ol>
+
+
+
+
+</dd>
 </dl>
     <h2 class="section-header "><a name="Tables"></a>Tables</h2>
 
@@ -1085,7 +1085,7 @@
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2017-09-02 20:23:41 </i>
+<i style="float:right;">Last updated 2017-09-11 09:32:14 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>
