@@ -1,4 +1,4 @@
-local _MODREV, _SPECREV = 'git', '-1'
+local _MODREV, _SPECREV = '1.0.4', '-1'
 
 package = 'std.normalize'
 version = _MODREV .. _SPECREV
@@ -18,14 +18,12 @@ description = {
 }
 
 source = {
-   url = 'git://github.com/lua-stdlib/normalize.git',
-   --url = 'http://github.com/lua-stdlib/normalize/archive/v' .. _MODREV .. '.zip',
-   --dir = 'normalize-' .. _MODREV,
+   url = 'http://github.com/lua-stdlib/normalize/archive/v' .. _MODREV .. '.zip',
+   dir = 'normalize-' .. _MODREV,
 }
 
 dependencies = {
    'lua >= 5.1, < 5.4',
-   'ldoc',
 }
 
 build = {
