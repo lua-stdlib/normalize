@@ -2,6 +2,9 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+
+## Noteworthy changes in release 1.0.4 (2017-09-11) [stable]
+
 ### New features
 
   - `std.normalize` has been rewritten, in addition to maintaining
@@ -21,7 +24,8 @@
        -- local int = require 'std.normalize.math'.tointeger
        int = 'math.tointeger',
        -- local MODNAME = 'math.tointeger'
-       MODNAME = 'math.tointeger'
+       MODNAME = 'math.tointeger',
+    }
     ```
 
     Note that dot-delimited strings are searched in the 'std.normalize'
