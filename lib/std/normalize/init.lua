@@ -870,7 +870,7 @@ local G = {
       sort = _G.table.sort,
    },
 }
-G._G = G
+F._G = G
 G.package.loaded = {
    _G = G,
    coroutine = G.coroutine,

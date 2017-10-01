@@ -2,6 +2,19 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+### Bug fixes
+
+  - Include `_G` table, pointing to the complete normalized table
+    of loaded modules, in the default user environment.  So this
+    will work now:
+
+    ```lua
+    local _ENV = require 'std.normalize` {}
+    for i = 1, len(_G.arg) do
+       print(i .. ': ' .. _G.arg[i])
+    end
+    ```
+
 
 ## Noteworthy changes in release 1.0.4 (2017-09-11) [stable]
 

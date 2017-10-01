@@ -35,7 +35,7 @@ specify std.normalize:
           end
       ]]
       expect(luaproc(script)).to_output(table.concat({
-         '_VERSION', 'arg', 'argerror', 'assert', 'collectgarbage',
+         '_G', '_VERSION', 'arg', 'argerror', 'assert', 'collectgarbage',
          'dofile', 'error', 'getfenv', 'getmetamethod', 'getmetatable',
          'ipairs', 'len', 'load', 'loadfile', 'next', 'opairs', 'pack',
          'pairs', 'pcall', 'print', 'rawequal', 'rawget', 'rawlen',
