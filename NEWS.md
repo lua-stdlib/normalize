@@ -2,6 +2,10 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+### New features
+
+  - New `table.merge` performs destructive merging of table content.
+
 ### Bug fixes
 
   - Include `_G` table, pointing to the complete normalized table

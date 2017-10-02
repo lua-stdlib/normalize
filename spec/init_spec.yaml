@@ -1033,6 +1033,28 @@ specify std.normalize:
          to_be '{?=1, []=1, _=0, a-key=1, word=0}'
 
 
+- describe table:
+  - describe merge:
+    - before:
+        f = M.table.merge
+        t = {1, 2, 5, foo='bar'}
+
+    - context with bad argumentns:
+        badargs.diagnose(f, 'table.merge(table, ?table)')
+
+    - it makes a shallow copy with one argument:
+        expect(f(t)).to_equal(t)
+    - it returns the second argument:
+        u = {}
+        expect(f(t, u)).to_be(u)
+    - it does not overwrite existing values:
+        u = f(t)
+        expect(f({'a', 'b', 'c', foo='baz'}, u)).to_equal(t)
+    - it does merge unique fields:
+        expect(f(t, {'a', 'b', bar='baz', [5]=42}))
+           .to_equal{'a', 'b', 5, [5]=42, foo='bar', bar='baz'}
+
+
 - describe unpack:
   - before:
       q = setmetatable({1, 2, 5}, {__len = function() return 5 end})

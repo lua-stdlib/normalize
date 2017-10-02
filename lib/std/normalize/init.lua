@@ -266,6 +266,15 @@ local function normalize_load(chunk, chunkname)
 end
 
 
+local function merge(t, r)
+   r = r or {}
+   for k, v in next, t do
+      r[k] = r[k] or v
+   end
+   return r
+end
+
+
 if not not pairs(setmetatable({},{__pairs=function() return false end})) then
    -- Add support for __pairs when missing.
    local _pairs = pairs
@@ -866,6 +875,17 @@ local G = {
    table = {
       concat = _G.table.concat,
       insert = _G.table.insert,
+
+      --- Destructively merge keys and values from one table into another.
+      -- @function table.merge
+      -- @tparam table t take fields from this table
+      -- @tparam[opt={}] table u and copy them into here, unless they are set already
+      -- @treturn table *u*
+      -- @usage
+      --    --> {'a', 'b', d='d'}
+      --    merge({'a', 'b'}, {'c', d='d'})
+      merge = argscheck('merge', T.table, opt(T.table)) .. merge,
+
       remove = _G.table.remove,
       sort = _G.table.sort,
    },
