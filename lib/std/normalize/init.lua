@@ -6,9 +6,9 @@
 --[[--
  Normalize API differences between supported Lua implementations.
 
- Respecting the values set in the `std.debug_init` module and the
- `_G._DEBUG` variable, inject deterministic identically behaving
- cross-implementation low-level functions into the callers environment.
+ Respecting the values set in the `std._debug` settings module, inject
+ deterministic identically behaving cross-implementation low-level
+ functions into the callers environment.
 
  Writing Lua libraries that target several Lua implementations can be a
  frustrating exercise in working around lots of small differences in APIs

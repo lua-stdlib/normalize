@@ -56,7 +56,7 @@ specify std.normalize._typecheck:
         expect(f 'callable' .. fntor).
            not_to_raise "attempt to annotate non-callable value with 'argscheck'"
 
-  - context global _DEBUG is nil:
+  - context when std._debug is not set:
     - it wraps the inner function:
         expect(luaproc(preamble .. [[
            magic = argscheck('magic', types.woot) .. inner
@@ -67,20 +67,20 @@ specify std.normalize._typecheck:
         expect(luaproc(preamble .. [[
            (argscheck('magic', types.ohno) .. inner) 'fail'
         ]])).to_fail_while_matching "bad argument #1 to 'magic' %(string unexpected%)"
-  - context global _DEBUG is false:
+  - context when std._debug is false:
     - before: |
         shamble = [[
-           _DEBUG = false
+            require 'std._debug' (false)
         ]] .. preamble
     - it returns a pass-through decorator:
         expect(luaproc(shamble .. [[
            magic = argscheck('magic', types.woot) .. inner
            exit(magic == inner)
         ]])).to_succeed_with ''
-  - context global _DEBUG is true:
+  - context when std._debug is true:
     - before: |
         shamble = [[
-           _DEBUG = true
+           require 'std._debug' (true)
         ]] .. preamble
     - it wraps the inner function:
         expect(luaproc(shamble .. [[
@@ -92,10 +92,10 @@ specify std.normalize._typecheck:
         expect(luaproc(shamble .. [[
            (argscheck('magic', types.ohno) .. inner) 'fail'
         ]])).to_fail_while_matching "bad argument #1 to 'magic' %(string unexpected%)"
-  - context global _DEBUG.argcheck is nil:
+  - context when std._debug.argcheck is nil:
     - before: |
         shamble = [[
-           _DEBUG = {argcheck=nil}
+           require 'std._debug'.argcheck = nil
         ]] .. preamble
     - it wraps the inner function:
         expect(luaproc(shamble .. [[
@@ -107,20 +107,20 @@ specify std.normalize._typecheck:
         expect(luaproc(shamble .. [[
            (argscheck('magic', types.ohno) .. inner) 'fail'
         ]])).to_fail_while_matching "bad argument #1 to 'magic' %(string unexpected%)"
-  - context global _DEBUG.argcheck is false:
+  - context when std._debug..argcheck is false:
     - before: |
         shamble = [[
-           _DEBUG = {argcheck=false}
+           require 'std._debug'.argcheck = false
         ]] .. preamble
     - it returns a pass-through decorator:
         expect(luaproc(shamble .. [[
            magic = argscheck('magic', types.woot) .. inner
            exit(magic == inner)
         ]])).to_succeed_with ''
-  - context global _DEBUG.argcheck is true:
+  - context when std._debug.argcheck is true:
     - before: |
         shamble = [[
-           _DEBUG = {argcheck=true}
+           require 'std._debug'.argcheck = true
         ]] .. preamble
     - it wraps the inner function:
         expect(luaproc(shamble .. [[

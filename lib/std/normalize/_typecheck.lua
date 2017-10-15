@@ -3,9 +3,9 @@
  Coryright (C) 2014-2017 Gary V. Vaughan
 ]]
 --[[--
- Depending on the value of _DEBUG is in the global environment, return
- functions for efficient argument type checking.   This is effectively
- a minimal implementation of `typecheck`, limited to the functionality
+ Depending on the state in `std._debug`, define functions for efficient
+ runtime argument type checking.   This module is effectively a
+ minimal implementation of `typecheck`, limited to the functionality
  required by normalize proper, so that `typecheck` itself can depend
  on `normalize` without introducing a dependency cycle.
 
@@ -13,7 +13,7 @@
 ]]
 
 local _ENV = require 'std.normalize._strict' {
-   _DEBUG = require 'std.normalize._debug',
+   _debug = require 'std._debug',
    concat = table.concat,
    error = error,
    format = string.format,
@@ -58,7 +58,7 @@ end
 local argscheck
 do
    -- Set argscheck according to whether argcheck is required.
-   if _DEBUG.argcheck then
+   if _debug.argcheck then
 
       ARGCHECK_FRAME = 1
 
@@ -276,7 +276,7 @@ return {
 
    --- A rudimentary argument type validation decorator.
    --
-   -- Return the checked function directly if `_DEBUG.argcheck` is reset,
+   -- Return the checked function directly if `_debug.argcheck` is reset,
    -- otherwise use check function arguments using predicate functions in
    -- the corresponding positions in the decorator call.
    -- @function argscheck

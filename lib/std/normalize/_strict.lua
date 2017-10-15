@@ -3,15 +3,15 @@
  Coryright (C) 2014-2017 Gary V. Vaughan
 ]]
 --[[--
- Depending on whether `std.strict` is installed, and what the value of
- _DEBUG is in the global environment, return a function for setting up
- a strict lexical environment for the caller.
+ Depending on whether `std.strict` is installed, and the value of
+ `std._debug.strict`, return a function for setting up a strict lexical
+  environment for the caller.
 
  @module std.normalize._strict
 ]]
 
 local _ENV = {
-   _DEBUG = require 'std.normalize._debug',
+   _debug = require 'std._debug',
    pcall = pcall,
    require = require,
    setfenv = setfenv or function() end,
@@ -28,7 +28,7 @@ setfenv(1, _ENV)
 
 -- If strict mode is required, use 'std.strict' if we have it.
 local strict
-if _DEBUG.strict then
+if _debug.strict then
    -- `require 'std.strict'` will get the old stdlib implementation of
    -- strict, which doesn't support environment tables :(
    ok, strict = pcall(require, 'std.strict.init')

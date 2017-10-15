@@ -191,10 +191,10 @@ specify std.normalize:
       expect(f('another', 3, 'oh noes')).
          to_raise "bad argument #3 to 'another' (oh noes)"
 
-  - context global _DEBUG is nil:
+  - context when std._debug is not set:
     - before: |
         shamble = [[
-           _DEBUG = nil					-- line 1
+           local _debug = nil				-- line 1
         ]] .. preamble
     - it blames the call site by default: |
         expect(luaproc(shamble .. [[
@@ -212,10 +212,10 @@ specify std.normalize:
            caller(0)					-- line 14
         ]])).to_fail_while_matching '^[^:]+: bad argument'
 
-  - context global _DEBUG is false:
+  - context when std._debug is false:
     - before: |
         shamble = [[
-           _DEBUG = false				-- line 1
+           local _debug = require 'std._debug' (false)	-- line 1
         ]] .. preamble
     - it blames the call site by default: |
         expect(luaproc(shamble .. [[
@@ -233,10 +233,10 @@ specify std.normalize:
            caller(0)					-- line 14
         ]])).to_fail_while_matching '^[^:]+: bad argument'
 
-  - context global _DEBUG is true:
+  - context when std._debug is true:
     - before: |
         shamble = [[
-           _DEBUG = true					-- line 1
+           local _debug = require 'std._debug' (true)	-- line 1
         ]] .. preamble
     - it blames the call site by default: |
         expect(luaproc(shamble .. [[
@@ -254,10 +254,10 @@ specify std.normalize:
            caller(0)					-- line 14
         ]])).to_fail_while_matching '^[^:]+: bad argument'
 
-  - context global _DEBUG.argcheck is nil:
+  - context when std._debug.argcheck is nil:
     - before: |
         shamble = [[
-           _DEBUG = { argcheck = nil }			-- line 1
+           require 'std._debug'.argcheck = nil		-- line 1
         ]] .. preamble
     - it blames the call site by default: |
         expect(luaproc(shamble .. [[
@@ -275,10 +275,10 @@ specify std.normalize:
            caller(0)					-- line 14
         ]])).to_fail_while_matching '^[^:]+: bad argument'
 
-  - context global _DEBUG.argcheck is false:
+  - context when std._debug.argcheck is false:
     - before: |
         shamble = [[
-           _DEBUG = { argcheck = false }		-- line 1
+           require 'std._debug'.argcheck = false	-- line 1
         ]] .. preamble
     - it blames the call site by default: |
         expect(luaproc(shamble .. [[
@@ -296,10 +296,10 @@ specify std.normalize:
            caller(0)					-- line 14
         ]])).to_fail_while_matching '^[^:]+: bad argument'
 
-  - context global _DEBUG.argcheck is true:
+  - context when std._debug.argcheck is true:
     - before: |
         shamble = [[
-           _DEBUG = { argcheck = true }			-- line 1
+           require 'std._debug'.argcheck = true		-- line 1
         ]] .. preamble
     - it blames the call site by default: |
         expect(luaproc(shamble .. [[
@@ -335,7 +335,7 @@ specify std.normalize:
       expect(type(f(0))).to_be 'table'
       expect(type(f(f))).to_be 'table'
 
-  - context when _DEBUG.argcheck is true:
+  - context when std._debug.argcheck is true:
     - before:
         fn = function(n) return getfenv(n), nil end
         fnenv = {getfenv = f}
@@ -361,10 +361,10 @@ specify std.normalize:
     - it returns the environment of higher stack frames:
         expect(gn(2)).to_be(gnenv)
 
-  - context when _DEBUG.argcheck is false:
+  - context when std._debug.argcheck is false:
     - before:
         preamble = [[
-           _DEBUG = { argcheck = false }
+           require 'std._debug'.argcheck = false
            M = require 'std.normalize'
            f = M.getfenv
            fn = function(n) return getfenv(n), nil end
@@ -928,7 +928,7 @@ specify std.normalize:
       expect(fn {}).to_be(fn)
       expect(f(fn, {})).to_be(fn)
 
-  - context when _DEBUG.argcheck is true:
+  - context when std._debug.argcheck is true:
     - before:
         fn = function(env) return f(1, env), nil end
         fnenv = {f = f}
@@ -956,10 +956,10 @@ specify std.normalize:
         expect(gn(1, fnenv)).to_be(fn)
         expect(gn(2, {fn = fn})).to_be(gn)
 
-  - context when _DEBUG.argcheck is false:
+  - context when std._debug.argcheck is false:
     - before:
         preamble = [[
-           _DEBUG = { argcheck = false }
+           require 'std._debug'.argcheck = false
            M = require 'std.normalize'
            f = M.setfenv
            fn = function(env) return f(1, env), nil end

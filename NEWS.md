@@ -13,10 +13,21 @@
     will work now:
 
     ```lua
-    local _ENV = require 'std.normalize` {}
+    local _ENV = require 'std.normalize' {}
     for i = 1, len(_G.arg) do
        print(i .. ': ' .. _G.arg[i])
     end
+    ```
+
+### Incompatible changes
+
+  - Strict mode and argument checking are no longer controlled by the
+    global _DEBUG setting, but rather by the new `std._debug` module.
+    For example, to turn off all runtime debug facilities, insteod of
+    setting `_DEBUG = false` before loading this module, you should use:
+
+    ```lua
+    local _debug = require 'std._debug'(false)
     ```
 
 

@@ -15,10 +15,8 @@ LuaJIT), 5.2 and 5.3.  The libraries are copyright by their authors
 warranty.
 
 _normalize_ has no run-time prerequisites beyond a standard Lua system,
-though it will take advantage of [stdlib][] and [std.strict][] if they
-are installed.  It also respects the contents of global `_DEBUG` with
-respect to creating strict environments, and validating arguments to
-`std.normalize` APIs.
+and the [std._debug][] package - though it will also take advantage of
+[std.strict][] if installed.
 
 Writing Lua libraries that target several Lua implementations can be a
 frustrating exercise in working around lots of small differences in APIs

@@ -9,7 +9,6 @@ VERSION	= git
 luadir	= lib/std/normalize
 SOURCES =				\
 	$(luadir)/_base.lua		\
-	$(luadir)/_debug.lua		\
 	$(luadir)/_strict.lua		\
 	$(luadir)/_typecheck.lua	\
 	$(luadir)/init.lua		\
