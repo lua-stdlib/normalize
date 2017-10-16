@@ -1033,7 +1033,57 @@ specify std.normalize:
          to_be '{?=1, []=1, _=0, a-key=1, word=0}'
 
 
+- describe string:
+  - describe render:
+    - before: |
+        arrayvfns = {
+           elem = tostring,
+           term = function(x) return type(x) ~= 'table' end,
+           sort = function(keys)
+              local r = {}
+              for i = 1, #keys do
+                 if type(keys[i]) == 'number' then r[#r + 1] = keys[i] end
+              end
+              return r
+           end,
+           open = function(_) return '[' end,
+           close = function(_) return ']' end,
+           pair = function(x, kp, vp, k, v, kstr, vstr, seqp)
+              return seqp and vstr or ''
+           end,
+           sep = function(x, kp, vp, kn, vn, seqp)
+              return seqp and kp ~= nil and kn ~= nil and ', ' or ''
+           end,
+        }
+        f = function(x)
+           return M.string.render(x, arrayvfns)
+        end
+
+    - it renders array elements in order:
+        expect(f{'a', 'b', [4]='d', 'c'}).to_be '[a, b, c, d]'
+    - it ignores non-array pairs:
+        expect(f{'a', 'b', [4]='d', 'c', foo='bar', baz='qux'}).
+           to_be '[a, b, c, d]'
+    - it recurses to nested tables:
+        expect(f{'a', {'b', 'c'}, {{'d'}}}).to_be '[a, [b, c], [[d]]]'
+    - it detects and breaks cycles:
+        a = {1, 2, 3}
+        a[4] = a
+        expect(f(a)).to_match '^%[1, 2, 3, table:.*%]$'
+
 - describe table:
+  - describe keys:
+    - before:
+        f = M.table.keys
+        t = {1, 2, 5, foo='bar'}
+
+    - context with bad arguments:
+        badargs.diagnose(f, 'table.keys(table)')
+
+    - it collects all keys from a table:
+        expect(f(t)).to_contain.all_of{1, 2, 3, 'foo'}
+
+
   - describe merge:
     - before:
         f = M.table.merge

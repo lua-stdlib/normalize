@@ -4,6 +4,10 @@
 
 ### New features
 
+  - New `string.render` exposes the low-level implementation of `str`.
+
+  - New `table.keys` fetches a list of keys in a given table.
+
   - New `table.merge` performs destructive merging of table content.
 
 ### Bug fixes
