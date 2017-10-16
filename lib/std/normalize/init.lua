@@ -374,15 +374,6 @@ else
 end
 
 
-local function shallow_copy(t)
-   local r = {}
-   for k, v in next, t do
-      r[k] = v
-   end
-   return r
-end
-
-
 local escape = setmetatable({
    ['\a'] = [[\a]],
    ['\b'] = [[\b]],
@@ -400,6 +391,8 @@ local escape = setmetatable({
    end,
 })
 
+
+local shallow_copy = merge
 
 local function str(x, roots)
    roots = roots or {}
