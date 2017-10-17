@@ -4,7 +4,7 @@ Normalized Lua Functions
 Copyright (C) 2002-2017 [std.normalize authors][authors]
 
 [![License](https://img.shields.io/:license-mit-blue.svg)](https://mit-license.org)
-[![travis-ci status](https://secure.travis-ci.org/lua-stdlib/normalize.png?branch=master)](https://travis-ci.org/lua-stdlib/normalize/builds)
+[![travis-ci status](https://secure.travis-ci.org/lua-stdlib/normalize.png?branch=release-v2.0)](https://travis-ci.org/lua-stdlib/normalize/builds)
 [![codecov.io](https://codecov.io/gh/lua-stdlib/normalize/branch/master/graph/badge.svg)](https://codecov.io/gh/lua-stdlib/normalize)
 [![Stories in Ready](https://badge.waffle.io/lua-stdlib/normalize.png?label=ready&title=Ready)](https://waffle.io/lua-stdlib/normalize)
 
