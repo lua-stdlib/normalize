@@ -2,6 +2,9 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+
+## Noteworthy changes in release 2.0 (2017-10-16) [stable]
+
 ### New features
 
   - New `string.render` exposes the low-level implementation of `str`.
