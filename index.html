@@ -3,7 +3,7 @@
 <html>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
 <head>
-    <title>std.normalize 1.0.4 Reference</title>
+    <title>std.normalize 2.0 Reference</title>
     <link rel="stylesheet" href="ldoc.css" type="text/css" />
 </head>
 <body>
@@ -24,7 +24,7 @@
 
 <div id="navigation">
 <br/>
-<h1>std.normalize 1.0.4</h1>
+<h1>std.normalize 2.0</h1>
 
 
 <h2>Contents</h2>
@@ -32,6 +32,7 @@
 <li><a href="#Functions">Functions</a></li>
 <li><a href="#Tables">Tables</a></li>
 <li><a href="#Metamethods">Metamethods </a></li>
+<li><a href="#Types">Types </a></li>
 </ul>
 
 
@@ -46,9 +47,9 @@
 
 <h1>Module <code>std.normalize</code></h1>
 <p>Normalize API differences between supported Lua implementations.</p>
-<p> Respecting the values set in the <code>std.debug_init</code> module and the
- <code>_G._DEBUG</code> variable, inject deterministic identically behaving
- cross-implementation low-level functions into the callers environment.</p>
+<p> Respecting the values set in the <code>std._debug</code> settings module, inject
+ deterministic identically behaving cross-implementation low-level
+ functions into the callers environment.</p>
 
 <p> Writing Lua libraries that target several Lua implementations can be a
  frustrating exercise in working around lots of small differences in APIs
@@ -109,10 +110,6 @@
 	<td class="summary">Load a string or a function, just like Lua 5.2+.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#opairs">opairs (t)</a></td>
-	<td class="summary">Ordered <code>pairs</code> iterator, respecting <code>__pairs</code> metamethod.</td>
-	</tr>
-	<tr>
 	<td class="name" nowrap><a href="#pack">pack (...)</a></td>
 	<td class="summary">Return a list of given arguments, with field <code>n</code> set to the length.</td>
 	</tr>
@@ -156,6 +153,18 @@
 	<td class="name" nowrap><a href="#package.searchpath">package.searchpath (name, path[, sep='.'[, rep=`package.dirsep`]])</a></td>
 	<td class="summary">Searches for a named file in a given path.</td>
 	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#string.render">string.render (x, vfns[, roots])</a></td>
+	<td class="summary">Low-level recursive data to string rendering.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#table.keys">table.keys (t)</a></td>
+	<td class="summary">Return an unordered list of all keys in a table.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#table.merge">table.merge (t[, u={}])</a></td>
+	<td class="summary">Destructively merge keys and values from one table into another.</td>
+	</tr>
 </table>
 <h2><a href="#Tables">Tables</a></h2>
 <table class="function_list">
@@ -173,6 +182,41 @@
 	<tr>
 	<td class="name" nowrap><a href="#__index">__index (name)</a></td>
 	<td class="summary">Lazy loading of normalize modules.</td>
+	</tr>
+</table>
+<h2><a href="#Types">Types </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#RenderFns">RenderFns</a></td>
+	<td class="summary">Table of functions for string.render.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#RenderElem">RenderElem (x)</a></td>
+	<td class="summary">Type of function for uniquely stringifying rendered element.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#RenderTerm">RenderTerm (x)</a></td>
+	<td class="summary">Type of predicate function for terminal elements.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#RenderSort">RenderSort (keys)</a></td>
+	<td class="summary">Type of function for sorting keys of a recursively rendered element.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#RenderOpen">RenderOpen (x)</a></td>
+	<td class="summary">Type of function to get string for before first element.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#RenderClose">RenderClose (x)</a></td>
+	<td class="summary">Type of function te get string for after last element.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#RenderPair">RenderPair (x, kp, vp, k, v, kstr, vstr, seqp)</a></td>
+	<td class="summary">Type of function to render a key value pair.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#RenderSep">RenderSep (x, kp, vp, kn, vn, seqp)</a></td>
+	<td class="summary">Type of function to render a separator between pairs.</td>
 	</tr>
 </table>
 
@@ -431,48 +475,6 @@
     <h3>Usage:</h3>
     <ul>
         <pre class="example"><span class="global">assert</span>(<span class="global">load</span> <span class="string">'print "woo"'</span>)()</pre>
-    </ul>
-
-</dd>
-    <dt>
-    <a name = "opairs"></a>
-    <strong>opairs (t)</strong>
-    </dt>
-    <dd>
-    Ordered <code>pairs</code> iterator, respecting <code>__pairs</code> metamethod. </p>
-
-<p> Although <code>__pairs</code> will be used to collect results, <code>opairs</code>
- always returns them in the same order as <code>str</code>.
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">t</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.5">table</a></span>
-         table to act on
-        </li>
-    </ul>
-
-    <h3>Returns:</h3>
-    <ol>
-        <li>
-           <span class="types"><span class="type">function</span></span>
-        iterator function</li>
-        <li>
-           <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.5">table</a></span>
-        <em>t</em>, the table being iterated over</li>
-        <li>
-        the previous iteration key</li>
-    </ol>
-
-
-
-    <h3>Usage:</h3>
-    <ul>
-        <pre class="example"><span class="comment">--&gt; 1           b
-</span><span class="comment">--&gt; 2           a
-</span><span class="comment">--&gt; foo         c
-</span><span class="keyword">for</span> k, v <span class="keyword">in</span> opairs {<span class="string">'b'</span>, foo=<span class="string">'c'</span>, <span class="string">'a'</span>} <span class="keyword">do</span> <span class="global">print</span>(k, v) <span class="keyword">end</span></pre>
     </ul>
 
 </dd>
@@ -917,6 +919,116 @@
 
 
 </dd>
+    <dt>
+    <a name = "string.render"></a>
+    <strong>string.render (x, vfns[, roots])</strong>
+    </dt>
+    <dd>
+    Low-level recursive data to string rendering.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         data to be renedered
+        </li>
+        <li><span class="parameter">vfns</span>
+            <span class="types"><a class="type" href="index.html#RenderFns">RenderFns</a></span>
+         table of virtual functions to control rendering
+        </li>
+        <li><span class="parameter">roots</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.5">table</a></span>
+         used internally for cycle detection
+         (<em>optional</em>)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+        a text recursive rendering of <em>x</em> using <em>vfns</em>
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="keyword">function</span> printarray(x)
+   <span class="keyword">return</span> render(x, arrayvfns)
+<span class="keyword">end</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "table.keys"></a>
+    <strong>table.keys (t)</strong>
+    </dt>
+    <dd>
+    Return an unordered list of all keys in a table.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">t</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.5">table</a></span>
+         table to operate on
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.5">table</a></span>
+        an unorderd list of keys in <em>t</em>
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--&gt; {'key2', 1, 42, 2, 'key1'}
+</span>keys{<span class="string">'a'</span>, <span class="string">'b'</span>, key1=<span class="number">1</span>, key2=<span class="number">2</span>, [<span class="number">42</span>]=<span class="number">3</span>}</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "table.merge"></a>
+    <strong>table.merge (t[, u={}])</strong>
+    </dt>
+    <dd>
+    Destructively merge keys and values from one table into another.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">t</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.5">table</a></span>
+         take fields from this table
+        </li>
+        <li><span class="parameter">u</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.5">table</a></span>
+         and copy them into here, unless they are set already
+         (<em>default</em> {})
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.5">table</a></span>
+        <em>u</em>
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--&gt; {'a', 'b', d='d'}
+</span>merge({<span class="string">'a'</span>, <span class="string">'b'</span>}, {<span class="string">'c'</span>, d=<span class="string">'d'</span>})</pre>
+    </ul>
+
+</dd>
 </dl>
     <h2 class="section-header "><a name="Tables"></a>Tables</h2>
 
@@ -1079,13 +1191,337 @@
 
 </dd>
 </dl>
+    <h2 class="section-header "><a name="Types"></a>Types </h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "RenderFns"></a>
+    <strong>RenderFns</strong>
+    </dt>
+    <dd>
+    Table of functions for string.render.
+
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">elem</span>
+            <span class="types"><a class="type" href="index.html#RenderElem">RenderElem</a></span>
+         return unique string representation of an element
+        </li>
+        <li><span class="parameter">term</span>
+            <span class="types"><a class="type" href="index.html#RenderTerm">RenderTerm</a></span>
+
+<p> return true for elements that should not be</p>
+<pre><code>recursed
+</code></pre>
+
+        </li>
+        <li><span class="parameter">sort</span>
+            <span class="types"><a class="type" href="index.html#RenderSort">RenderSort</a></span>
+         return list of keys in order to be rendered
+        </li>
+        <li><span class="parameter">open</span>
+            <span class="types"><a class="type" href="index.html#RenderOpen">RenderOpen</a></span>
+         return a string for before first element of a table
+        </li>
+        <li><span class="parameter">close</span>
+            <span class="types"><a class="type" href="index.html#RenderClose">RenderClose</a></span>
+         return a string for after last element of a table
+        </li>
+        <li><span class="parameter">pair</span>
+            <span class="types"><a class="type" href="index.html#RenderPair">RenderPair</a></span>
+
+<p> return a string rendering of a key value pair</p>
+<pre><code>element
+</code></pre>
+
+        </li>
+        <li><span class="parameter">sep</span>
+            <span class="types"><a class="type" href="index.html#RenderSep">RenderSep</a></span>
+         return a string to render between elements
+        </li>
+    </ul>
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="index.html#string.render">string.render</a>
+    </ul>
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">arrayvfns = {
+  elem = <span class="global">tostring</span>,
+  term = <span class="keyword">function</span>(x)
+     <span class="keyword">return</span> <span class="global">type</span>(x) ~= <span class="string">'table'</span> <span class="keyword">or</span> getmetamethod(x, <span class="string">'__tostring'</span>)
+  <span class="keyword">end</span>,
+  sort = <span class="keyword">function</span>(keys)
+     <span class="keyword">local</span> r = {}
+     <span class="keyword">for</span> i = <span class="number">1</span>, #keys <span class="keyword">do</span>
+        <span class="keyword">if</span> <span class="global">type</span>(keys[i]) == <span class="string">'number'</span> <span class="keyword">then</span> r[#r + <span class="number">1</span>] = keys[i] <span class="keyword">end</span>
+     <span class="keyword">end</span>
+     <span class="keyword">return</span> r
+  <span class="keyword">end</span>,
+  open = <span class="keyword">function</span>(_) <span class="keyword">return</span> <span class="string">'['</span> <span class="keyword">end</span>,
+  close = <span class="keyword">function</span>(_) <span class="keyword">return</span> <span class="string">']'</span> <span class="keyword">end</span>,
+  pair = <span class="keyword">function</span>(x, kp, vp, k, v, kstr, vstr, seqp)
+     <span class="keyword">return</span> seqp <span class="keyword">and</span> vstr <span class="keyword">or</span> <span class="string">''</span>
+  <span class="keyword">end</span>,
+  sep = <span class="keyword">function</span>(x, kp, vp, kn, vn, seqp)
+     <span class="keyword">return</span> seqp <span class="keyword">and</span> kp ~= <span class="keyword">nil</span> <span class="keyword">and</span> kn ~= <span class="keyword">nil</span> <span class="keyword">and</span> <span class="string">', '</span> <span class="keyword">or</span> <span class="string">''</span>
+  <span class="keyword">end</span>,
+)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "RenderElem"></a>
+    <strong>RenderElem (x)</strong>
+    </dt>
+    <dd>
+    Type of function for uniquely stringifying rendered element.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         element to operate on
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+        stringified <em>x</em>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "RenderTerm"></a>
+    <strong>RenderTerm (x)</strong>
+    </dt>
+    <dd>
+    Type of predicate function for terminal elements.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         element to operate on
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">bool</span></span>
+
+<p>true for terminal elements that should be rendered</p>
+<pre><code>immediately
+</code></pre>
+
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "RenderSort"></a>
+    <strong>RenderSort (keys)</strong>
+    </dt>
+    <dd>
+    Type of function for sorting keys of a recursively rendered element.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">keys</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.5">table</a></span>
+
+<p> list of table keys, it's okay to mutate and return</p>
+<pre><code>this parameter
+</code></pre>
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.5">table</a></span>
+        sorted list of keys for pairs to be rendered
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "RenderOpen"></a>
+    <strong>RenderOpen (x)</strong>
+    </dt>
+    <dd>
+    Type of function to get string for before first element.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         element to operate on
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+        string to render before first element
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "RenderClose"></a>
+    <strong>RenderClose (x)</strong>
+    </dt>
+    <dd>
+    Type of function te get string for after last element.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         element to operate on
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+        string to render after last element
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "RenderPair"></a>
+    <strong>RenderPair (x, kp, vp, k, v, kstr, vstr, seqp)</strong>
+    </dt>
+    <dd>
+    Type of function to render a key value pair.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         complete table elmeent being operated on
+        </li>
+        <li><span class="parameter">kp</span>
+         unstringified previous pair key
+        </li>
+        <li><span class="parameter">vp</span>
+         unstringified previous pair value
+        </li>
+        <li><span class="parameter">k</span>
+         unstringified pair key to render
+        </li>
+        <li><span class="parameter">v</span>
+         unstringified pair value to render
+        </li>
+        <li><span class="parameter">kstr</span>
+         already stringified pair key to render
+        </li>
+        <li><span class="parameter">vstr</span>
+         already stringified pair value to render
+        </li>
+        <li><span class="parameter">seqp</span>
+
+<p> true if all keys so far have been a contiguous range of</p>
+<pre><code>integers
+</code></pre>
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+        stringified rendering of pair <em>kstr</em> and <em>vstr</em>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "RenderSep"></a>
+    <strong>RenderSep (x, kp, vp, kn, vn, seqp)</strong>
+    </dt>
+    <dd>
+    Type of function to render a separator between pairs.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         complet table element being operated on
+        </li>
+        <li><span class="parameter">kp</span>
+         unstringified previous pair key
+        </li>
+        <li><span class="parameter">vp</span>
+         unstringified previous pair value
+        </li>
+        <li><span class="parameter">kn</span>
+         unstringified next pair key
+        </li>
+        <li><span class="parameter">vn</span>
+         unstringified next pair value
+        </li>
+        <li><span class="parameter">seqp</span>
+
+<p> true if all keys so far have been a contiguous range of</p>
+<pre><code>integers
+</code></pre>
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.2/manual.html#6.4">string</a></span>
+
+<p>stringified rendering of separator between previous and</p>
+<pre><code>next pairs
+</code></pre>
+
+    </ol>
+
+
+
+
+</dd>
+</dl>
 
 
 </div> <!-- id="content" -->
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2017-09-11 09:32:14 </i>
+<i style="float:right;">Last updated 2017-10-16 23:07:23 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>
