@@ -34,6 +34,23 @@
     local _debug = require 'std._debug'(false)
     ```
 
+  - Removed ugly `opairs` implementation, with it's own fixed ordering.
+    If you still need it, you can use something like this:
+
+    ```lua
+    keylist = table.keys(t)
+    sort(keylist, function(a, b)
+       if type(a) == 'number' then
+          return type(b) ~= 'number' or a < b
+       else
+          return type(b) ~= 'number' and tostring(a) < tostring(b)
+       end
+    end)
+    for _, k in ipairs(keylist) do
+       process(k, t[k])
+    end
+    ```
+
 
 ## Noteworthy changes in release 1.0.4 (2017-09-11) [stable]
 

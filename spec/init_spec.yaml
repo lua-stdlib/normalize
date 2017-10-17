@@ -29,18 +29,24 @@ specify std.normalize:
 
   - it loads core functions:
       script = [[
+         local sort = table.sort
          local _ENV = require 'std.normalize' {}
-          for k in opairs(_ENV) do
-             print(k)
-          end
+         local keylist = {}
+         for k in next, _ENV do
+            keylist[#keylist + 1] = k
+         end
+         sort(keylist)
+         for _, k in ipairs(keylist) do
+            print(k)
+         end
       ]]
       expect(luaproc(script)).to_output(table.concat({
          '_G', '_VERSION', 'arg', 'argerror', 'assert', 'collectgarbage',
          'dofile', 'error', 'getfenv', 'getmetamethod', 'getmetatable',
-         'ipairs', 'len', 'load', 'loadfile', 'next', 'opairs', 'pack',
-         'pairs', 'pcall', 'print', 'rawequal', 'rawget', 'rawlen',
-         'rawset', 'require', 'select', 'setfenv', 'setmetatable', 'str',
-         'tonumber', 'tostring', 'type', 'unpack', 'xpcall',
+         'ipairs', 'len', 'load', 'loadfile', 'next', 'pack', 'pairs',
+         'pcall', 'print', 'rawequal', 'rawget', 'rawlen', 'rawset',
+         'require', 'select', 'setfenv', 'setmetatable', 'str', 'tonumber',
+         'tostring', 'type', 'unpack', 'xpcall',
       }, '\n') .. '\n')
   - it diagnoses missed symbol dereferences in right-to-left order:
       expect(luaproc [[
@@ -646,55 +652,6 @@ specify std.normalize:
     - it returns 'float' for other numbers:
         expect(f(math.pi)).to_be 'float'
         expect(f(1.0000000000000002)).to_be 'float'
-
-
-- describe opairs:
-  - before:
-      __index = function(t, k)
-         if type(k) == 'number' and k < 10 then return 1 end
-      end
-      __pairs = function(t)
-         return next, {'a', [5]='proxy', 'table'; foo=3, bar=1, baz=2, qux=4}
-      end
-      src = {'foo', bar='baz', [5] = 'quux', 42}
-      t = {}
-
-      f = M.opairs
-
-  - context with bad arguments:
-    - 'it diagnoses missing argument #1':
-         expect(f()).to_raise 'table expected'
-    - 'it diagnoses nil-valued argument #1':
-         expect(f(nil)).to_raise 'table expected'
-    - 'it diagnoses argument #1 type not table':
-         expect(f(false)).to_raise 'table expected'
-
-  - it works for an empty list:
-      for i, v in f {} do t[i] = v end
-      expect(t).to_equal {}
-  - it is an iterator over all table values:
-      for k, v in f(src) do t[k] = v end
-      expect(t).to_equal(src)
-  - it returns numeric keys in order:
-      for k in f(src) do table.insert(t, k) end
-      expect(t).to_equal {1, 2, 5, 'bar'}
-  - it returns non-numeric keys in asciibetical order:
-      for k in f {foo=1, bar=2, baz=3, quux=4} do table.insert(t, k) end
-      expect(t).to_equal {'bar', 'baz', 'foo', 'quux'}
-  - it respects __pairs metamethod:
-      for k, v in f(setmetatable(src, {__pairs = __pairs})) do t[k] = v end
-      expect(t).
-         to_equal {'a', [5]='proxy', 'table', foo=3, bar=1, baz=2, qux=4}
-  - it returns __pairs numeric keys in order:
-      for k in f(setmetatable(src, {__pairs = __pairs})) do
-         if type(k) == 'number' then table.insert(t, k) end
-      end
-      expect(t).to_equal {1, 2, 5}
-  - it returns __pairs non-numeric keys in asciibetical order:
-      for k in f(setmetatable(src, {__pairs = __pairs})) do
-         if type(k) ~= 'number' then table.insert(t, k) end
-      end
-      expect(t).to_equal {'bar', 'baz', 'foo', 'qux'}
 
 
 - describe os:

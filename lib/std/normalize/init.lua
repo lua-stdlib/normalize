@@ -293,31 +293,6 @@ if not not pairs(setmetatable({},{__pairs=function() return false end})) then
 end
 
 
-local function keysort(a, b)
-   if type(a) == 'number' then
-      return type(b) ~= 'number' or a < b
-   else
-      return type(b) ~= 'number' and tostring(a) < tostring(b)
-   end
-end
-
-
-local function opairs(t)
-   local keys, i = {}, 0
-   for k in pairs(t) do keys[#keys + 1] = k end
-   sort(keys, keysort)
-
-   local _, _t = pairs(t)
-   return function(t)
-      i = i + 1
-      local k = keys[i]
-      if k ~= nil then
-         return k, t[k]
-      end
-   end, _t, nil
-end
-
-
 local pathmatch_patt = '[^' .. pathsep .. ']+'
 
 local searchpath = searchpath or function(name, path, sep, rep)
@@ -421,6 +396,15 @@ end
 
 local function always(x)
    return function(...) return x end
+end
+
+
+local function keysort(a, b)
+   if type(a) == 'number' then
+      return type(b) ~= 'number' or a < b
+   else
+      return type(b) ~= 'number' and tostring(a) < tostring(b)
+   end
 end
 
 
@@ -628,22 +612,6 @@ local F = {
 
    loadfile = _G.loadfile,
    next = _G.next,
-
-   --- Ordered `pairs` iterator, respecting `__pairs` metamethod.
-   --
-   -- Although `__pairs` will be used to collect results, `opairs`
-   -- always returns them in the same order as `str`.
-   -- @function opairs
-   -- @tparam table t table to act on
-   -- @treturn function iterator function
-   -- @treturn table *t*, the table being iterated over
-   -- @return the previous iteration key
-   -- @usage
-   --    --> 1           b
-   --    --> 2           a
-   --    --> foo         c
-   --    for k, v in opairs {'b', foo='c', 'a'} do print(k, v) end
-   opairs = argscheck('opairs', T.table) .. opairs,
 
    --- Return a list of given arguments, with field `n` set to the length.
    --
