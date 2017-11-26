@@ -2,6 +2,25 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+### Bug fixes
+
+  - Environment table population now correctly looks up ALLCAPS symbols
+    when inferring destination symbol names, and only treats explicit
+    assignment to an ALLCAPS destination symbol name as a string
+    constant:
+
+    ```lua
+    local _ENV = require 'std.normalize' {
+       'lyaml.functional.NULL',
+       CONST = 'lyaml.functional.NULL',
+    }
+    assert(NULL == require 'lyaml.functional'.NULL)
+    assert(type(CONST) == 'string')
+    ```
+
+    Previously, `NULL` would not have been looad, instead remaining as
+    the constant string 'lyaml.functional.NULL'.
+
 
 ## Noteworthy changes in release 2.0 (2017-10-16) [stable]
 

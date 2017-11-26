@@ -95,6 +95,7 @@ local _ENV = _.strict {
    type = type,
    types = _.typecheck.types,
    unpack = table.unpack or unpack,
+   upper = string.upper,
    xpcall = xpcall,
 }
 _ = nil
@@ -1016,15 +1017,27 @@ end
 
 -- Import value into name key of env table.
 -- String values are replaced by the equivalent symbol they name in the
--- normalized module table.
+-- normalized module table, except that strings assigned to ALLCAPS names
+-- are treated as string constants and not looked up as module symbols.
 -- @tparam table env environment table
 -- @string name key to index into *env*
 -- @param value value to store at *name* in *env*
 -- @int level call depth for error message stack traces
 -- @treturn table modified *env*
 local function import(env, name, value, level)
+   local i = tointeger(name)
+   if i and type(value) == 'string' then
+      name = match(value, '[^%.]+$')
+      if name == nil then
+         error(
+           "could not infer name from module '" .. value .. "' at #" .. i,
+           level + 1
+         )
+      end
+   end
+
    local dst, k = mksubtables(env, split(name, '[^%.]+'))
-   if type(value) == 'string' and name:upper() ~= name then
+   if type(value) == 'string' and (i or upper(name) ~= name) then
       value = stringimport(value, level + 1)
    end
    dst[k] = value
@@ -1041,16 +1054,6 @@ local function normalize(userenv, level)
 
    -- Everything else must be requested by name.
    for name, value in next, userenv do
-      local i = tointeger(name)
-      if i and type(value) == 'string' then
-         name = match(value, '[^%.]+$')
-         if name == nil then
-            error(
-              "could not infer name from module '" .. value .. "' at #" .. i,
-              level + 1
-            )
-         end
-      end
       env = import(env, name, value, level + 1)
    end
 
@@ -1077,15 +1080,25 @@ return setmetatable(G, {
    -- Additionally, external modules are loaded using `require`, with `.`
    -- separators in the module name translated to nested tables in the
    -- module environment. For example 'std.prototype' in the usage below
-   -- is equivalent to:
+   -- will add to the environment table the equivalent of:
    --
-   --       local std = {prototype=require 'std.prototype'}
+   --       local prototype = require 'std.prototype'
    --
-   -- And finally, you can assign a loaded module to a specific symbol
-   -- with `key=value` syntax.   For example 'std.strict' in the usage
-   -- below is equivalent to:
+   -- Alternatively, you can assign a loaded module symbol to a specific
+   -- environment table symbol with `key=value` syntax.   For example the
+   -- the 'math.tointeger' from the usage below is equivalent to:
    --
-   --       local strict = require 'std.strict'
+   --       local int = require 'std.normalize.math'.tointeger
+   --
+   -- Compare this to loading the non-normalized implementation from the
+   -- host Lua with a table entry such as:
+   --
+   --       int = require 'math'.tointeger,
+   --
+   -- Finally, explicit string assignment to ALLCAPS keys are not loaded
+   -- from modules at all, but behave as a constant string assignment:
+   --
+   --       INT = 'math.tointeger',
    -- @function __call
    -- @tparam table env environment table
    -- @tparam[opt=1] int level stack level for `setfenv`, 1 means set
@@ -1096,7 +1109,7 @@ return setmetatable(G, {
    --    local _ENV = require 'std.normalize' {
    --       'string',
    --       'std.prototype',
-   --       strict = 'std.strict',
+   --       int = 'math.tointeger',
    --    }
    __call = function(_, env, level)
       level = 1 + (level or 1)

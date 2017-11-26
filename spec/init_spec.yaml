@@ -102,6 +102,17 @@ specify std.normalize:
          }
          exit(INT == 'math.tointeger' and 0 or 1)
       ]]).to_succeed_with ''
+  - it loads ALLCAPS symbols with implicit assignment:
+      expect(luaproc [[
+         package.preload['constants'] = function()
+            return {NULL='MAGIC'}
+         end
+         local exit = os.exit
+         local _ENV = require 'std.normalize' {
+            'constants.NULL',
+         }
+         exit(NULL == 'MAGIC' and 0 or 1)
+      ]]).to_succeed_with ''
   - it searches module and symbols partitions:
       expect(luaproc [[
          local exit = os.exit
