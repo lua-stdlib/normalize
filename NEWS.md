@@ -2,6 +2,9 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+
+## Noteworthy changes in release 2.0.1 (2017-11-26) [stable]
+
 ### Bug fixes
 
   - Environment table population now correctly looks up ALLCAPS symbols
