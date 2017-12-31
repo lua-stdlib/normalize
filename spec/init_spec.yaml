@@ -32,7 +32,7 @@ specify std.normalize:
          local sort = table.sort
          local _ENV = require 'std.normalize' {}
          local keylist = {}
-         for k in next, _ENV do
+         for k in pairs(_ENV) do
             keylist[#keylist + 1] = k
          end
          sort(keylist)

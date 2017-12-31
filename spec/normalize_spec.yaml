@@ -1,0 +1,117 @@
+# Strict variable declarations for Lua 5.1, 5.2 & 5.3
+# Copyright (C) 2014-2017 Gary V. Vaughan
+
+before:
+  strict = require 'std.normalize._strict'
+
+  function f(env)
+     local setfenv = rawget(_G, 'setfenv') or function() end
+     local getfenv = rawget(_G, 'getfenv') or function() end
+
+     local save = getfenv(1)
+     local r = strict(env)
+     setfenv(1, save)
+     return r
+  end
+
+
+specify std.normalize:
+- context using std.strict is available:
+  - context from module method:
+    - it allows assignment to declared variables:
+        scope = f {FOO='bar'}
+        expect((function() scope.FOO = 'baz' end)()).
+           not_to_raise 'not declared'
+        expect(scope.FOO).to_be 'baz'
+
+    - it diagnoses assignment to undeclared variable:
+        scope = f {FOO='bar'}
+        if have_std_strict then
+           expect((function() scope.undefined = 'rval' end)()).
+              to_raise "assignment to undeclared variable 'undefined'"
+        end
+
+    - it allows reference to declared variables:
+        scope = f {FOO='bar'}
+        expect((function() return scope.FOO end)()).to_be 'bar'
+
+    - it diagnoses reference to undeclared variable:
+        scope = f {}
+        if have_std_strict then
+           expect((function() return scope.undefined end)()).
+              to_raise "variable 'undefined' is not declared"
+        end
+
+    - it allows assignment to declared global variables:
+        _ENV = f(setmetatable({}, {__index=_G}))
+        if rawget(_G, 'setfenv') then setfenv(1, _ENV) end
+        defined = 'rval'
+        expect(_ENV.defined).to_be 'rval'
+        expect((function() defined = 'FOO' end)()).
+           not_to_raise 'undeclared variable'
+
+    - it diagnoses assignment to undeclared global variable:
+        _ENV = f(setmetatable({}, {__index=_G}))
+        if rawget(_G, 'setfenv') then setfenv(1, _ENV) end
+        if have_std_strict then
+           expect((function() undefined = 'rval' end)()).
+              to_raise "assignment to undeclared variable 'undefined'"
+        end
+
+    - it diagnoses reference to undeclared global variable:
+        _ENV = f(setmetatable({}, {__index=_G}))
+        if rawget(_G, 'setfenv') then setfenv(1, _ENV) end
+        if have_std_strict then
+            expect((function() FOO = undefined end)()).
+              to_raise "variable 'undefined' is not declared"
+        end
+
+    - it does not leak into surrounding scope:
+        _ENV = f(setmetatable({}, {__index=_G}))
+        if rawget(_G, 'setfenv') then setfenv(1, _ENV) end
+        expect((function() _G.undefined = 'rval' end)()).
+           not_to_raise 'undefined'
+
+  - context as callable:
+    - it allows assignment to undeclared global variables:
+        _ENV = f(setmetatable({}, {__index=_G}))
+        if rawget(_G, 'setfenv') then setfenv(1, _ENV) end
+        defined = 'rval'
+        expect(_ENV.defined).to_be 'rval'
+        expect((function() defined = 'FOO' end)()).
+           not_to_raise 'undeclared variable'
+
+    - it diagnoses assignment to undeclared global variable:
+        _ENV = f(setmetatable({}, {__index=_G}))
+        if rawget(_G, 'setfenv') then setfenv(1, _ENV) end
+        if have_std_strict then
+           expect((function() undefined = 'rval' end)()).
+              to_raise "assignment to undeclared variable 'undefined'"
+        end
+
+    - it diagnoses reference to undeclared global variable:
+        _ENV = f(setmetatable({}, {__index=_G}))
+        if rawget(_G, 'setfenv') then setfenv(1, _ENV) end
+        if have_std_strict then
+           expect((function() FOO = undefined end)()).
+              to_raise "variable 'undefined' is not declared"
+        end
+
+    - it supports optional stack level count:
+        wrapper = function(env)
+           return(f(setmetatable(env, {__index=_G}), 2))
+        end
+        _ENV = wrapper {defined='rval'}
+        if rawget(_G, 'setfenv') then setfenv(1, _ENV) end
+        expect((function() defined = 'FOO' end)()).
+           not_to_raise 'undeclared variable'
+        if have_std_strict then
+           expect((function() undefined = 'rval' end)()).
+              to_raise "assignment to undeclared variable 'undefined'"
+        end
+
+    - it does not leak into surrounding scope:
+        _ENV = f(setmetatable({}, {__index=_G}))
+        if rawget(_G, 'setfenv') then setfenv(1, _ENV) end
+        expect((function() _G.undefined = 'rval' end)()).
+           not_to_raise 'undefined'

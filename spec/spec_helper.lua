@@ -5,6 +5,8 @@
 local typecheck
 have_typecheck, typecheck = pcall(require, 'typecheck')
 
+have_std_strict = pcall(require, 'std.strict.init')
+
 local inprocess = require 'specl.inprocess'
 local hell = require 'specl.shell'
 
