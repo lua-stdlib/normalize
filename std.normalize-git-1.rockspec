@@ -17,17 +17,27 @@ description = {
    license = 'MIT/X11',
 }
 
-source = {
-   url = 'git://github.com/lua-stdlib/normalize.git',
-   --url = 'http://github.com/lua-stdlib/normalize/archive/v' .. _MODREV .. '.zip',
-   --dir = 'normalize-' .. _MODREV,
-}
+source = (function(gitp)
+   if gitp then
+      return {
+         url = 'git://github.com/lua-stdlib/normalize.git',
+      }
+   else
+      return {
+         url = 'http://github.com/lua-stdlib/normalize/archive/v' .. _MODREV .. '.zip',
+         dir = 'normalize-' .. _MODREV,
+      	}
+   end
+end)(_MODREV == 'git')
 
 dependencies = {
    'lua >= 5.1, < 5.4',
-   'ldoc',
    'std._debug',
 }
+
+if _MODREV == 'git' then
+   dependencies[#dependencies + 1] = 'ldoc'
+end
 
 build = {
    type = 'builtin',
