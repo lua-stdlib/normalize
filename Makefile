@@ -1,3 +1,6 @@
+# Normalized Lua API for Lua 5.1, 5.2 & 5.3
+# Copyright (C) 2002-2018 std.normalize authors
+
 LDOC	= ldoc
 LUA	= lua
 MKDIR	= mkdir -p
@@ -24,7 +27,7 @@ $(luadir)/version.lua: .FORCE
 	if cmp -s '$@' '$@T'; then						\
 	    rm -f '$@T';							\
 	else									\
-	    echo 'echo "Normalized Lua Functions / $(VERSION)" > $@';		\
+	    echo 'echo return "Normalized Lua Functions / $(VERSION)" > $@';	\
 	    mv '$@T' '$@';							\
 	fi
 

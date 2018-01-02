@@ -1,6 +1,6 @@
 --[[
  Normalized Lua API for Lua 5.1, 5.2 & 5.3
- Coryright (C) 2014-2017 Gary V. Vaughan
+ Copyright (C) 2014-2018 std.normalize authors
 ]]
 --[[--
  Depending on whether `std.strict` is installed, and the value of
