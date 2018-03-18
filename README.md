@@ -4,8 +4,8 @@ Normalized Lua Functions
 Copyright (C) 2002-2018 [std.normalize authors][authors]
 
 [![License](https://img.shields.io/:license-mit-blue.svg)](https://mit-license.org)
-[![travis-ci status](https://secure.travis-ci.org/lua-stdlib/normalize.png?branch=master)](https://travis-ci.org/lua-stdlib/normalize/builds)
-[![codecov.io](https://codecov.io/gh/lua-stdlib/normalize/branch/master/graph/badge.svg)](https://codecov.io/gh/lua-stdlib/normalize)
+[![travis-ci status](https://secure.travis-ci.org/lua-stdlib/normalize.png?branch=release-v2.0.2)](https://travis-ci.org/lua-stdlib/normalize/builds)
+[![codecov.io](https://codecov.io/gh/lua-stdlib/normalize/branch/release-v2.0.2/graph/badge.svg)](https://codecov.io/gh/lua-stdlib/normalize)
 [![Stories in Ready](https://badge.waffle.io/lua-stdlib/normalize.png?label=ready&title=Ready)](https://waffle.io/lua-stdlib/normalize)
 
 This is a collection of normalized lua functions for Lua 5.1 (including
@@ -54,7 +54,7 @@ required by [stdlib][] is provided.
 
 Pull-requests for more normalized APIs are welcome!
 
-[authors]: https://github.com/lua-stdlib/normalize/blob/master/AUTHORS.md
+[authors]: https://github.com/lua-stdlib/normalize/blob/release-v2.0.2/AUTHORS.md
 [github]: https://github.com/lua-stdlib/normalize/ "Github repository"
 [lua]: https://www.lua.org "The Lua Project"
 [lua-compat]: https://github.com/keplerproject/lua-compat-5.3 "Lua 5.3ish API"
