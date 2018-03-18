@@ -48,7 +48,7 @@ local pack_mt = {
 
 
 local pack = pack or function(...)
-   return { n = select('#', ...), ...}
+   return {n=select('#', ...), ...}
 end
 
 
