@@ -4,9 +4,12 @@
 
 ### Bug fixes
 
-  - Passing a table to the return value of `require 'std.normalize'
+  - Passing a table to the return value of `require 'std.normalize'`
     really does diagnose attempts to access undeclared variables when
     std.strict is found in the package.path now.
+
+  - Don't trigger undeclared variable accesses during loading, when
+    used in conjunction with other strict modules.
 
 
 ## Noteworthy changes in release 2.0.1 (2017-11-26) [stable]
