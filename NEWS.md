@@ -2,6 +2,9 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+
+## Noteworthy changes in release 2.0.2 (2018-03-17) [stable]
+
 ### Bug fixes
 
   - Passing a table to the return value of `require 'std.normalize'`
