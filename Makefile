@@ -22,14 +22,8 @@ SOURCES =				\
 all: doc $(luadir)/version.lua
 
 
-$(luadir)/version.lua: .FORCE
-	@echo 'return "Normalized Lua Functions / $(VERSION)"' > '$@T';		\
-	if cmp -s '$@' '$@T'; then						\
-	    rm -f '$@T';							\
-	else									\
-	    echo 'echo return "Normalized Lua Functions / $(VERSION)" > $@';	\
-	    mv '$@T' '$@';							\
-	fi
+$(luadir)/version.lua: Makefile
+	@echo 'return "Normalized Lua Functions / $(VERSION)"' > '$@'
 
 doc: build-aux/config.ld $(SOURCES)
 	$(LDOC) -c build-aux/config.ld .

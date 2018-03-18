@@ -44,5 +44,7 @@ if _MODREV == 'git' then
    source = {
       url = 'git://github.com/lua-stdlib/normalize.git',
    }
+
+   build.modules['std.functional.version'] = 'lib/std/normalize/version-git.lua'
 end
 
