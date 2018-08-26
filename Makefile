@@ -19,7 +19,7 @@ SOURCES =				\
 	$(NOTHING_ELSE)
 
 
-all: doc $(luadir)/version.lua
+all: $(luadir)/version.lua
 
 
 $(luadir)/version.lua: Makefile

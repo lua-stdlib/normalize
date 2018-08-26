@@ -23,7 +23,7 @@ source = {
 }
 
 dependencies = {
-   'lua >= 5.1, < 5.4',
+   'lua >= 5.1, < 5.5',
    'std._debug',
 }
 
@@ -36,15 +36,14 @@ build = {
       ['std.normalize._typecheck'] = 'lib/std/normalize/_typecheck.lua',
       ['std.normalize.version']	   = 'lib/std/normalize/version.lua',
    },
+   copy_directories = {'doc'},
 }
 
 if _MODREV == 'git' then
-   dependencies[#dependencies + 1] = 'ldoc'
+   build.copy_directories = nil
 
    source = {
       url = 'git://github.com/lua-stdlib/normalize.git',
    }
-
-   build.modules['std.functional.version'] = 'lib/std/normalize/version-git.lua'
 end
 
