@@ -1,5 +1,5 @@
-# Normalized Lua API for Lua 5.1, 5.2 & 5.3
-# Copyright (C) 2014-2018 std.normalize authors
+# Normalized Lua API for Lua 5.1, 5.2, 5.3 & 5.4
+# Copyright (C) 2014-2020 std.normalize authors
 
 before:
   strict = require 'std.normalize._strict'

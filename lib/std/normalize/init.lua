@@ -1,6 +1,6 @@
 --[[
- Normalized Lua API for Lua 5.1, 5.2 & 5.3
- Copyright (C) 2002-2018 std.normalize authors
+ Normalized Lua API for Lua 5.1, 5.2, 5.3 & 5.4
+ Copyright (C) 2002-2020 std.normalize authors
 ]]
 --[[--
  Normalize API differences between supported Lua implementations.

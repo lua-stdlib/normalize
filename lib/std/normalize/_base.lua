@@ -1,6 +1,6 @@
 --[[
- Normalized Lua API for Lua 5.1, 5.2 & 5.3
- Coryright (C) 2014-2018 std.normalize authors
+ Normalized Lua API for Lua 5.1, 5.2, 5.3 & 5.4
+ Coryright (C) 2014-2020 std.normalize authors
 ]]
 --[[--
  Purely to break internal dependency cycles without introducing
