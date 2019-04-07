@@ -2,6 +2,9 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+
+## Noteworthy changes in release 2.0.3 (2020-04-15) [stable]
+
 ### New features
 
   - Initial support for Lua-5.4.
