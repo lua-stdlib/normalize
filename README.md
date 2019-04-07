@@ -4,8 +4,8 @@ Normalized Lua Functions
 Copyright (C) 2002-2026 [std.normalize authors][authors]
 
 [![License](https://img.shields.io/:license-mit-blue.svg)](https://mit-license.org)
-[![workflow status](https://github.com/lua-stdlib/normalize/actions/workflows/spec.yml/badge.svg?branch=master)](https://github.com/lua-stdlib/normalize/actions)
-[![codecov.io](https://codecov.io/gh/lua-stdlib/normalize/branch/master/graph/badge.svg)](https://codecov.io/gh/lua-stdlib/normalize)
+[![workflow status](https://github.com/lua-stdlib/normalize/actions/workflows/spec.yml/badge.svg?branch=release-v2.0.4)](https://github.com/lua-stdlib/normalize/actions)
+[![codecov.io](https://codecov.io/gh/lua-stdlib/normalize/branch/release-v2.0.4/graph/badge.svg)](https://codecov.io/gh/lua-stdlib/normalize)
 
 This is a collection of normalized lua functions for Lua 5.1 (including
 LuaJIT), 5.2, 5.3, 5.4 and 5.5.  The libraries are copyright by their

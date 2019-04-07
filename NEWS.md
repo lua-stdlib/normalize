@@ -1,13 +1,10 @@
 # std.normalize NEWS - User visible changes
 
-## Noteworthy changes in release ?.? (????-??-??) [?]
-
-
 ## Noteworthy changes in release 2.0.4 (2026-07-26) [stable]
 
 ### New features
 
-  - Initial support for Lua-5.4.
+  - Initial support for Lua-5.5.
 
 ### New features
 
