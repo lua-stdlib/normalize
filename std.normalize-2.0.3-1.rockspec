@@ -1,4 +1,4 @@
-local _MODREV, _SPECREV = 'git', '-1'
+local _MODREV, _SPECREV = '2.0.3', '-1'
 
 package = 'std.normalize'
 version = _MODREV .. _SPECREV
