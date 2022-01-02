@@ -1,7 +1,7 @@
 Normalized Lua Functions
 ========================
 
-Copyright (C) 2002-2020 [std.normalize authors][authors]
+Copyright (C) 2002-2022 [std.normalize authors][authors]
 
 [![License](https://img.shields.io/:license-mit-blue.svg)](https://mit-license.org)
 [![travis-ci status](https://secure.travis-ci.org/lua-stdlib/normalize.png?branch=master)](https://travis-ci.org/lua-stdlib/normalize/builds)
