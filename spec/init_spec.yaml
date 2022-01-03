@@ -776,7 +776,7 @@ specify std.normalize:
     - it diagnoses file not found:
         ok, err = f('xyz', templates)
         expect(err).to_contain(
-           "\tno file '" .. tmpdir.path .. "/xyz/init.example'\n" ..
+           "no file '" .. tmpdir.path .. "/xyz/init.example'\n" ..
            "\tno file '" .. tmpdir.path .. "/xyz.example'"
         )
     - it returns first matching file:
