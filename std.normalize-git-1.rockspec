@@ -32,8 +32,6 @@ build = {
    type = 'builtin',
    modules = {
       ['std.normalize']	           = 'lib/std/normalize/init.lua',
-      ['std.normalize._base']      = 'lib/std/normalize/_base.lua',
-      ['std.normalize._strict']    = 'lib/std/normalize/_strict.lua',
       ['std.normalize.version']	   = 'lib/std/normalize/version.lua',
    },
    copy_directories = {'doc'},

@@ -23,23 +23,34 @@ local LUA = os.getenv 'LUA' or 'lua'
 
 
 -- Allow use of bare 'pack' and 'unpack' even in Lua 5.3.
-pack = table.pack or function(...) return {n = select('#', ...), ...} end
+pack = (function(f)
+   local pack_mt = {
+      ___len = function(self)
+         return self.n
+      end,
+   }
+
+   local pack_fn = f or function(...)
+      return {n=select('#', ...), ...}
+   end
+
+   return function(...)
+      return setmetatable(pack_fn(...), pack_mt)
+   end
+end)(rawget(_G, "pack"))
+
 unpack = table.unpack or unpack
 
 
-local function getmetamethod(x, n)
-   local m =(getmetatable(x) or {})[tostring(n)]
-   if type(m) == 'function' then
-      return m
-   end
-   if type((getmetatable(m) or {}).__call) == 'function' then
-      return m
+function callable(x)
+   if type(x) == 'function' or (getmetatable(x) or {}).__call then
+      return x
    end
 end
 
 
-function callable(x)
-   return type(x) == 'function' or getmetamethod(x, '__call')
+function getmetamethod(x, n)
+   return callable((getmetatable(x) or {})[n])
 end
 
 

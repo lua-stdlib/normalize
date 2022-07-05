@@ -41,18 +41,64 @@
 ]]
 
 
+--[[ ====================== ]]--
+--[[ Load optional modules. ]]--
+--[[ ====================== ]]--
 
-local _ = {
-   base = require 'std.normalize._base',
-   strict = require 'std.normalize._strict',
-   typecheck = require 'typecheck',
-}
 
-local _ENV = _.strict(_G)
+local _debug = (function()
+   local ok, r = pcall(require, 'std._debug')
+   if not ok then
+      r = setmetatable({
+         -- If this module was required, but there's no std._debug, safe to
+         -- assume we do want runtime argchecks!
+         argcheck = true,
+         -- Similarly, if std.strict is available, but there's no _std.debug,
+         -- then apply strict global symbol checks to this module!
+         strict = true,
+      }, {
+         __call = function(self, x)
+            self.argscheck = (x ~= false)
+         end,
+      })
+   end
 
-local ARGCHECK_FRAME = _.typecheck.ARGCHECK_FRAME
-local argerror = _.typecheck.argerror
-local argscheck = _.typecheck.argscheck
+   return r
+end)()
+
+
+local strict = (function()
+   local setfenv = rawget(_G, 'setfenv') or function() end
+
+   -- No strict global symbol checks with no std.strict module, even
+   -- if we found std._debug and requested that!
+   local r = function(env, level)
+      setfenv(1+(level or 1), env)
+      return env
+   end
+
+   if _debug.strict then
+      -- Specify `.init` submodule to make sure we only accept
+      -- lua-stdlib/strict, and not the old strict module from
+      -- lua-stdlib/lua-stdlib.
+      local ok, m = pcall(require, 'std.strict.init')
+      if ok then
+         r = m
+      end
+   end
+   return r
+end)()
+
+
+local typecheck = require 'typecheck'
+
+
+local _ENV = strict(_G)
+
+
+local ARGCHECK_FRAME = typecheck.ARGCHECK_FRAME
+local argerror = typecheck.argerror
+local argscheck = typecheck.argscheck
 local concat = table.concat
 local config = package.config
 local debug_getfenv = debug.getfenv or false
@@ -64,24 +110,17 @@ local debug_upvaluejoin = debug.upvaluejoin
 local exit = os.exit
 local format = string.format
 local getfenv = rawget(_G, 'getfenv') or false
-local getmetamethod = _.base.getmetamethod
 local gmatch = string.gmatch
 local gsub = string.gsub
 local loadstring = rawget(_G, 'loadstring') or load
 local match = string.match
 local open = io.open
-local pack = _.base.pack
 local remove = table.remove
 local searchpath = package.searchpath or false
 local setfenv = rawget(_G, 'setfenv') or false
 local sort = table.sort
-local strict = _.strict
-local tointeger = _.base.tointeger
 local unpack = table.unpack or unpack
 local upper = string.upper
-
-_ = nil
-
 
 --[[ =============== ]]--
 --[[ Implementation. ]]--
@@ -95,6 +134,53 @@ _ = nil
 
 local dirsep, pathsep, pathmark, execdir, igmark =
    match(config, '^([^\n]+)\n([^\n]+)\n([^\n]+)\n([^\n]+)\n([^\n]+)')
+
+
+local function callable(x)
+   -- Careful here!
+   -- Most versions of Lua don't recurse functables, so make sure you
+   -- always put a real function in __call metamethods.  Consequently,
+   -- no reason to recurse here.
+   -- func=function() print 'called' end
+   -- func() --> 'called'
+   -- functable=setmetatable({}, {__call=func})
+   -- functable() --> 'called'
+   -- nested=setmetatable({}, {__call=function(self, ...) return functable(...)end})
+   -- nested() -> 'called'
+   -- notnested=setmetatable({}, {__call=functable})
+   -- notnested()
+   -- --> stdin:1: attempt to call global 'nested' (a table value)
+   -- --> stack traceback:
+   -- -->	stdin:1: in main chunk
+   -- -->		[C]: in ?
+   if type(x) == 'function' or (getmetatable(x) or {}).__call then
+      return x
+   end
+end
+
+
+local tointeger = (function(f)
+   if f == nil then
+      -- No host tointeger implementationm use our own.
+      local floor = math.floor
+      return function(x)
+         if type(x) == 'number' and x - floor(x) == 0.0 then
+            return x
+         end
+      end
+
+   elseif f '1' ~= nil then
+      -- Don't perform implicit string-to-number conversion!
+      return function(x)
+         if type(x) == 'number' then
+            return f(x)
+         end
+      end
+   end
+
+   -- Host tointeger is good!
+   return f
+end)(math.tointeger)
 
 
 -- It's hard to test at require-time whether the host `os.exit` handles
@@ -170,6 +256,11 @@ else
 end
 
 
+local function getmetamethod(x, n)
+   return callable((getmetatable(x) or {})[n])
+end
+
+
 local function rawlen(x)
    -- Lua 5.1 does not implement rawlen, and while # operator ignores
    -- __len metamethod, `nil` in sequence is handled inconsistently.
@@ -188,13 +279,7 @@ end
 
 
 local function len(x)
-   local m = getmetamethod(x, '__len')
-   if m then
-      return m(x)
-   elseif getmetamethod(x, '__tostring') then
-      x = tostring(x)
-   end
-   return rawlen(x)
+   return (getmetamethod(x, '__len') or rawlen)(x)
 end
 
 
@@ -255,6 +340,23 @@ local function merge(t, r)
    end
    return r
 end
+
+
+local pack = (function(f)
+   local pack_mt = {
+      __len = function(self)
+         return self.n
+      end,
+   }
+
+   local pack_fn = f or function(...)
+      return {n=select('#', ...), ...}
+   end
+
+   return function(...)
+      return setmetatable(pack_fn(...), pack_mt)
+   end
+end)(rawget(_G, "pack"))
 
 
 local pairs = (function(b)

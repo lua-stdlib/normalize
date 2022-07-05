@@ -2,7 +2,18 @@
 # Copyright (C) 2014-2023 std.normalize authors
 
 before:
-  strict = require 'std.normalize._strict'
+  strict = (function()
+     local ok, m = pcall(require, 'std.strict.init')
+     if ok then
+        return m
+     end
+
+     local setfenv = rawget(_G, 'setfenv') or function() end
+     return function(env, level)
+        setfenv(1+(level or 1), env)
+        return env
+     end
+  end)()
 
   function f(env)
      local setfenv = rawget(_G, 'setfenv') or function() end

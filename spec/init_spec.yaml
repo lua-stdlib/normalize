@@ -536,14 +536,8 @@ specify std.normalize:
       expect(f 'ab\0c\0').to_be(5)
   - it respects __len metamethod:
       expect(f(setmetatable({}, {__len = __len}))).to_be(42)
-  - it respects __tostring metamethod:
-      expect(f(setmetatable({}, {__tostring = __tostring}))).to_be(6)
-  - it counts embedded zeros in __string results:
-      src = setmetatable({}, {__tostring = function() return 'ab\0c\0' end})
-      expect(f(src)).to_be(5)
-  - it prioritizes __len over __tostring:
-      x = setmetatable({}, { __len = __len, __tostring = __tostring})
-      expect(f(x)).to_be(42)
+  - it ignores __tostring metamethod:
+      expect(f(setmetatable({}, {__tostring = __tostring}))).to_be(0)
   - it does not count nil valued array part elements:
       expect(f {1, 2, 3, nil, nil, 6}).to_be(3)
   - 'it defers to the # operator':

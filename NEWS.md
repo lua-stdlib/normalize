@@ -2,6 +2,14 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+### New features
+
+  - Support importing into another project directly with:
+
+    ```sh
+    $ cp ../normalize/lib/std/normalize/init.lua lib/std/normalize.lua
+    ```
+
 
 ## Noteworthy changes in release 2.0.3 (2020-04-15) [stable]
 
