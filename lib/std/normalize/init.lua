@@ -45,63 +45,42 @@
 local _ = {
    base = require 'std.normalize._base',
    strict = require 'std.normalize._strict',
-   typecheck = require 'std.normalize._typecheck',
+   typecheck = require 'typecheck',
 }
 
-local _ENV = _.strict {
-   _G = _G,
-   _VERSION = _VERSION,
-   ARGCHECK_FRAME = _.typecheck.ARGCHECK_FRAME,
-   any = _.typecheck.any,
-   argerror = _.typecheck.argerror,
-   argscheck = _.typecheck.argscheck,
-   concat = table.concat,
-   config = package.config,
-   debug_getfenv = debug.getfenv or false,
-   debug_getinfo = debug.getinfo,
-   debug_getupvalue = debug.getupvalue,
-   debug_setfenv = debug.setfenv or false,
-   debug_setupvalue = debug.setupvalue,
-   debug_upvaluejoin = debug.upvaluejoin,
-   error = error,
-   exit = os.exit,
-   format = string.format,
-   getfenv = getfenv or false,
-   getmetamethod = _.base.getmetamethod,
-   getmetatable = getmetatable,
-   gmatch = string.gmatch,
-   gsub = string.gsub,
-   load = load,
-   loadstring = loadstring or load,
-   match = string.match,
-   next = next,
-   open = io.open,
-   opt = _.typecheck.opt,
-   pack = _.base.pack,
-   pairs = pairs,
-   pcall = pcall,
-   rawset = rawset,
-   remove = table.remove,
-   require = require,
-   searchpath = package.searchpath or false,
-   select = select,
-   setfenv = setfenv or false,
-   setmetatable = setmetatable,
-   sort = table.sort,
-   strict = _.strict,
-   tointeger = _.base.tointeger,
-   tostring = tostring,
-   type = type,
-   types = _.typecheck.types,
-   unpack = table.unpack or unpack,
-   upper = string.upper,
-   xpcall = xpcall,
-}
+local _ENV = _.strict(_G)
+
+local ARGCHECK_FRAME = _.typecheck.ARGCHECK_FRAME
+local argerror = _.typecheck.argerror
+local argscheck = _.typecheck.argscheck
+local concat = table.concat
+local config = package.config
+local debug_getfenv = debug.getfenv or false
+local debug_getinfo = debug.getinfo
+local debug_getupvalue = debug.getupvalue
+local debug_setfenv = debug.setfenv or false
+local debug_setupvalue = debug.setupvalue
+local debug_upvaluejoin = debug.upvaluejoin
+local exit = os.exit
+local format = string.format
+local getfenv = rawget(_G, 'getfenv') or false
+local getmetamethod = _.base.getmetamethod
+local gmatch = string.gmatch
+local gsub = string.gsub
+local loadstring = rawget(_G, 'loadstring') or load
+local match = string.match
+local open = io.open
+local pack = _.base.pack
+local remove = table.remove
+local searchpath = package.searchpath or false
+local setfenv = rawget(_G, 'setfenv') or false
+local sort = table.sort
+local strict = _.strict
+local tointeger = _.base.tointeger
+local unpack = table.unpack or unpack
+local upper = string.upper
+
 _ = nil
-
-
-local ARGCHECK_FRAME = ARGCHECK_FRAME
-
 
 
 --[[ =============== ]]--
@@ -241,24 +220,18 @@ local function ipairs(l)
 end
 
 
-local function keys(t)
-   local r = {}
-   for k in pairs(t) do
-      r[#r + 1] = k
-   end
-   return r
-end
-
-
-if not pcall(load, '_=1') then
-   local loadfunction = load
-   load = function(...)
-      if type(...) == 'string' then
-         return loadstring(...)
+local load = (function(ok)
+   if not ok then
+      return function(...)
+         if type(...) == 'string' then
+            return loadstring(...)
+         end
+         return _G.load(...)
       end
-      return loadfunction(...)
    end
-end
+
+   return _G.load
+end)(pcall(load, '_=1'))
 
 
 local function normalize_load(chunk, chunkname)
@@ -284,12 +257,24 @@ local function merge(t, r)
 end
 
 
-if not not pairs(setmetatable({},{__pairs=function() return false end})) then
-   -- Add support for __pairs when missing.
-   local _pairs = pairs
-   function pairs(t)
-      return(getmetamethod(t, '__pairs') or _pairs)(t)
+local pairs = (function(b)
+   if b then
+      -- Add support for __pairs when missing.
+      return function (t)
+         return (getmetamethod(t, '__pairs') or pairs)(t)
+      end
    end
+
+   return _G.pairs
+end)(not not pairs(setmetatable({},{__pairs=function() return false end})))
+
+
+local function keys(t)
+   local r = {}
+   for k in pairs(t) do
+      r[#r + 1] = k
+   end
+   return r
 end
 
 
@@ -498,9 +483,6 @@ end
 --[[ ================= ]]--
 
 
-local T = types
-
-
 local F = {
    _VERSION = _G._VERSION,
    arg = _G.arg,
@@ -522,9 +504,7 @@ local F = {
    --           argerror('std.io.slurp', 1, err, 2)
    --       end
    --       ...
-   argerror = argscheck(
-      'argerror', T.stringy, T.integer, T.accept, opt(T.integer)
-   ) .. argerror,
+   argerror = argerror,
 
    assert = _G.assert,
    collectgarbage = _G.collectgarbage,
@@ -537,13 +517,13 @@ local F = {
    -- knows how to unwrap functors (table's with a function valued
    -- `__call` metamethod).
    -- @function getfenv
-   -- @tparam function|int fn stack level, C or Lua function or functor
-   --    to act on
+   -- @tparam[opt=1] function|int fn stack level, C or Lua function or
+   --    functor to act on
    -- @treturn table the execution environment of *fn*
    -- @usage
    --    callers_environment = getfenv(1)
    getfenv = argscheck(
-      'getfenv', opt(T.integer, T.callable)
+      'getfenv([callable|integer])'
    ) .. normalize_getfenv,
 
    --- Return named metamethod, if callable, otherwise `nil`.
@@ -555,7 +535,7 @@ local F = {
    -- @usage
    --    normalize = getmetamethod(require 'std.normalize', '__call')
    getmetamethod = argscheck(
-      'getmetamethod', T.arg, T.stringy
+      'getmetamethod(?any, string)'
    ) .. getmetamethod,
 
    getmetatable = _G.getmetatable,
@@ -581,7 +561,7 @@ local F = {
    --
    --    for i, v in ipairs(pack(1, 2, nil, 4)) do u[i] = v end
    --    assert(len(u) == 4)
-   ipairs = argscheck('ipairs', T.table) .. ipairs,
+   ipairs = argscheck('ipairs(table)') .. ipairs,
 
    --- Deterministic, functional version of core Lua `#` operator.
    --
@@ -597,7 +577,7 @@ local F = {
    --    x = {1, 2, 3, nil, 5}
    --    --> 5 3
    --    print(#x, len(x))
-   len = argscheck('len', any(T.table, T.stringy)) .. len,
+   len = argscheck('len(string|table)') .. len,
 
    --- Load a string or a function, just like Lua 5.2+.
    -- @function load
@@ -607,7 +587,7 @@ local F = {
    -- @usage
    --    assert(load 'print "woo"')()
    load = argscheck(
-      'load', any(T.callable, T.stringy), opt(T.stringy)
+      'load(callable|string, [string])'
    ) .. normalize_load,
 
    loadfile = _G.loadfile,
@@ -635,7 +615,7 @@ local F = {
    -- @return the previous iteration key
    -- @usage
    --    for k, v in pairs {'a', b='c', foo=42} do process(k, v) end
-   pairs = argscheck('pairs', T.table) .. pairs,
+   pairs = argscheck('pairs(table)') .. pairs,
 
    pcall = _G.pcall,
    print = _G.print,
@@ -649,7 +629,7 @@ local F = {
    -- @usage
    --    --> 0
    --    rawlen(setmetatable({}, {__len=function() return 42}))
-   rawlen = argscheck('rawlen', any(T.string, T.table)) .. rawlen,
+   rawlen = argscheck('rawlen(string|table)') .. rawlen,
 
    rawset = _G.rawset,
    select = _G.select,
@@ -666,7 +646,7 @@ local F = {
    -- @usage
    --    function clearenv(fn) return setfenv(fn, {}) end
    setfenv = argscheck(
-      'setfenv', any(T.integer, T.callable), T.table
+      'setfenv(integer|callable, table)'
    ) .. normalize_setfenv,
 
    setmetatable = _G.setmetatable,
@@ -695,7 +675,7 @@ local F = {
    --    local a, b, c = unpack(pack(nil, 2, nil))
    --    assert(a == nil and b == 2 and c == nil)
    unpack = argscheck(
-      'unpack', T.table, opt(T.integer), opt(T.integer)
+      'unpack(table, [?integer], [integer])'
    ) .. unpack,
 
    --- Support arguments to a protected function call, even on Lua 5.1.
@@ -711,7 +691,7 @@ local F = {
    -- @usage
    --    -- Use errh to get a backtrack after curses exits abnormally
    --    xpcall(main, errh, arg, opt)
-   xpcall = argscheck('xpcall', T.callable, T.callable) .. xpcall,
+   xpcall = argscheck('xpcall(callable, callable, [?any...])') .. xpcall,
 }
 
 local G = {
@@ -785,7 +765,7 @@ local G = {
       -- @param x object to act on
       -- @treturn[1] integer *x* converted to an integer if possible
       -- @return[2] `nil` otherwise
-      tointeger = argscheck('tointeger', T.arg) .. tointeger,
+      tointeger = argscheck('math.tointeger(?any)') .. tointeger,
 
       --- Return 'integer', 'float' or `nil` according to argument type.
       --
@@ -797,7 +777,7 @@ local G = {
       -- @treturn[1] string 'integer', if *x* is a whole number
       -- @treturn[2] string 'float', for other numbers
       -- @return[3] `nil` otherwise
-      type = argscheck('type', T.arg) .. math_type,
+      type = argscheck('math.type(?any)') .. math_type,
    },
    os = {
       clock = _G.os.clock,
@@ -810,7 +790,7 @@ local G = {
       -- @tparam bool|number[opt=true] status report back to parent process
       -- @usage
       --    exit(len(records.processed) > 0)
-      exit = argscheck('exit', any(T.boolean, T.integer, T.missing)) .. exit,
+      exit = argscheck('os.exit([boolean|integer])') .. exit,
 
       getenv = _G.os.getenv,
       remove = _G.os.remove,
@@ -859,7 +839,7 @@ local G = {
       -- @return[2] `nil`
       -- @treturn[2] string error message listing all failed paths
       searchpath = argscheck(
-         'searchpath', T.string, T.string, opt(T.string), opt(T.string)
+         'package.searchpath(string, string, [?string], [string])'
       ) .. searchpath,
    },
    string = {
@@ -884,7 +864,7 @@ local G = {
       --    function printarray(x)
       --       return render(x, arrayvfns)
       --    end
-      render = argscheck('render', T.accept, T.table, opt(T.table)) .. render,
+      render = argscheck('string.render(?any, table, [table])') .. render,
 
       reverse = _G.string.reverse,
       sub = _G.string.sub,
@@ -901,7 +881,7 @@ local G = {
       -- @usage
       --    --> {'key2', 1, 42, 2, 'key1'}
       --    keys{'a', 'b', key1=1, key2=2, [42]=3}
-      keys = argscheck('keys', T.table) .. keys,
+      keys = argscheck('table.keys(table)') .. keys,
 
       --- Destructively merge keys and values from one table into another.
       -- @function table.merge
@@ -911,7 +891,7 @@ local G = {
       -- @usage
       --    --> {'a', 'b', d='d'}
       --    merge({'a', 'b'}, {'c', d='d'})
-      merge = argscheck('merge', T.table, opt(T.table)) .. merge,
+      merge = argscheck('table.merge(table, [table])') .. merge,
 
       remove = _G.table.remove,
       sort = _G.table.sort,

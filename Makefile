@@ -13,7 +13,6 @@ luadir	= lib/std/normalize
 SOURCES =				\
 	$(luadir)/_base.lua		\
 	$(luadir)/_strict.lua		\
-	$(luadir)/_typecheck.lua	\
 	$(luadir)/init.lua		\
 	$(luadir)/version.lua		\
 	$(NOTHING_ELSE)

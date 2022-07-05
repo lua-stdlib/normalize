@@ -184,23 +184,20 @@ specify std.normalize:
     - 'it diagnoses missing argument #1':
          expect(f()).to_raise 'string expected, got no value'
     - 'it diagnoses argument #1 type not string':
-         stringy = setmetatable({}, {__tostring = function() end})
          expect(f(nil)).to_raise 'string expected, got nil'
-         expect(f(stringy)).not_to_raise 'string expected'
     - 'it diagnoses missing argument #2':
          expect(f 'X').to_raise 'integer expected, got no value'
     - 'it diagnoses argument #2 type not number':
          expect(f('X', nil)).to_raise 'integer expected, got nil'
-         expect(f('X', '1')).not_to_raise 'integer expected'
-    - 'it diagnoses argument #2 type not integer':
-         expect(f('X', 1.0001)).to_raise 'number has no integer representation'
-         expect(f('X', '1.0001')).to_raise 'number has no integer representation'
+         expect(f('X', '1')).to_raise 'string has no integer representation'
+         expect(f('X', 1.0001)).to_raise 'float has no integer representation'
+         expect(f('X', '1.0001')).to_raise 'string has no integer representation'
     - 'it diagnoses argument #4 type not number': |
          expect(f('X', 1, 'ohnoes', false)).
            to_raise "bad argument #4 to 'argerror' (integer expected, got boolean)"
     - 'it diagnoses argument #4 type not integer': |
-         expect(f('X', 99999.0, 'ohnoes', 0.99999)).
-            to_raise "bad argument #4 to 'argerror' (number has no integer representation)"
+         expect(f('X', 99999.0, 'ohnoes', 99999.9)).
+            to_raise "bad argument #4 to 'argerror' (float has no integer representation)"
 
   - it raises an argument error: |
       expect(f('myfunc', 1)).to_raise "bad argument #1 to 'myfunc'"
@@ -344,8 +341,8 @@ specify std.normalize:
         expect(f(false)).
            to_raise 'callable or integer expected, got boolean'
     - 'it diagnoses argument #1 type not integer':
-         expect(f(1.0001)).to_raise 'number has no integer representation'
-         expect(f '1.0001').to_raise 'number has no integer representation'
+         expect(f(1.0001)).to_raise 'callable or integer expected, got float'
+         expect(f '1.0001').to_raise 'callable or integer expected, got string'
 
   - it returns a table:
       expect(type(f())).to_be 'table'
@@ -374,6 +371,7 @@ specify std.normalize:
         expect(fn(1)).to_be(fnenv)
         expect(gn(1)).to_be(fnenv)
     - it returns the callers environment by default:
+        pending 'specl/luamacro fix to not add an invisible argument'
         expect(fn()).to_be(fn(1))
     - it returns the environment of higher stack frames:
         expect(gn(2)).to_be(gnenv)
@@ -428,14 +426,12 @@ specify std.normalize:
 
   - context with bad arguments:
     - 'it diagnoses missing argument #1':
-         expect(f()).to_raise 'value expected'
+         expect(f()).to_raise 'argument expected, got no value'
          expect(f(nil)).not_to_raise 'value expected'
     - 'it diagnoses missing argument #2':
          expect(f({})).to_raise 'string expected, got no value'
     - 'it diagnoses argument #2 type not string':
-         stringy = setmetatable({}, {__tostring = function() end})
          expect(f({}, nil)).to_raise 'string expected, got nil'
-         expect(f({}, stringy)).not_to_raise 'string expected'
 
   - context with a table:
     - before:
@@ -528,9 +524,7 @@ specify std.normalize:
     - 'it diagnoses nil-valued argument #1':
         expect(f(nil)).to_raise 'string or table expected, got nil'
     - 'it diagnoses argument #1 type not string or table':
-        stringy = setmetatable({}, {__tostring = function() end})
         expect(f(false)).to_raise 'string or table expected, got boolean'
-          expect(f(stringy)).not_to_raise 'string expected'
 
   - it works for an empty list:
       src = {}
@@ -573,10 +567,8 @@ specify std.normalize:
         expect(f(nil)).to_raise 'callable or string expected, got nil'
     - 'it diagnoses argument #1 type not callable or string':
         expect(f(false)).to_raise 'callable or string expected, got boolean'
-        stringy = setmetatable({}, {__tostring = function() end})
-        expect(f(stringy)).not_to_raise 'callable or string expected'
-        funky = setmetatable({}, {__call = function() end})
-        expect(f(funky)).not_to_raise 'callable or string expected'
+        functable = setmetatable({}, {__call = function() end})
+        expect(f(functable)).not_to_raise 'callable or string expected'
     - 'it diagnoses argument #2 type not string':
         expect(f('_=1', false)).to_raise 'string expected, got boolean'
 
@@ -585,11 +577,6 @@ specify std.normalize:
   - it compiles a string into a callable function:
       fn = f 'return 42'
       expect(fn()).to_be(42)
-  - it compiles a string-like table into a callable function:
-      __tostring = function() return 'return math.pi' end
-      stringy = setmetatable({}, {__tostring = __tostring})
-      fn = f(stringy)
-      expect(fn()).to_be(math.pi)
   - it calls a function for successive chunks:
       fn = f(chunky)
       expect(fn()).to_be(math.pi)
@@ -625,7 +612,7 @@ specify std.normalize:
 
     - context with bad arguments:
       - 'it diagnoses missing argument #1':
-           expect(f()).to_raise 'value expected'
+           expect(f()).to_raise 'argument expected'
 
     - it returns any integer argument:
         expect(f(99)).to_be(99)
@@ -644,7 +631,7 @@ specify std.normalize:
 
     - context with bad arguments:
       - 'it diagnoses missing argument #1':
-           expect(f()).to_raise 'value expected'
+           expect(f()).to_raise 'argument expected'
 
     - it returns nil for non-number values:
         expect(f(nil)).to_be(nil)
@@ -678,7 +665,7 @@ specify std.normalize:
       - 'it diagnoses argument #1 type not boolean or integer':
           expect(f(nil)).to_raise 'boolean or integer expected'
           expect(f {}).to_raise 'boolean or integer expected'
-          expect(f(math.pi)).to_raise 'number has no integer representation'
+          expect(f(math.pi)).to_raise 'boolean or integer expected, got float'
 
     - it exits successfully by default:
         expect(luaproc(preamble .. 'exit()')).to_succeed_with ''
@@ -690,7 +677,7 @@ specify std.normalize:
         expect(luaproc(preamble .. 'exit(42)')).to_exit(42)
         expect(luaproc(preamble .. 'exit(127)')).to_exit(127)
     - it exits with the given integer-convertible status:
-        expect(luaproc(preamble .. "exit '3'")).to_exit(3)
+        expect(luaproc(preamble .. "exit(3.0)")).to_exit(3)
 
 
 - describe pack:
@@ -876,9 +863,9 @@ specify std.normalize:
            to_raise 'callable or integer expected, got boolean'
     - 'it diagnoses argument #1 type not integer':
         expect(f(2/3)).
-           to_raise 'number has no integer representation'
-        expect(f '2.3').
-           to_raise 'number has no integer representation'
+           to_raise 'callable or integer expected, got float'
+        expect(f '3').
+           to_raise 'callable or integer expected, got string'
     - 'it diagnoses missing argument #2':
         expect(f(0)).to_raise 'table expected, got no value'
     - 'it diagnoses nil-valued argument #2':
@@ -1057,8 +1044,19 @@ specify std.normalize:
         f = M.table.merge
         t = {1, 2, 5, foo='bar'}
 
-    - context with bad argumentns:
-        badargs.diagnose(f, 'table.merge(table, ?table)')
+    - context with bad arguments:
+      - 'it diagnoses missing argument #1':
+          expect(f()).to_raise 'table expected, got no value'
+      - 'it diagnoses nil-valued argument #1':
+          expect(f(nil)).to_raise 'table expected, got nil'
+      - 'it diagnoses argument #1 type not table':
+          expect(f(false)).to_raise 'table expected, got boolean'
+      - 'it diagnoses nil-valued argument #2':
+          expect(f({}, nil)).to_raise 'table expected, got nil'
+      - 'it diagnoses argument #2 type not table':
+          expect(f({}, false)).to_raise 'table expected, got boolean'
+      - it diagnoses ,ore than maximum of 2 arguments:
+          expect(f({}, {}, false)).to_raise 'no more than 2 arguments expected, got 3'
 
     - it makes a shallow copy with one argument:
         expect(f(t)).to_equal(t)
@@ -1089,20 +1087,20 @@ specify std.normalize:
          expect(f(false)).to_raise 'table expected, got boolean'
     - 'it diagnoses argument #2 type not number': |
          expect(f(t, false)).
-            to_raise "bad argument #2 to 'unpack' (integer expected, got boolean)"
+            to_raise "bad argument #2 to 'unpack' (integer or nil expected, got boolean)"
     - 'it diagnoses argument #2 type not integer': |
          expect(f(t, 1.5)).
-            to_raise "bad argument #2 to 'unpack' (number has no integer representation)"
+            to_raise "bad argument #2 to 'unpack' (integer or nil expected, got float)"
          expect(f(t, '1.5')).
-            to_raise "bad argument #2 to 'unpack' (number has no integer representation)"
+            to_raise "bad argument #2 to 'unpack' (integer or nil expected, got string)"
     - 'it diagnoses argument #3 type not number': |
          expect(f(t, 1, false)).
             to_raise "bad argument #3 to 'unpack' (integer expected, got boolean)"
     - 'it diagnoses argument #3 type not integer': |
          expect(f(t, 1, 1.5)).
-            to_raise "bad argument #3 to 'unpack' (number has no integer representation)"
-         expect(f(t, '1', '1.5')).
-            to_raise "bad argument #3 to 'unpack' (number has no integer representation)"
+            to_raise "bad argument #3 to 'unpack' (float has no integer representation)"
+         expect(f(t, 1, '1.5')).
+            to_raise "bad argument #3 to 'unpack' (string has no integer representation)"
 
   - it works with an empty sequence:
       expect(f {}).to_equal {n=0}
@@ -1178,7 +1176,7 @@ specify std.normalize:
            "bad argument #1 to 'xpcall' (callable expected, got nil)"
     - 'it diagnoses argument #1 type not function': |
         expect(f {}).to_raise
-           "bad argument #1 to 'xpcall' (callable expected, got table)"
+           "bad argument #1 to 'xpcall' (callable expected, got empty table)"
     - 'it diagnoses missing argument #2': |
         expect(f(id)).to_raise
            "bad argument #2 to 'xpcall' (callable expected, got no value)"
@@ -1187,7 +1185,7 @@ specify std.normalize:
            "bad argument #2 to 'xpcall' (callable expected, got nil)"
     - 'it diagnoses argument #2 type not function': |
         expect(f(id, {})).to_raise
-           "bad argument #2 to 'xpcall' (callable expected, got table)"
+           "bad argument #2 to 'xpcall' (callable expected, got empty table)"
 
   - it returns true if the protected call succeeds:
       expect(f(id, id)).to_be(true)

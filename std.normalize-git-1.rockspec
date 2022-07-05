@@ -25,6 +25,7 @@ source = {
 dependencies = {
    'lua >= 5.1, < 5.5',
    'std._debug',
+   'typecheck >= 3.0',
 }
 
 build = {
@@ -33,7 +34,6 @@ build = {
       ['std.normalize']	           = 'lib/std/normalize/init.lua',
       ['std.normalize._base']      = 'lib/std/normalize/_base.lua',
       ['std.normalize._strict']    = 'lib/std/normalize/_strict.lua',
-      ['std.normalize._typecheck'] = 'lib/std/normalize/_typecheck.lua',
       ['std.normalize.version']	   = 'lib/std/normalize/version.lua',
    },
    copy_directories = {'doc'},

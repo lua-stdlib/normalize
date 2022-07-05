@@ -10,17 +10,11 @@
 ]]
 
 
-local _ENV = require 'std.normalize._strict' {
-   floor = math.floor,
-   getmetatable = getmetatable,
-   pack = table.pack or false,
-   select = select,
-   setmetatable = setmetatable,
-   tointeger = math.tointeger or false,
-   tonumber = tonumber,
-   tostring = tostring,
-   type = type,
-}
+local _ENV = require 'std.normalize._strict' (_G)
+
+local getmetatable = getmetatable
+local pack = table.pack or false
+local tointeger = math.tointeger or false
 
 
 
@@ -55,6 +49,7 @@ end
 local tointeger = (function(f)
    if not f then
       -- No host tointeger implementation, use our own.
+      local floor = math.floor
       return function(x)
         if type(x) == 'number' and x - floor(x) == 0.0 then
            return x

@@ -28,7 +28,6 @@ return {
   ["include"] = {
     "lib/std/normalize/_base$",
     "lib/std/normalize/_strict$",
-    "lib/std/normalize/_typecheck$",
     "lib/std/normalize/init$",
     "lib/std/normalize/version$",
   },
