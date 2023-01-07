@@ -1,7 +1,7 @@
 Normalized Lua Functions
 ========================
 
-Copyright (C) 2002-2022 [std.normalize authors][authors]
+Copyright (C) 2002-2023 [std.normalize authors][authors]
 
 [![License](https://img.shields.io/:license-mit-blue.svg)](https://mit-license.org)
 [![workflow status](https://github.com/lua-stdlib/normalize/actions/workflows/spec.yml/badge.svg?branch=master)](https://github.com/lua-stdlib/normalize/actions)
