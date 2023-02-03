@@ -73,7 +73,7 @@ local strict = (function()
    -- No strict global symbol checks with no std.strict module, even
    -- if we found std._debug and requested that!
    local r = function(env, level)
-      setfenv(1+(level or 1), env)
+      setfenv(1 + (level or 1), env)
       return env
    end
 
@@ -90,7 +90,36 @@ local strict = (function()
 end)()
 
 
-local typecheck = require 'typecheck'
+local typecheck = (function()
+   local format = string.format
+
+   local ok, r = pcall(require, 'typecheck')
+   if ok then
+      return r
+   end
+
+   return {
+      ARGCHECK_FRAME = 0,
+
+      -- Return `inner` untouched, for no runtime overhead!
+      argscheck = function(decl, inner)
+         return inner or setmetatable({}, {
+            __concat = function(_, inner)
+               return inner
+            end,
+         })
+      end,
+
+      argerror = function(name, i, extramsg, level)
+         level = level or 1
+         local s = format("bad argument #%d to '%s'", i, name)
+         if extramsg ~= nil then
+            s = s .. ' (' .. extramsg .. ')'
+         end
+         error(s, level > 0 and level + 2 or 0)
+      end,
+   }
+end)()
 
 
 local _ENV = strict(_G)
@@ -624,9 +653,8 @@ local F = {
    -- @treturn table the execution environment of *fn*
    -- @usage
    --    callers_environment = getfenv(1)
-   getfenv = argscheck(
-      'getfenv([callable|integer])'
-   ) .. normalize_getfenv,
+   getfenv = argscheck 'getfenv([callable|integer])'
+      .. normalize_getfenv,
 
    --- Return named metamethod, if callable, otherwise `nil`.
    -- @function getmetamethod
@@ -636,9 +664,8 @@ local F = {
    --    metamethod
    -- @usage
    --    normalize = getmetamethod(require 'std.normalize', '__call')
-   getmetamethod = argscheck(
-      'getmetamethod(?any, string)'
-   ) .. getmetamethod,
+   getmetamethod = argscheck 'getmetamethod(?any, string)'
+      .. getmetamethod,
 
    getmetatable = _G.getmetatable,
 
@@ -663,7 +690,8 @@ local F = {
    --
    --    for i, v in ipairs(pack(1, 2, nil, 4)) do u[i] = v end
    --    assert(len(u) == 4)
-   ipairs = argscheck('ipairs(table)') .. ipairs,
+   ipairs = argscheck 'ipairs(table)'
+      .. ipairs,
 
    --- Deterministic, functional version of core Lua `#` operator.
    --
@@ -679,7 +707,8 @@ local F = {
    --    x = {1, 2, 3, nil, 5}
    --    --> 5 3
    --    print(#x, len(x))
-   len = argscheck('len(string|table)') .. len,
+   len = argscheck 'len(string|table)'
+      .. len,
 
    --- Load a string or a function, just like Lua 5.2+.
    -- @function load
@@ -688,9 +717,8 @@ local F = {
    -- @treturn function a Lua function to execute *ld* in global scope.
    -- @usage
    --    assert(load 'print "woo"')()
-   load = argscheck(
-      'load(callable|string, [string])'
-   ) .. normalize_load,
+   load = argscheck 'load(callable|string, [string])'
+      .. normalize_load,
 
    loadfile = _G.loadfile,
    next = _G.next,
@@ -717,7 +745,8 @@ local F = {
    -- @return the previous iteration key
    -- @usage
    --    for k, v in pairs {'a', b='c', foo=42} do process(k, v) end
-   pairs = argscheck('pairs(table)') .. pairs,
+   pairs = argscheck 'pairs(table)'
+      .. pairs,
 
    pcall = _G.pcall,
    print = _G.print,
@@ -731,7 +760,8 @@ local F = {
    -- @usage
    --    --> 0
    --    rawlen(setmetatable({}, {__len=function() return 42}))
-   rawlen = argscheck('rawlen(string|table)') .. rawlen,
+   rawlen = argscheck 'rawlen(string|table)'
+      .. rawlen,
 
    rawset = _G.rawset,
    select = _G.select,
@@ -747,9 +777,8 @@ local F = {
    -- @treturn function function acted upon
    -- @usage
    --    function clearenv(fn) return setfenv(fn, {}) end
-   setfenv = argscheck(
-      'setfenv(integer|callable, table)'
-   ) .. normalize_setfenv,
+   setfenv = argscheck 'setfenv(integer|callable, table)'
+      .. normalize_setfenv,
 
    setmetatable = _G.setmetatable,
 
@@ -776,9 +805,8 @@ local F = {
    -- @usage
    --    local a, b, c = unpack(pack(nil, 2, nil))
    --    assert(a == nil and b == 2 and c == nil)
-   unpack = argscheck(
-      'unpack(table, [?integer], [integer])'
-   ) .. unpack,
+   unpack = argscheck'unpack(table, [?integer], [integer])'
+      .. unpack,
 
    --- Support arguments to a protected function call, even on Lua 5.1.
    -- @function xpcall
@@ -793,7 +821,8 @@ local F = {
    -- @usage
    --    -- Use errh to get a backtrack after curses exits abnormally
    --    xpcall(main, errh, arg, opt)
-   xpcall = argscheck('xpcall(callable, callable, [?any...])') .. xpcall,
+   xpcall = argscheck 'xpcall(callable, callable, [?any...])'
+      .. xpcall,
 }
 
 local G = {
@@ -867,7 +896,8 @@ local G = {
       -- @param x object to act on
       -- @treturn[1] integer *x* converted to an integer if possible
       -- @return[2] `nil` otherwise
-      tointeger = argscheck('math.tointeger(?any)') .. tointeger,
+      tointeger = argscheck 'math.tointeger(?any)'
+         .. tointeger,
 
       --- Return 'integer', 'float' or `nil` according to argument type.
       --
@@ -879,7 +909,8 @@ local G = {
       -- @treturn[1] string 'integer', if *x* is a whole number
       -- @treturn[2] string 'float', for other numbers
       -- @return[3] `nil` otherwise
-      type = argscheck('math.type(?any)') .. math_type,
+      type = argscheck 'math.type(?any)'
+         .. math_type,
    },
    os = {
       clock = _G.os.clock,
@@ -892,7 +923,8 @@ local G = {
       -- @tparam bool|number[opt=true] status report back to parent process
       -- @usage
       --    exit(len(records.processed) > 0)
-      exit = argscheck('os.exit([boolean|integer])') .. exit,
+      exit = argscheck 'os.exit([boolean|integer])'
+         .. exit,
 
       getenv = _G.os.getenv,
       remove = _G.os.remove,
@@ -966,7 +998,8 @@ local G = {
       --    function printarray(x)
       --       return render(x, arrayvfns)
       --    end
-      render = argscheck('string.render(?any, table, [table])') .. render,
+      render = argscheck 'string.render(?any, table, [table])'
+         .. render,
 
       reverse = _G.string.reverse,
       sub = _G.string.sub,
@@ -983,7 +1016,8 @@ local G = {
       -- @usage
       --    --> {'key2', 1, 42, 2, 'key1'}
       --    keys{'a', 'b', key1=1, key2=2, [42]=3}
-      keys = argscheck('table.keys(table)') .. keys,
+      keys = argscheck 'table.keys(table)'
+         .. keys,
 
       --- Destructively merge keys and values from one table into another.
       -- @function table.merge
@@ -993,7 +1027,8 @@ local G = {
       -- @usage
       --    --> {'a', 'b', d='d'}
       --    merge({'a', 'b'}, {'c', d='d'})
-      merge = argscheck('table.merge(table, [table])') .. merge,
+      merge = argscheck 'table.merge(table, [table])'
+         .. merge,
 
       remove = _G.table.remove,
       sort = _G.table.sort,

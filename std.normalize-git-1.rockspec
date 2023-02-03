@@ -3,6 +3,8 @@ local _MODREV, _SPECREV = 'git', '-1'
 package = 'std.normalize'
 version = _MODREV .. _SPECREV
 
+rockspec_format = '3.0'
+
 description = {
    summary = 'Normalized Lua Functions',
    detailed = [[
@@ -14,6 +16,7 @@ description = {
       overhead when semantics allow.
    ]],
    homepage = 'https://lua-stdlib.github.io/normalize',
+   issues_url = 'https://github.com/lua-stdlib/normalize/issues',
    license = 'MIT/X11',
 }
 
@@ -25,21 +28,33 @@ source = {
 dependencies = {
    'lua >= 5.1, < 5.5',
    'std._debug',
-   'typecheck >= 3.0',
+}
+
+build_dependencies = {
+   'ldoc',
 }
 
 build = {
-   type = 'builtin',
    modules = {
-      ['std.normalize']	           = 'lib/std/normalize/init.lua',
-      ['std.normalize.version']	   = 'lib/std/normalize/version.lua',
+      ['std.normalize']         = 'lib/std/normalize/init.lua',
+      ['std.normalize.version'] = 'lib/std/normalize/version.lua',
    },
    copy_directories = {'doc'},
 }
 
-if _MODREV == 'git' then
-   build.copy_directories = nil
+test_dependencies = {
+   'ansicolors',
+   'luacov',
+   'specl',
+   'typecheck >= 3.0',
+}
 
+test = {
+   type = 'command',
+   command = 'make check',
+}
+
+if _MODREV == 'git' then
    source = {
       url = 'git://github.com/lua-stdlib/normalize.git',
    }
