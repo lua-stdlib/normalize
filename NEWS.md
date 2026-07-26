@@ -2,6 +2,13 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+
+## Noteworthy changes in release 2.0.4 (2026-07-26) [stable]
+
+### New features
+
+  - Initial support for Lua-5.4.
+
 ### New features
 
   - Support importing into another project directly with:
