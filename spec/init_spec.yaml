@@ -363,6 +363,16 @@ specify std.normalize:
     - it returns the environment of a functor:
         ftor = setmetatable({}, {__call = fn})
         expect(f(ftor)).to_be(fnenv)
+    - it returns the environment of a functor's call function:
+        fn = (loadstring or load) 'return tostring(42)'
+        dispatcher = function(self, ...) return self.call(...) end
+        ftor = setmetatable({call = fn}, {__call = dispatcher})
+        dispatchenv = M.getfenv(dispatcher)
+        fnenv = {tostring = function() return 'wrapped' end}
+        M.setfenv(fn, fnenv)
+        expect(M.getfenv(ftor)).to_be(fnenv)
+        expect(M.getfenv(dispatcher)).to_be(dispatchenv)
+        expect(ftor()).to_be 'wrapped'
     - it returns the global environment:
         # FIXME: don't break out of the sandbox in Lua 5.1
         #  expect(f(0)).to_be(_G)
@@ -397,6 +407,18 @@ specify std.normalize:
         expect(luaproc(preamble .. [[
           ftor = setmetatable({}, {__call = fn})
           os.exit(f(ftor) == fnenv and 0 or 1)
+        ]])).to_succeed_with ''
+    - it returns the environment of a functor's call function:
+        expect(luaproc(preamble .. [[
+           local fn = (loadstring or load) 'return tostring(42)'
+           local dispatcher = function(self, ...) return self.call(...) end
+           local ftor = setmetatable({call = fn}, {__call = dispatcher})
+           local dispatchenv = M.getfenv(dispatcher)
+           local env = {tostring = function() return 'wrapped' end}
+           assert(M.setfenv(fn, env) == fn)
+           assert(M.getfenv(ftor) == env)
+           assert(M.getfenv(dispatcher) == dispatchenv)
+           assert(ftor() == 'wrapped')
         ]])).to_succeed_with ''
     - it returns the global environment:
         # FIXME: don't break out of the sandbox in Lua 5.1
@@ -889,6 +911,16 @@ specify std.normalize:
         ftor = setmetatable({}, {__call = fn})
         r = f(ftor, fnenv)
         expect(ftor {}).to_be(r)
+    - it sets the environment of a functor's call function:
+        fn = (loadstring or load) 'return tostring(42)'
+        dispatcher = function(self, ...) return self.call(...) end
+        ftor = setmetatable({call = fn}, {__call = dispatcher})
+        dispatchenv = M.getfenv(dispatcher)
+        fnenv = {tostring = function() return 'wrapped' end}
+        M.setfenv(ftor, fnenv)
+        expect(M.getfenv(ftor)).to_be(fnenv)
+        expect(M.getfenv(dispatcher)).to_be(dispatchenv)
+        expect(ftor()).to_be 'wrapped'
     - it sets the global environment: |
         pending 'what is this supposed to do, anyway?'
         expect(luaproc [[
@@ -925,6 +957,18 @@ specify std.normalize:
            ftor = setmetatable({}, {__call = fn})
            r = f(ftor, fnenv)
            os.exit(ftor {} == r and 0 or 1)
+        ]])).to_succeed_with ''
+    - it sets the environment of a functor's call function:
+        expect(luaproc(preamble .. [[
+           local fn = (loadstring or load) 'return tostring(42)'
+           local dispatcher = function(self, ...) return self.call(...) end
+           local ftor = setmetatable({call = fn}, {__call = dispatcher})
+           local dispatchenv = M.getfenv(dispatcher)
+           local env = {tostring = function() return 'wrapped' end}
+           assert(M.setfenv(ftor, env) == fn)
+           assert(M.getfenv(ftor) == env)
+           assert(M.getfenv(dispatcher) == dispatchenv)
+           assert(ftor() == 'wrapped')
         ]])).to_succeed_with ''
     - it sets the global environment: |
         pending 'what is this supposed to do, anyway?'

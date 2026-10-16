@@ -251,7 +251,7 @@ if debug_getfenv then
          -- No need to recurse because Lua doesn't support nested functors.
          -- __call can only (sensibly) be a function, so no need to adjust
          -- stack frame offset either.
-         fn =(getmetatable(fn) or {}).__call or fn
+         fn = fn.call or (getmetatable(fn) or {}).__call or fn
       end
 
       -- In Lua 5.1, only debug.getfenv works on C functions; but it
@@ -270,7 +270,7 @@ else
       if n then
          fn = debug_getinfo(n + 1 + ARGCHECK_FRAME, 'f').func
       elseif type(fn) ~= 'function' then
-         fn = (getmetatable(fn) or {}).__call or fn
+         fn = fn.call or (getmetatable(fn) or {}).__call or fn
       end
 
       local name, env
@@ -440,7 +440,7 @@ if debug_setfenv then
          return setfenv(n, env), nil
       end
       if type(fn) ~= 'function' then
-         fn =(getmetatable(fn) or {}).__call or fn
+         fn = fn.call or (getmetatable(fn) or {}).__call or fn
       end
       return debug_setfenv(fn, env)
    end
@@ -456,7 +456,7 @@ else
          end
          fn = debug_getinfo(n, 'f').func
       elseif type(fn) ~= 'function' then
-         fn =(getmetatable(fn) or {}).__call or fn
+         fn = fn.call or (getmetatable(fn) or {}).__call or fn
       end
 
       local up, name = 0
