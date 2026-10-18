@@ -11,6 +11,13 @@
   - `str` returns only the string, like `tostring`, not also the count
     of escaped characters.
 
+  - `getfenv` and `setfenv` act on a functor's function valued `call`
+    field before its `__call` metamethod, like lua-stdlib 41's
+    `std.debug`, so setting the environment of a functable doesn't
+    change the `__call` dispatcher it shares with others.  They ignore
+    any other `call` field, and still unwrap userdata functors and
+    tables whose `__index` raises an error.
+
 
 ## Noteworthy changes in release 2.0.4 (2026-07-26) [stable]
 

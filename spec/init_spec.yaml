@@ -373,6 +373,26 @@ specify std.normalize:
         expect(M.getfenv(ftor)).to_be(fnenv)
         expect(M.getfenv(dispatcher)).to_be(dispatchenv)
         expect(ftor()).to_be 'wrapped'
+    - it ignores a call field that isn't a function:
+        ftor = setmetatable({call = 'x'}, {__call = fn})
+        expect(f(ftor)).to_be(fnenv)
+    - it doesn't index a functor:
+        ftor = setmetatable({}, {
+           __call = fn,
+           __index = function(_, k) error('undeclared ' .. k) end,
+        })
+        expect(f(ftor)).to_be(fnenv)
+    - it unwraps a userdata functor: |
+        -- Only Lua 5.1 has newproxy to make one.
+        expect(luaproc [[
+           if not newproxy then os.exit(0) end
+           local M = require 'std.normalize'
+           local fn, env = function() end, {}
+           M.setfenv(fn, env)
+           local u = newproxy(true)
+           getmetatable(u).__call = fn
+           os.exit(M.getfenv(u) == env and M.setfenv(u, env) == fn and 0 or 1)
+        ]]).to_succeed_with ''
     - it returns the global environment:
         # FIXME: don't break out of the sandbox in Lua 5.1
         #  expect(f(0)).to_be(_G)
@@ -921,6 +941,15 @@ specify std.normalize:
         expect(M.getfenv(ftor)).to_be(fnenv)
         expect(M.getfenv(dispatcher)).to_be(dispatchenv)
         expect(ftor()).to_be 'wrapped'
+    - it ignores a call field that isn't a function:
+        ftor = setmetatable({call = 'x'}, {__call = fn})
+        expect(f(ftor, fnenv)).to_be(fn)
+    - it doesn't index a functor:
+        ftor = setmetatable({}, {
+           __call = fn,
+           __index = function(_, k) error('undeclared ' .. k) end,
+        })
+        expect(f(ftor, fnenv)).to_be(fn)
     - it sets the global environment: |
         pending 'what is this supposed to do, anyway?'
         expect(luaproc [[

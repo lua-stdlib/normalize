@@ -232,6 +232,19 @@ local function exit(...)
 end
 
 
+-- Return the function that a functor *fn* runs: its own `call` field,
+-- like the functables that share one `__call` dispatcher, or else its
+-- `__call` metamethod.  No need to recurse, because Lua doesn't support
+-- nested functors.
+local function unwrap(fn)
+   local call = type(fn) == 'table' and rawget(fn, 'call')
+   if type(call) == 'function' then
+      return call
+   end
+   return (getmetatable(fn) or {}).__call or fn
+end
+
+
 -- Choose by version: an environment that smooths over Lua differences
 -- may not provide the 5.1 debug.[gs]etfenv.
 local normalize_getfenv
@@ -251,11 +264,8 @@ if _VERSION == 'Lua 5.1' then
       end
 
       if type(fn) ~= 'function' then
-         -- Unwrap functors:
-         -- No need to recurse because Lua doesn't support nested functors.
-         -- __call can only (sensibly) be a function, so no need to adjust
-         -- stack frame offset either.
-         fn = fn.call or (getmetatable(fn) or {}).__call or fn
+         -- Unwrapping a functor doesn't change the stack frame offset.
+         fn = unwrap(fn)
       end
 
       -- In Lua 5.1, only debug.getfenv works on C functions; but it
@@ -274,7 +284,7 @@ else
       if n then
          fn = debug_getinfo(n + 1 + ARGCHECK_FRAME, 'f').func
       elseif type(fn) ~= 'function' then
-         fn = fn.call or (getmetatable(fn) or {}).__call or fn
+         fn = unwrap(fn)
       end
 
       local name, env
@@ -444,7 +454,7 @@ if _VERSION == 'Lua 5.1' then
          return setfenv(n, env), nil
       end
       if type(fn) ~= 'function' then
-         fn = fn.call or (getmetatable(fn) or {}).__call or fn
+         fn = unwrap(fn)
       end
       return debug_setfenv(fn, env)
    end
@@ -460,7 +470,7 @@ else
          end
          fn = debug_getinfo(n, 'f').func
       elseif type(fn) ~= 'function' then
-         fn = fn.call or (getmetatable(fn) or {}).__call or fn
+         fn = unwrap(fn)
       end
 
       local up, name = 0
@@ -649,8 +659,9 @@ local F = {
    --- Get a function or functor environment.
    --
    -- This version of getfenv works on all supported Lua versions, and
-   -- knows how to unwrap functors (table's with a function valued
-   -- `__call` metamethod).
+   -- knows how to unwrap functors: a table with a function valued
+   -- `call` field acts on that function, and any other functor acts on
+   -- its `__call` metamethod.
    -- @function getfenv
    -- @tparam[opt=1] function|int fn stack level, C or Lua function or
    --    functor to act on
@@ -773,7 +784,7 @@ local F = {
    --- Set a function or functor environment.
    --
    -- This version of setfenv works on all supported Lua versions, and
-   -- knows how to unwrap functors.
+   -- knows how to unwrap functors, like @{getfenv}.
    -- @function setfenv
    -- @tparam function|int fn stack level, C or Lua function or functor
    --    to act on
