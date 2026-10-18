@@ -543,9 +543,9 @@ local strvtable = {
       ['\\'] = [[\\]],
    }, {
       __call = function(map, x)
-         return gsub(tostring(x), '[\a\b\t\n\v\f\r]', function(c)
+         return (gsub(tostring(x), '[\a\b\t\n\v\f\r]', function(c)
             return map[c]
-         end)
+         end))
       end,
    }),
 

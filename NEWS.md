@@ -8,6 +8,9 @@
     so they work in Lua 5.1 environments that don't provide
     `debug.getfenv` and `debug.setfenv`, such as Specl's sandbox.
 
+  - `str` returns only the string, like `tostring`, not also the count
+    of escaped characters.
+
 
 ## Noteworthy changes in release 2.0.4 (2026-07-26) [stable]
 
