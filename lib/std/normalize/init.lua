@@ -130,10 +130,12 @@ local argerror = typecheck.argerror
 local argscheck = typecheck.argscheck
 local concat = table.concat
 local config = package.config
-local debug_getfenv = debug.getfenv or false
+-- In Lua 5.1, only debug.getfenv works on C functions; but compatibility
+-- layers (like specl) may supply only the best version as `getfenv`.
+local debug_getfenv = debug.getfenv or rawget(_G, 'getfenv') or false
 local debug_getinfo = debug.getinfo
 local debug_getupvalue = debug.getupvalue
-local debug_setfenv = debug.setfenv or false
+local debug_setfenv = debug.setfenv or rawget(_G, 'setfenv') or false
 local debug_setupvalue = debug.setupvalue
 local debug_upvaluejoin = debug.upvaluejoin
 local exit = os.exit
@@ -230,8 +232,10 @@ local function exit(...)
 end
 
 
+-- Choose by version: an environment that smooths over Lua differences
+-- may not provide the 5.1 debug.[gs]etfenv.
 local normalize_getfenv
-if debug_getfenv then
+if _VERSION == 'Lua 5.1' then
 
    normalize_getfenv = function(fn)
       local n = tointeger(fn or 1)
@@ -429,7 +433,7 @@ end
 
 
 local normalize_setfenv
-if debug_setfenv then
+if _VERSION == 'Lua 5.1' then
 
    normalize_setfenv = function(fn, env)
       local n = tointeger(fn or 1)

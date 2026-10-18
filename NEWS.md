@@ -2,6 +2,12 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+### Bug fixes
+
+  - `getfenv` and `setfenv` choose their implementation by `_VERSION`,
+    so they work in Lua 5.1 environments that don't provide
+    `debug.getfenv` and `debug.setfenv`, such as Specl's sandbox.
+
 
 ## Noteworthy changes in release 2.0.4 (2026-07-26) [stable]
 
