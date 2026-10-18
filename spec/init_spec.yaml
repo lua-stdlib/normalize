@@ -189,15 +189,15 @@ specify std.normalize:
          expect(f 'X').to_raise 'integer expected, got no value'
     - 'it diagnoses argument #2 type not number':
          expect(f('X', nil)).to_raise 'integer expected, got nil'
-         expect(f('X', '1')).to_raise 'string has no integer representation'
-         expect(f('X', 1.0001)).to_raise 'float has no integer representation'
-         expect(f('X', '1.0001')).to_raise 'string has no integer representation'
+         expect(f('X', '1')).to_raise 'number has no integer representation'
+         expect(f('X', 1.0001)).to_raise 'number has no integer representation'
+         expect(f('X', '1.0001')).to_raise 'number has no integer representation'
     - 'it diagnoses argument #4 type not number': |
          expect(f('X', 1, 'ohnoes', false)).
            to_raise "bad argument #4 to 'argerror' (integer expected, got boolean)"
     - 'it diagnoses argument #4 type not integer': |
          expect(f('X', 99999.0, 'ohnoes', 99999.9)).
-            to_raise "bad argument #4 to 'argerror' (float has no integer representation)"
+            to_raise "bad argument #4 to 'argerror' (number has no integer representation)"
 
   - it raises an argument error: |
       expect(f('myfunc', 1)).to_raise "bad argument #1 to 'myfunc'"
@@ -341,7 +341,7 @@ specify std.normalize:
         expect(f(false)).
            to_raise 'callable or integer expected, got boolean'
     - 'it diagnoses argument #1 type not integer':
-         expect(f(1.0001)).to_raise 'callable or integer expected, got float'
+         expect(f(1.0001)).to_raise 'callable or integer expected, got number'
          expect(f '1.0001').to_raise 'callable or integer expected, got string'
 
   - it returns a table:
@@ -378,13 +378,13 @@ specify std.normalize:
         #  expect(f(0)).to_be(_G)
         expect(f(0) == f(0)._G).to_be(true)
     - it returns the callers environment:
-        expect(fn(1)).to_be(fnenv)
-        expect(gn(1)).to_be(fnenv)
+        expect((fn(1))).to_be(fnenv)
+        expect((gn(1))).to_be(fnenv)
     - it returns the callers environment by default:
         pending 'specl/luamacro fix to not add an invisible argument'
         expect(fn()).to_be(fn(1))
     - it returns the environment of higher stack frames:
-        expect(gn(2)).to_be(gnenv)
+        expect((gn(2))).to_be(gnenv)
 
   - context when std._debug.argcheck is false:
     - before:
@@ -681,7 +681,7 @@ specify std.normalize:
       - 'it diagnoses argument #1 type not boolean or integer':
           expect(f(nil)).to_raise 'boolean or integer expected'
           expect(f {}).to_raise 'boolean or integer expected'
-          expect(f(math.pi)).to_raise 'boolean or integer expected, got float'
+          expect(f(math.pi)).to_raise 'boolean or integer expected, got number'
 
     - it exits successfully by default:
         expect(luaproc(preamble .. 'exit()')).to_succeed_with ''
@@ -879,7 +879,7 @@ specify std.normalize:
            to_raise 'callable or integer expected, got boolean'
     - 'it diagnoses argument #1 type not integer':
         expect(f(2/3)).
-           to_raise 'callable or integer expected, got float'
+           to_raise 'callable or integer expected, got number'
         expect(f '3').
            to_raise 'callable or integer expected, got string'
     - 'it diagnoses missing argument #2':
@@ -896,7 +896,7 @@ specify std.normalize:
       ]]).to_succeed_with 'nil\n'
   - it returns the actioned function otherwise:
       fn = function(env) return f(1, env), nil end
-      expect(fn {}).to_be(fn)
+      expect((fn {})).to_be(fn)
       expect(f(fn, {})).to_be(fn)
 
   - context when std._debug.argcheck is true:
@@ -906,11 +906,11 @@ specify std.normalize:
 
     - it sets the environment of a function:
         r = f(fn, fnenv)
-        expect(fn {}).to_be(r)
+        expect((fn {})).to_be(r)
     - it sets the environment of a functor:
         ftor = setmetatable({}, {__call = fn})
         r = f(ftor, fnenv)
-        expect(ftor {}).to_be(r)
+        expect((ftor {})).to_be(r)
     - it sets the environment of a functor's call function:
         fn = (loadstring or load) 'return tostring(42)'
         dispatcher = function(self, ...) return self.call(...) end
@@ -932,10 +932,10 @@ specify std.normalize:
         ]]).to_succeed_with 'woo!\n'
     - it sets the callers environment:
         fn = function(n, env) return f(n, env), nil end
-        expect(fn(1, fnenv)).to_be(fn)
+        expect((fn(1, fnenv))).to_be(fn)
         gn = function(n, env) return fn(n, env), nil end
-        expect(gn(1, fnenv)).to_be(fn)
-        expect(gn(2, {fn = fn})).to_be(gn)
+        expect((gn(1, fnenv))).to_be(fn)
+        expect((gn(2, {fn = fn}))).to_be(gn)
 
   - context when std._debug.argcheck is false:
     - before:
@@ -1071,7 +1071,7 @@ specify std.normalize:
         t = {1, 2, 5, foo='bar'}
 
     - context with bad arguments:
-        badargs.diagnose(f, 'table.keys(table)')
+        badargs.diagnose('table.keys(table)', f)
 
     - it collects all keys from a table:
         expect(f(t)).to_contain.all_of{1, 2, 3, 'foo'}
@@ -1128,7 +1128,7 @@ specify std.normalize:
             to_raise "bad argument #2 to 'unpack' (integer or nil expected, got boolean)"
     - 'it diagnoses argument #2 type not integer': |
          expect(f(t, 1.5)).
-            to_raise "bad argument #2 to 'unpack' (integer or nil expected, got float)"
+            to_raise "bad argument #2 to 'unpack' (integer or nil expected, got number)"
          expect(f(t, '1.5')).
             to_raise "bad argument #2 to 'unpack' (integer or nil expected, got string)"
     - 'it diagnoses argument #3 type not number': |
@@ -1136,9 +1136,9 @@ specify std.normalize:
             to_raise "bad argument #3 to 'unpack' (integer expected, got boolean)"
     - 'it diagnoses argument #3 type not integer': |
          expect(f(t, 1, 1.5)).
-            to_raise "bad argument #3 to 'unpack' (float has no integer representation)"
+            to_raise "bad argument #3 to 'unpack' (number has no integer representation)"
          expect(f(t, 1, '1.5')).
-            to_raise "bad argument #3 to 'unpack' (string has no integer representation)"
+            to_raise "bad argument #3 to 'unpack' (number has no integer representation)"
 
   - it works with an empty sequence:
       expect(f {}).to_equal {n=0}
@@ -1228,7 +1228,7 @@ specify std.normalize:
   - it returns true if the protected call succeeds:
       expect(f(id, id)).to_be(true)
   - it returns false if the protected call errors:
-      expect(f(fail, id)).to_be(false)
+      expect((f(fail, id))).to_be(false)
   - it calls the handler if the protected call errors:
       t = {'MAGIC'}
       ok, r = f(error, function() return t end)
