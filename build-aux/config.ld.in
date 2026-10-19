@@ -3,8 +3,8 @@
  Copyright (C) 2002-2026 std.normalize authors
 ]]
 
-title = 'std.normalize @PACKAGE_VERSION@ Reference'
-project = 'std.normalize @PACKAGE_VERSION@'
+title = 'std.normalize @version@ Reference'
+project = 'std.normalize @version@'
 description = [[
 # Normalized Lua Functions
 

@@ -2,6 +2,15 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+### New features
+
+  - std.normalize builds with luke instead of make.  To install current
+    git master, use the `std.normalize-dev-1.rockspec`:
+
+    ```bash
+    luarocks install https://raw.githubusercontent.com/lua-stdlib/normalize/master/std.normalize-dev-1.rockspec
+    ```
+
 ### Incompatible changes
 
   - std._debug is no longer a hard dependency.  Without it, std.normalize

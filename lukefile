@@ -1,0 +1,16 @@
+--[[
+ Normalized Lua API for Lua 5.1, 5.2, 5.3, 5.4 & 5.5
+ Copyright (C) 2002-2026 std.normalize authors
+]]
+
+luke_format = 0
+
+package  = 'std.normalize'
+version  = '$USER'
+
+ldocs    = 'build-aux/config.ld.in'
+
+modules  = {
+   {['std.normalize']         = 'lib/std/normalize/init.lua'},
+   {['std.normalize.version'] = 'lib/std/normalize/version.lua.in'},
+}
