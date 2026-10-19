@@ -1,4 +1,4 @@
-local _MODREV, _SPECREV = 'git', '-1'
+local _MODREV, _SPECREV = 'dev', '-1'
 
 package = 'std.normalize'
 version = _MODREV .. _SPECREV
@@ -21,7 +21,7 @@ description = {
 }
 
 source = {
-   url = 'http://github.com/lua-stdlib/normalize/archive/v' .. _MODREV .. '.zip',
+   url = 'https://github.com/lua-stdlib/normalize/archive/v' .. _MODREV .. '.zip',
    dir = 'normalize-' .. _MODREV,
 }
 
@@ -54,9 +54,9 @@ test = {
    command = 'make check',
 }
 
-if _MODREV == 'git' then
+if _MODREV == 'dev' then
    source = {
-      url = 'git://github.com/lua-stdlib/normalize.git',
+      url = 'git+https://github.com/lua-stdlib/normalize.git',
    }
 end
 
