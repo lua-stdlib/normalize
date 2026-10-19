@@ -20,6 +20,12 @@
 
 ### Bug fixes
 
+  - `package` reads and writes every field but its own additions
+    through to the core `package` table, so setting `package.path`
+    changes where `require` searches, and `package.loaded` lists
+    modules loaded after std.normalize.  `package.loaded` still holds
+    the normalized core modules.
+
   - `getfenv` and `setfenv` choose their implementation by `_VERSION`,
     so they work in Lua 5.1 environments that don't provide
     `debug.getfenv` and `debug.setfenv`, such as Specl's sandbox.

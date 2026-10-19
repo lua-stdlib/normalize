@@ -949,10 +949,10 @@ local G = {
       tmpname = _G.os.tmpname,
    },
    package = {
-      config = _G.package.config,
-      cpath = _G.package.cpath,
-
       --- Package module constants for `package.config` substrings.
+      -- Every other field, such as `path` and `loaded`, is read from and
+      -- written to the core `package` table, except that `loaded` holds
+      -- the normalized core modules.
       -- @table package
       -- @string dirsep directory separator in path elements
       -- @string execdir replaced by the executable's directory in a path
@@ -966,10 +966,8 @@ local G = {
       pathmark = pathmark,
       pathsep = pathsep,
 
-      loadlib = _G.package.loadlib,
-      path = _G.package.path,
-      preload = _G.package.preload,
-      searchers = _G.package.searchers or _G.package.loaders,
+      -- Lua 5.1 calls them `loaders`.
+      searchers = not _G.package.searchers and _G.package.loaders or nil,
 
       --- Searches for a named file in a given path.
       --
@@ -1050,7 +1048,44 @@ local G = {
    },
 }
 F._G = G
-G.package.loaded = {
+
+
+-- Return a `__pairs` metamethod that lists the fields of a table, and
+-- then the fields of *core* that the table doesn't shadow.
+local function chainpairs(core)
+   return function(t)
+      local own = true
+      return function(_, k)
+         local v
+         if own then
+            k, v = next(t, k)
+            if k ~= nil then
+               return k, v
+            end
+            own = false
+         end
+         repeat
+            k, v = next(core, k)
+         until k == nil or rawget(t, k) == nil
+         return k, v
+      end, t, nil
+   end
+end
+
+
+-- Pass everything but our own additions through to the core package
+-- table, so that changes on either side are visible on both.
+local core_package = _G.package
+setmetatable(G.package, {
+   __index = core_package,
+   __newindex = core_package,
+   __pairs = chainpairs(core_package),
+})
+
+
+-- Likewise, pass `package.loaded` through to the core table, except for
+-- the normalized core modules.
+local normalized = {
    _G = G,
    coroutine = G.coroutine,
    debug = G.debug,
@@ -1061,9 +1096,28 @@ G.package.loaded = {
    string = G.string,
    table = G.table,
 }
-for k, v in next, _G.package.loaded do
-   G.package.loaded[k] = G.package.loaded[k] or v
-end
+rawset(G.package, 'loaded', setmetatable({}, {
+   __index = function(_, k)
+      local v = normalized[k]
+      if v == nil then
+         v = core_package.loaded[k]
+      end
+      return v
+   end,
+   __newindex = core_package.loaded,
+   __pairs = function(t)
+      return function(_, k)
+         local v
+         k, v = next(core_package.loaded, k)
+         if k ~= nil and normalized[k] ~= nil then
+            v = normalized[k]
+         end
+         return k, v
+      end, t, nil
+   end,
+}))
+
+
 F.require = function(modname)
    return G.package.loaded[modname] or _G.require(modname)
 end

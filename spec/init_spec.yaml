@@ -820,6 +820,66 @@ specify std.normalize:
       s = M.package.pathsep
       expect(type(s)).to_be 'string'
       expect(#s).not_to_be(0)
+  - it reads fields from the core package table: |
+      expect(luaproc [[
+         local core = package
+         local _ENV = require 'std.normalize' {'package'}
+         core.path = './later/?.lua'
+         print(package.path, package.config == core.config)
+      ]]).to_succeed_with './later/?.lua\ttrue\n'
+  - it writes fields to the core package table: |
+      expect(luaproc [[
+         local core = package
+         local _ENV = require 'std.normalize' {'package'}
+         package.path, package.cpath = './?.lua', './?.so'
+         print(core.path, core.cpath)
+      ]]).to_succeed_with './?.lua\t./?.so\n'
+  - it lists both its own and the core package fields: |
+      expect(luaproc [[
+         local _ENV = require 'std.normalize' {'package'}
+         local keys = {}
+         for k in pairs(package) do
+            keys[k] = (keys[k] or 0) + 1
+         end
+         print(keys.dirsep, keys.searchpath, keys.path, keys.config,
+            keys.loaded, keys.preload)
+      ]]).to_succeed_with '1\t1\t1\t1\t1\t1\n'
+
+  - describe loaded:
+    - it contains the normalized core modules: |
+        expect(luaproc [[
+           local core = package
+           local _ENV = require 'std.normalize' {'package', 'string'}
+           print(package.loaded.string == string,
+              package.loaded.string ~= core.loaded.string,
+              package.loaded.package == package)
+        ]]).to_succeed_with 'true\ttrue\ttrue\n'
+    - it contains modules loaded after std.normalize: |
+        expect(luaproc [[
+           local _ENV = require 'std.normalize' {'package'}
+           package.preload.later = function() return 'LATER' end
+           require 'later'
+           print(package.loaded.later)
+        ]]).to_succeed_with 'LATER\n'
+    - it writes through to the core package.loaded: |
+        expect(luaproc [[
+           local core = package
+           local _ENV = require 'std.normalize' {'package'}
+           package.loaded.magic = 'MAGIC'
+           print(core.loaded.magic)
+        ]]).to_succeed_with 'MAGIC\n'
+    - it lists every loaded module: |
+        expect(luaproc [[
+           local core = package
+           local _ENV = require 'std.normalize' {'package', 'string'}
+           core.loaded.later = 'LATER'
+           local seen = {}
+           for k, v in pairs(package.loaded) do
+              seen[k] = v
+           end
+           print(seen.later, seen.string == string,
+              seen['std.normalize'] ~= nil)
+        ]]).to_succeed_with 'LATER\ttrue\ttrue\n'
 
   - describe searchpath:
     - before:
