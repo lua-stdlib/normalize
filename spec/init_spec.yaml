@@ -180,24 +180,32 @@ specify std.normalize:
 
       f = M.argerror
 
-  - context with bad arguments:
-    - 'it diagnoses missing argument #1':
-         expect(f()).to_raise 'string expected, got no value'
-    - 'it diagnoses argument #1 type not string':
-         expect(f(nil)).to_raise 'string expected, got nil'
-    - 'it diagnoses missing argument #2':
-         expect(f 'X').to_raise 'integer expected, got no value'
-    - 'it diagnoses argument #2 type not number':
-         expect(f('X', nil)).to_raise 'integer expected, got nil'
-         expect(f('X', '1')).to_raise 'number has no integer representation'
-         expect(f('X', 1.0001)).to_raise 'number has no integer representation'
-         expect(f('X', '1.0001')).to_raise 'number has no integer representation'
-    - 'it diagnoses argument #4 type not number': |
-         expect(f('X', 1, 'ohnoes', false)).
-           to_raise "bad argument #4 to 'argerror' (integer expected, got boolean)"
-    - 'it diagnoses argument #4 type not integer': |
-         expect(f('X', 99999.0, 'ohnoes', 99999.9)).
-            to_raise "bad argument #4 to 'argerror' (number has no integer representation)"
+  - context with bad arguments: |
+      if have_typecheck then
+         examples {['it diagnoses missing argument #1'] = function()
+            expect(f()).to_raise 'string expected, got no value'
+         end}
+         examples {['it diagnoses argument #1 type not string'] = function()
+            expect(f(nil)).to_raise 'string expected, got nil'
+         end}
+         examples {['it diagnoses missing argument #2'] = function()
+            expect(f 'X').to_raise 'integer expected, got no value'
+         end}
+         examples {['it diagnoses argument #2 type not number'] = function()
+            expect(f('X', nil)).to_raise 'integer expected, got nil'
+            expect(f('X', '1')).to_raise 'number has no integer representation'
+            expect(f('X', 1.0001)).to_raise 'number has no integer representation'
+            expect(f('X', '1.0001')).to_raise 'number has no integer representation'
+         end}
+         examples {['it diagnoses argument #4 type not number'] = function()
+            expect(f('X', 1, 'ohnoes', false)).
+              to_raise "bad argument #4 to 'argerror' (integer expected, got boolean)"
+         end}
+         examples {['it diagnoses argument #4 type not integer'] = function()
+            expect(f('X', 99999.0, 'ohnoes', 99999.9)).
+               to_raise "bad argument #4 to 'argerror' (number has no integer representation)"
+         end}
+      end
 
   - it raises an argument error: |
       expect(f('myfunc', 1)).to_raise "bad argument #1 to 'myfunc'"
@@ -336,13 +344,17 @@ specify std.normalize:
   - before:
       f = M.getfenv
 
-  - context with bad arguments:
-    - 'it diagnoses argument #1 type not callable or integer':
-        expect(f(false)).
-           to_raise 'callable or integer expected, got boolean'
-    - 'it diagnoses argument #1 type not integer':
-         expect(f(1.0001)).to_raise 'callable or integer expected, got number'
-         expect(f '1.0001').to_raise 'callable or integer expected, got string'
+  - context with bad arguments: |
+      if have_typecheck then
+         examples {['it diagnoses argument #1 type not callable or integer'] = function()
+            expect(f(false)).
+               to_raise 'callable or integer expected, got boolean'
+         end}
+         examples {['it diagnoses argument #1 type not integer'] = function()
+            expect(f(1.0001)).to_raise 'callable or integer expected, got number'
+            expect(f '1.0001').to_raise 'callable or integer expected, got string'
+         end}
+      end
 
   - it returns a table:
       expect(type(f())).to_be 'table'
@@ -466,14 +478,19 @@ specify std.normalize:
   - before:
       f = M.getmetamethod
 
-  - context with bad arguments:
-    - 'it diagnoses missing argument #1':
-         expect(f()).to_raise 'argument expected, got no value'
-         expect(f(nil)).not_to_raise 'value expected'
-    - 'it diagnoses missing argument #2':
-         expect(f({})).to_raise 'string expected, got no value'
-    - 'it diagnoses argument #2 type not string':
-         expect(f({}, nil)).to_raise 'string expected, got nil'
+  - context with bad arguments: |
+      if have_typecheck then
+         examples {['it diagnoses missing argument #1'] = function()
+            expect(f()).to_raise 'argument expected, got no value'
+            expect(f(nil)).not_to_raise 'value expected'
+         end}
+         examples {['it diagnoses missing argument #2'] = function()
+            expect(f({})).to_raise 'string expected, got no value'
+         end}
+         examples {['it diagnoses argument #2 type not string'] = function()
+            expect(f({}, nil)).to_raise 'string expected, got nil'
+         end}
+      end
 
   - context with a table:
     - before:
@@ -514,13 +531,18 @@ specify std.normalize:
 
       f = M.ipairs
 
-  - context with bad arguments:
-    - 'it diagnoses missing argument #1':
-         expect(f()).to_raise 'table expected, got no value'
-    - 'it diagnoses nil-valued argument #1':
-         expect(f(nil)).to_raise 'table expected, got nil'
-    - 'it diagnoses argument #1 type not table':
-         expect(f(false)).to_raise 'table expected, got boolean'
+  - context with bad arguments: |
+      if have_typecheck then
+         examples {['it diagnoses missing argument #1'] = function()
+            expect(f()).to_raise 'table expected, got no value'
+         end}
+         examples {['it diagnoses nil-valued argument #1'] = function()
+            expect(f(nil)).to_raise 'table expected, got nil'
+         end}
+         examples {['it diagnoses argument #1 type not table'] = function()
+            expect(f(false)).to_raise 'table expected, got boolean'
+         end}
+      end
 
   - it works for an empty list:
       for i, v in f {} do t[i] = v end
@@ -560,13 +582,18 @@ specify std.normalize:
 
       f = M.len
 
-  - context with bad arguments:
-    - 'it diagnoses missing argument #1':
-        expect(f()).to_raise 'string or table expected, got no value'
-    - 'it diagnoses nil-valued argument #1':
-        expect(f(nil)).to_raise 'string or table expected, got nil'
-    - 'it diagnoses argument #1 type not string or table':
-        expect(f(false)).to_raise 'string or table expected, got boolean'
+  - context with bad arguments: |
+      if have_typecheck then
+         examples {['it diagnoses missing argument #1'] = function()
+            expect(f()).to_raise 'string or table expected, got no value'
+         end}
+         examples {['it diagnoses nil-valued argument #1'] = function()
+            expect(f(nil)).to_raise 'string or table expected, got nil'
+         end}
+         examples {['it diagnoses argument #1 type not string or table'] = function()
+            expect(f(false)).to_raise 'string or table expected, got boolean'
+         end}
+      end
 
   - it works for an empty list:
       src = {}
@@ -596,17 +623,23 @@ specify std.normalize:
 
       f = M.load
 
-  - context with bad arguments:
-    - 'it diagnoses missing argument #1':
-        expect(f()).to_raise 'callable or string expected, got no value'
-    - 'it diagnoses nil-valued argument #1':
-        expect(f(nil)).to_raise 'callable or string expected, got nil'
-    - 'it diagnoses argument #1 type not callable or string':
-        expect(f(false)).to_raise 'callable or string expected, got boolean'
-        functable = setmetatable({}, {__call = function() end})
-        expect(f(functable)).not_to_raise 'callable or string expected'
-    - 'it diagnoses argument #2 type not string':
-        expect(f('_=1', false)).to_raise 'string expected, got boolean'
+  - context with bad arguments: |
+      if have_typecheck then
+         examples {['it diagnoses missing argument #1'] = function()
+            expect(f()).to_raise 'callable or string expected, got no value'
+         end}
+         examples {['it diagnoses nil-valued argument #1'] = function()
+            expect(f(nil)).to_raise 'callable or string expected, got nil'
+         end}
+         examples {['it diagnoses argument #1 type not callable or string'] = function()
+            expect(f(false)).to_raise 'callable or string expected, got boolean'
+            functable = setmetatable({}, {__call = function() end})
+            expect(f(functable)).not_to_raise 'callable or string expected'
+         end}
+         examples {['it diagnoses argument #2 type not string'] = function()
+            expect(f('_=1', false)).to_raise 'string expected, got boolean'
+         end}
+      end
 
   - it returns a function:
       expect(type(f 'return 1')).to_be 'function'
@@ -646,9 +679,12 @@ specify std.normalize:
     - before:
         f = M.math.tointeger
 
-    - context with bad arguments:
-      - 'it diagnoses missing argument #1':
-           expect(f()).to_raise 'argument expected'
+    - context with bad arguments: |
+        if have_typecheck then
+           examples {['it diagnoses missing argument #1'] = function()
+              expect(f()).to_raise 'argument expected'
+           end}
+        end
 
     - it returns any integer argument:
         expect(f(99)).to_be(99)
@@ -665,9 +701,12 @@ specify std.normalize:
     - before:
         f = M.math.type
 
-    - context with bad arguments:
-      - 'it diagnoses missing argument #1':
-           expect(f()).to_raise 'argument expected'
+    - context with bad arguments: |
+        if have_typecheck then
+           examples {['it diagnoses missing argument #1'] = function()
+              expect(f()).to_raise 'argument expected'
+           end}
+        end
 
     - it returns nil for non-number values:
         expect(f(nil)).to_be(nil)
@@ -697,11 +736,14 @@ specify std.normalize:
 
         f = M.os.exit
 
-    - context with bad arguments:
-      - 'it diagnoses argument #1 type not boolean or integer':
-          expect(f(nil)).to_raise 'boolean or integer expected'
-          expect(f {}).to_raise 'boolean or integer expected'
-          expect(f(math.pi)).to_raise 'boolean or integer expected, got number'
+    - context with bad arguments: |
+        if have_typecheck then
+           examples {['it diagnoses argument #1 type not boolean or integer'] = function()
+              expect(f(nil)).to_raise 'boolean or integer expected'
+              expect(f {}).to_raise 'boolean or integer expected'
+              expect(f(math.pi)).to_raise 'boolean or integer expected, got number'
+           end}
+        end
 
     - it exits successfully by default:
         expect(luaproc(preamble .. 'exit()')).to_succeed_with ''
@@ -775,26 +817,36 @@ specify std.normalize:
     - after:
         tmpdir:remove()
 
-    - context with bad arguments:
-      - 'it diagnoses missing argument #1':
-          expect(f()).to_raise 'string expected, got no value'
-      - 'it diagnoses nil-valued argument #1':
-          expect(f(nil)).to_raise 'string expected, got nil'
-      - 'it diagnoses argument #1 type not string':
-          expect(f(false)).to_raise 'string expected, got boolean'
-      - 'it diagnoses missing argument #2':
-          expect(f('str')).to_raise 'string expected, got no value'
-      - 'it diagnoses nil-valued argument #2':
-          expect(f('str', nil)).to_raise 'string expected, got nil'
-      - 'it diagnoses argument #2 type not string':
-          expect(f('str', false)).
-             to_raise 'string expected, got boolean'
-      - 'it diagnoses argument #3 type not string':
-          expect(f('name', 'path', false)).
-             to_raise 'string expected, got boolean'
-      - 'it diagnoses argument #4 type not string':
-          expect(f('name', 'path', 'sep', false)).
-             to_raise 'string expected, got boolean'
+    - context with bad arguments: |
+        if have_typecheck then
+           examples {['it diagnoses missing argument #1'] = function()
+              expect(f()).to_raise 'string expected, got no value'
+           end}
+           examples {['it diagnoses nil-valued argument #1'] = function()
+              expect(f(nil)).to_raise 'string expected, got nil'
+           end}
+           examples {['it diagnoses argument #1 type not string'] = function()
+              expect(f(false)).to_raise 'string expected, got boolean'
+           end}
+           examples {['it diagnoses missing argument #2'] = function()
+              expect(f('str')).to_raise 'string expected, got no value'
+           end}
+           examples {['it diagnoses nil-valued argument #2'] = function()
+              expect(f('str', nil)).to_raise 'string expected, got nil'
+           end}
+           examples {['it diagnoses argument #2 type not string'] = function()
+              expect(f('str', false)).
+                 to_raise 'string expected, got boolean'
+           end}
+           examples {['it diagnoses argument #3 type not string'] = function()
+              expect(f('name', 'path', false)).
+                 to_raise 'string expected, got boolean'
+           end}
+           examples {['it diagnoses argument #4 type not string'] = function()
+              expect(f('name', 'path', 'sep', false)).
+                 to_raise 'string expected, got boolean'
+           end}
+        end
 
     - it diagnoses file not found:
         ok, err = f('xyz', templates)
@@ -830,13 +882,18 @@ specify std.normalize:
 
       f = M.pairs
 
-  - context with bad arguments:
-    - 'it diagnoses missing argument #1':
-         expect(f()).to_raise 'table expected, got no value'
-    - 'it diagnoses nil-valued argument #1':
-         expect(f(nil)).to_raise 'table expected, got nil'
-    - 'it diagnoses argument #1 type not table':
-         expect(f(false)).to_raise 'table expected, got boolean'
+  - context with bad arguments: |
+      if have_typecheck then
+         examples {['it diagnoses missing argument #1'] = function()
+            expect(f()).to_raise 'table expected, got no value'
+         end}
+         examples {['it diagnoses nil-valued argument #1'] = function()
+            expect(f(nil)).to_raise 'table expected, got nil'
+         end}
+         examples {['it diagnoses argument #1 type not table'] = function()
+            expect(f(false)).to_raise 'table expected, got boolean'
+         end}
+      end
 
   - it works for an empty list:
       for i, v in f {} do t[i] = v end
@@ -856,13 +913,18 @@ specify std.normalize:
 
       f = M.rawlen
 
-  - context with bad arguments:
-    - 'it diagnoses missing argument #1':
-        expect(f()).to_raise 'string or table expected, got no value'
-    - 'it diagnoses nil-valued argument #1':
-        expect(f(nil)).to_raise 'string or table expected, got nil'
-    - 'it diagnoses argument #1 type not string or table':
-        expect(f(false)).to_raise 'string or table expected, got boolean'
+  - context with bad arguments: |
+      if have_typecheck then
+         examples {['it diagnoses missing argument #1'] = function()
+            expect(f()).to_raise 'string or table expected, got no value'
+         end}
+         examples {['it diagnoses nil-valued argument #1'] = function()
+            expect(f(nil)).to_raise 'string or table expected, got nil'
+         end}
+         examples {['it diagnoses argument #1 type not string or table'] = function()
+            expect(f(false)).to_raise 'string or table expected, got boolean'
+         end}
+      end
 
   - it works for an empty list:
       src = {}
@@ -889,25 +951,34 @@ specify std.normalize:
   - before:
       f = M.setfenv
 
-  - context with bad arguments:
-    - 'it diagnoses missing argument #1':
-        expect(f()).to_raise 'callable or integer expected, got no value'
-    - 'it diagnoses nil-valued argument #1':
-        expect(f(nil)).to_raise 'callable or integer expected, got nil'
-    - 'it diagnoses argument #1 type not callable or number':
-        expect(f(false)).
-           to_raise 'callable or integer expected, got boolean'
-    - 'it diagnoses argument #1 type not integer':
-        expect(f(2/3)).
-           to_raise 'callable or integer expected, got number'
-        expect(f '3').
-           to_raise 'callable or integer expected, got string'
-    - 'it diagnoses missing argument #2':
-        expect(f(0)).to_raise 'table expected, got no value'
-    - 'it diagnoses nil-valued argument #2':
-        expect(f(0, nil)).to_raise 'table expected, got nil'
-    - 'it diagnoses argument #2 type not table':
-        expect(f(0, boolean)).to_raise 'table expected, got nil'
+  - context with bad arguments: |
+      if have_typecheck then
+         examples {['it diagnoses missing argument #1'] = function()
+            expect(f()).to_raise 'callable or integer expected, got no value'
+         end}
+         examples {['it diagnoses nil-valued argument #1'] = function()
+            expect(f(nil)).to_raise 'callable or integer expected, got nil'
+         end}
+         examples {['it diagnoses argument #1 type not callable or number'] = function()
+            expect(f(false)).
+               to_raise 'callable or integer expected, got boolean'
+         end}
+         examples {['it diagnoses argument #1 type not integer'] = function()
+            expect(f(2/3)).
+               to_raise 'callable or integer expected, got number'
+            expect(f '3').
+               to_raise 'callable or integer expected, got string'
+         end}
+         examples {['it diagnoses missing argument #2'] = function()
+            expect(f(0)).to_raise 'table expected, got no value'
+         end}
+         examples {['it diagnoses nil-valued argument #2'] = function()
+            expect(f(0, nil)).to_raise 'table expected, got nil'
+         end}
+         examples {['it diagnoses argument #2 type not table'] = function()
+            expect(f(0, boolean)).to_raise 'table expected, got nil'
+         end}
+      end
 
   - it returns nothing after setting the global environment:
       expect(luaproc [[
@@ -1111,19 +1182,27 @@ specify std.normalize:
         f = M.table.merge
         t = {1, 2, 5, foo='bar'}
 
-    - context with bad arguments:
-      - 'it diagnoses missing argument #1':
-          expect(f()).to_raise 'table expected, got no value'
-      - 'it diagnoses nil-valued argument #1':
-          expect(f(nil)).to_raise 'table expected, got nil'
-      - 'it diagnoses argument #1 type not table':
-          expect(f(false)).to_raise 'table expected, got boolean'
-      - 'it diagnoses nil-valued argument #2':
-          expect(f({}, nil)).to_raise 'table expected, got nil'
-      - 'it diagnoses argument #2 type not table':
-          expect(f({}, false)).to_raise 'table expected, got boolean'
-      - it diagnoses ,ore than maximum of 2 arguments:
-          expect(f({}, {}, false)).to_raise 'no more than 2 arguments expected, got 3'
+    - context with bad arguments: |
+        if have_typecheck then
+           examples {['it diagnoses missing argument #1'] = function()
+              expect(f()).to_raise 'table expected, got no value'
+           end}
+           examples {['it diagnoses nil-valued argument #1'] = function()
+              expect(f(nil)).to_raise 'table expected, got nil'
+           end}
+           examples {['it diagnoses argument #1 type not table'] = function()
+              expect(f(false)).to_raise 'table expected, got boolean'
+           end}
+           examples {['it diagnoses nil-valued argument #2'] = function()
+              expect(f({}, nil)).to_raise 'table expected, got nil'
+           end}
+           examples {['it diagnoses argument #2 type not table'] = function()
+              expect(f({}, false)).to_raise 'table expected, got boolean'
+           end}
+           examples {['it diagnoses ,ore than maximum of 2 arguments'] = function()
+              expect(f({}, {}, false)).to_raise 'no more than 2 arguments expected, got 3'
+           end}
+        end
 
     - it makes a shallow copy with one argument:
         expect(f(t)).to_equal(t)
@@ -1145,29 +1224,38 @@ specify std.normalize:
       u = {1, 2, 5; n=3}
       f = function(...) return pack(M.unpack(...)) end
 
-  - context with bad arguments:
-    - 'it diagnoses missing argument #1':
-         expect(f()).to_raise 'table expected, got no value'
-    - 'it diagnoses nil-valued argument #1':
-         expect(f(nil)).to_raise 'table expected, got nil'
-    - 'it diagnoses argument #1 type not table':
-         expect(f(false)).to_raise 'table expected, got boolean'
-    - 'it diagnoses argument #2 type not number': |
-         expect(f(t, false)).
-            to_raise "bad argument #2 to 'unpack' (integer or nil expected, got boolean)"
-    - 'it diagnoses argument #2 type not integer': |
-         expect(f(t, 1.5)).
-            to_raise "bad argument #2 to 'unpack' (integer or nil expected, got number)"
-         expect(f(t, '1.5')).
-            to_raise "bad argument #2 to 'unpack' (integer or nil expected, got string)"
-    - 'it diagnoses argument #3 type not number': |
-         expect(f(t, 1, false)).
-            to_raise "bad argument #3 to 'unpack' (integer expected, got boolean)"
-    - 'it diagnoses argument #3 type not integer': |
-         expect(f(t, 1, 1.5)).
-            to_raise "bad argument #3 to 'unpack' (number has no integer representation)"
-         expect(f(t, 1, '1.5')).
-            to_raise "bad argument #3 to 'unpack' (number has no integer representation)"
+  - context with bad arguments: |
+      if have_typecheck then
+         examples {['it diagnoses missing argument #1'] = function()
+            expect(f()).to_raise 'table expected, got no value'
+         end}
+         examples {['it diagnoses nil-valued argument #1'] = function()
+            expect(f(nil)).to_raise 'table expected, got nil'
+         end}
+         examples {['it diagnoses argument #1 type not table'] = function()
+            expect(f(false)).to_raise 'table expected, got boolean'
+         end}
+         examples {['it diagnoses argument #2 type not number'] = function()
+            expect(f(t, false)).
+               to_raise "bad argument #2 to 'unpack' (integer or nil expected, got boolean)"
+         end}
+         examples {['it diagnoses argument #2 type not integer'] = function()
+            expect(f(t, 1.5)).
+               to_raise "bad argument #2 to 'unpack' (integer or nil expected, got number)"
+            expect(f(t, '1.5')).
+               to_raise "bad argument #2 to 'unpack' (integer or nil expected, got string)"
+         end}
+         examples {['it diagnoses argument #3 type not number'] = function()
+            expect(f(t, 1, false)).
+               to_raise "bad argument #3 to 'unpack' (integer expected, got boolean)"
+         end}
+         examples {['it diagnoses argument #3 type not integer'] = function()
+            expect(f(t, 1, 1.5)).
+               to_raise "bad argument #3 to 'unpack' (number has no integer representation)"
+            expect(f(t, 1, '1.5')).
+               to_raise "bad argument #3 to 'unpack' (number has no integer representation)"
+         end}
+      end
 
   - it works with an empty sequence:
       expect(f {}).to_equal {n=0}
@@ -1234,25 +1322,33 @@ specify std.normalize:
 
       f = M.xpcall
 
-  - context with bad arguments:
-    - 'it diagnoses missing argument #1': |
-        expect(f()).to_raise
-           "bad argument #1 to 'xpcall' (callable expected, got no value)"
-    - 'it diagnoses nil-valued argument #1': |
-        expect(f(nil)).to_raise
-           "bad argument #1 to 'xpcall' (callable expected, got nil)"
-    - 'it diagnoses argument #1 type not function': |
-        expect(f {}).to_raise
-           "bad argument #1 to 'xpcall' (callable expected, got empty table)"
-    - 'it diagnoses missing argument #2': |
-        expect(f(id)).to_raise
-           "bad argument #2 to 'xpcall' (callable expected, got no value)"
-    - 'it diagnoses nil-valued argument #2': |
-        expect(f(id, nil)).to_raise
-           "bad argument #2 to 'xpcall' (callable expected, got nil)"
-    - 'it diagnoses argument #2 type not function': |
-        expect(f(id, {})).to_raise
-           "bad argument #2 to 'xpcall' (callable expected, got empty table)"
+  - context with bad arguments: |
+      if have_typecheck then
+         examples {['it diagnoses missing argument #1'] = function()
+            expect(f()).to_raise
+               "bad argument #1 to 'xpcall' (callable expected, got no value)"
+         end}
+         examples {['it diagnoses nil-valued argument #1'] = function()
+            expect(f(nil)).to_raise
+               "bad argument #1 to 'xpcall' (callable expected, got nil)"
+         end}
+         examples {['it diagnoses argument #1 type not function'] = function()
+            expect(f {}).to_raise
+               "bad argument #1 to 'xpcall' (callable expected, got empty table)"
+         end}
+         examples {['it diagnoses missing argument #2'] = function()
+            expect(f(id)).to_raise
+               "bad argument #2 to 'xpcall' (callable expected, got no value)"
+         end}
+         examples {['it diagnoses nil-valued argument #2'] = function()
+            expect(f(id, nil)).to_raise
+               "bad argument #2 to 'xpcall' (callable expected, got nil)"
+         end}
+         examples {['it diagnoses argument #2 type not function'] = function()
+            expect(f(id, {})).to_raise
+               "bad argument #2 to 'xpcall' (callable expected, got empty table)"
+         end}
+      end
 
   - it returns true if the protected call succeeds:
       expect(f(id, id)).to_be(true)
