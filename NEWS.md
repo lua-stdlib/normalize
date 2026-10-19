@@ -2,6 +2,13 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+### Incompatible changes
+
+  - std._debug is no longer a hard dependency.  Without it, std.normalize
+    still checks arguments with typecheck and applies std.strict
+    whenever they are installed.  Packages that use std._debug themselves
+    must now depend on it directly.
+
 ### Bug fixes
 
   - `getfenv` and `setfenv` choose their implementation by `_VERSION`,

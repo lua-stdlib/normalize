@@ -27,7 +27,6 @@ source = {
 
 dependencies = {
    'lua >= 5.1, < 5.6',
-   'std._debug ~> 1',
 }
 
 build_dependencies = {
@@ -46,6 +45,7 @@ test_dependencies = {
    'ansicolors',
    'luacov',
    'specl',
+   'std._debug ~> 1',
    'typecheck >= 3.0',
 }
 

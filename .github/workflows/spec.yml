@@ -47,6 +47,8 @@ jobs:
           luarocks install https://raw.githubusercontent.com/gvvaughan/typecheck/master/typecheck-dev-1.rockspec
           luarocks install https://raw.githubusercontent.com/gvvaughan/specl/master/specl-dev-1.rockspec
           luarocks --tree="$DEPS" install --only-deps std.normalize-git-1.rockspec
+          # The examples change std._debug settings to test them.
+          luarocks --tree="$DEPS" install std._debug
           test -n "${{ matrix.typecheck }}" && luarocks --tree="$DEPS" install --deps-mode=all https://raw.githubusercontent.com/gvvaughan/typecheck/master/typecheck-dev-1.rockspec || true
           test -n "${{ matrix.strict }}" && luarocks --tree="$DEPS" install std.strict || true
 

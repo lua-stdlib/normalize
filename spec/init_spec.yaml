@@ -213,6 +213,27 @@ specify std.normalize:
       expect(f('another', 3, 'oh noes')).
          to_raise "bad argument #3 to 'another' (oh noes)"
 
+  - context when std._debug is not installed:
+    - before: |
+        shamble = [[
+           package.preload['std._debug'] = function() error 'none' end -- line 1
+        ]] .. preamble
+    - it blames the call site by default: |
+        expect(luaproc(shamble .. [[
+           caller()					-- line 14
+        ]])).to_contain_error ':7: bad argument'
+    - it reports correct source line with optional stack level argument: |
+        expect(luaproc(shamble .. [[
+           caller(1)					-- line 14
+        ]])).to_fail_while_matching ':7: bad argument'
+        expect(luaproc(shamble .. [[
+           caller(2)					-- line 14
+        ]])).to_fail_while_matching ':11: bad argument'
+    - it suppresses position information at level 0: |
+        expect(luaproc(shamble .. [[
+           caller(0)					-- line 14
+        ]])).to_fail_while_matching '^[^:]+: bad argument'
+
   - context when std._debug is not set:
     - before: |
         shamble = [[

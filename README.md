@@ -14,8 +14,9 @@ authors (see the [AUTHORS][] file for details), and released under the
 warranty.
 
 _normalize_ has no run-time prerequisites beyond a standard Lua system,
-and the [std._debug][] package - though it will also take advantage of
-[std.strict][] if installed.
+though it will also take advantage of [typecheck][] and [std.strict][]
+if installed, and obey the [std._debug][] settings if that is installed
+too.
 
 Writing Lua libraries that target several Lua implementations can be a
 frustrating exercise in working around lots of small differences in APIs
@@ -59,6 +60,7 @@ Pull-requests for more normalized APIs are welcome!
 [lua-compat]: https://github.com/keplerproject/lua-compat-5.3 "Lua 5.3ish API"
 [mit]: https://mit-license.org "MIT License"
 [stdlib]: https://github.com/lua-stdlib/lua-stdlib "Standard Lua Libraries"
+[std._debug]: https://github.com/lua-stdlib/_debug "debug hints"
 [std.strict]: https://github.com/lua-stdlib/strict "strict variables"
 [typecheck]: https://github.com/gvvaughan/typecheck "function type checks"
 
