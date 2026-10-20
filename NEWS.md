@@ -2,6 +2,9 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+
+## Noteworthy changes in release 3 (2026-10-20) [stable]
+
 ### New features
 
   - std.normalize builds with luke instead of make.  To install current
