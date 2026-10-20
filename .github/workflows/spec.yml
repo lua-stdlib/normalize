@@ -22,8 +22,8 @@ jobs:
       contents: read
       id-token: write
 
-    # Specl's own dependencies include typecheck and the old std.strict
-    # from stdlib 41, so std.normalize's dependencies go into a tree of
+    # Specl's own dependencies include typecheck and a released
+    # std.normalize, so std.normalize's dependencies go into a tree of
     # their own, the only one the examples search.
     env:
       DEPS: ${{ github.workspace }}/deps
@@ -48,13 +48,11 @@ jobs:
           printf gvvaughan > "$(luarocks show --rock-dir ldoc)/rock_namespace"
           luarocks install ansicolors
           luarocks install luacov
-          # Specl and typecheck fixes for std.normalize are not released yet.
-          luarocks install https://raw.githubusercontent.com/gvvaughan/typecheck/master/typecheck-dev-1.rockspec
-          luarocks install https://raw.githubusercontent.com/gvvaughan/specl/master/specl-dev-1.rockspec
+          luarocks install specl
           luarocks --tree="$DEPS" make --only-deps
           # The examples change std._debug settings to test them.
           luarocks --tree="$DEPS" install std._debug
-          test -n "${{ matrix.typecheck }}" && luarocks --tree="$DEPS" install --deps-mode=all https://raw.githubusercontent.com/gvvaughan/typecheck/master/typecheck-dev-1.rockspec || true
+          test -n "${{ matrix.typecheck }}" && luarocks --tree="$DEPS" install --deps-mode=all typecheck || true
           test -n "${{ matrix.strict }}" && luarocks --tree="$DEPS" install std.strict || true
 
       - name: build
