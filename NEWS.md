@@ -20,6 +20,10 @@
 
 ### Bug fixes
 
+  - `getfenv`, `setfenv` and calling `std.normalize` no longer return
+    a trailing `nil`, which on Lua 5.1 made `setfenv(fn, getfenv(1))`
+    fail its argument checks.
+
   - `package` reads and writes every field but its own additions
     through to the core `package` table, so setting `package.path`
     changes where `require` searches, and `package.loaded` lists

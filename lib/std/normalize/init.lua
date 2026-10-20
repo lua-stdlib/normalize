@@ -258,9 +258,10 @@ if _VERSION == 'Lua 5.1' then
             n = n + 1 + ARGCHECK_FRAME
          end
 
-         -- Return an additional nil result to defeat tail call elimination
-         -- which would remove a stack frame and break numeric *fn* count.
-         return getfenv(n), nil
+         -- The parentheses return only the environment, and keep this
+         -- from being a tail call, which would remove a stack frame and
+         -- break the numeric *fn* count.
+         return (getfenv(n))
       end
 
       if type(fn) ~= 'function' then
@@ -451,7 +452,8 @@ if _VERSION == 'Lua 5.1' then
          if n > 0 then
             n = n + 1 + ARGCHECK_FRAME
          end
-         return setfenv(n, env), nil
+         -- One value, and not a tail call, as in getfenv.
+         return (setfenv(n, env))
       end
       if type(fn) ~= 'function' then
          fn = unwrap(fn)
@@ -1298,7 +1300,8 @@ return setmetatable(G, {
    --    }
    __call = function(_, env, level)
       level = 1 + (level or 1)
-      return strict(normalize(env, level), level), nil
+      -- One value, and not a tail call, as in getfenv.
+      return (strict(normalize(env, level), level))
    end,
 
    --- Lazy loading of normalize modules.

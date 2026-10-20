@@ -27,6 +27,11 @@ specify std.normalize:
   - before:
       f = M
 
+  - it returns only the environment:
+      expect(luaproc [[
+         local print, select = print, select
+         print(select('#', require 'std.normalize' {}))
+      ]]).to_succeed_with '1\n'
   - it loads core functions:
       script = [[
          local sort = table.sort
@@ -381,6 +386,11 @@ specify std.normalize:
       expect(type(f())).to_be 'table'
       expect(type(f(0))).to_be 'table'
       expect(type(f(f))).to_be 'table'
+  - it returns only the environment:
+      expect(select('#', f())).to_be(1)
+      expect(select('#', f(1))).to_be(1)
+      expect(select('#', f(0))).to_be(1)
+      expect(select('#', f(f))).to_be(1)
 
   - context when std._debug.argcheck is true:
     - before:
@@ -1070,6 +1080,11 @@ specify std.normalize:
       fn = function(env) return f(1, env), nil end
       expect((fn {})).to_be(fn)
       expect(f(fn, {})).to_be(fn)
+  - it returns only the actioned function:
+      local select = select
+      fn = function() return select('#', f(1, {})) end
+      expect(fn()).to_be(1)
+      expect(select('#', f(fn, {}))).to_be(1)
 
   - context when std._debug.argcheck is true:
     - before:
