@@ -3,7 +3,7 @@
 <html>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
 <head>
-    <title>std.normalize 2.0.3 Reference</title>
+    <title>std.normalize 3 Reference</title>
     <link rel="stylesheet" href="ldoc.css" type="text/css" />
 </head>
 <body>
@@ -24,7 +24,8 @@
 
 <div id="navigation">
 <br/>
-<h1>std.normalize 2.0.3</h1>
+<h1>std.normalize 3</h1>
+
 
 
 <h2>Contents</h2>
@@ -90,7 +91,7 @@
 	<td class="summary">Raise a bad argument error.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#getfenv">getfenv (fn)</a></td>
+	<td class="name" nowrap><a href="#getfenv">getfenv ([fn=1])</a></td>
 	<td class="summary">Get a function or functor environment.</td>
 	</tr>
 	<tr>
@@ -241,15 +242,15 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">name</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a></span>
          function to callout in error message
         </li>
         <li><span class="parameter">i</span>
-            <span class="types"><span class="type">int</span></span>
+            <span class="types"><span class="type">integer</span></span>
          argument number
         </li>
         <li><span class="parameter">extramsg</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a></span>
 
 <p> additional text to append to message inside</p>
 <pre><code>parentheses
@@ -258,7 +259,7 @@
          (<em>optional</em>)
         </li>
         <li><span class="parameter">level</span>
-            <span class="types"><span class="type">int</span></span>
+            <span class="types"><span class="type">integer</span></span>
          call stack level to blame for the error
          (<em>default</em> 1)
         </li>
@@ -269,10 +270,10 @@
 
     <h3>Usage:</h3>
     <ul>
-        <pre class="example"><span class="keyword">local</span> <span class="keyword">function</span> slurp(file)
-   <span class="keyword">local</span> h, err = input_handle(file)
+        <pre class="example"><span class="keyword">local</span> <span class="keyword">function</span> <span class="function-name">slurp</span>(file)
+   <span class="keyword">local</span> h, err = <span class="function-name">input_handle</span>(file)
    <span class="keyword">if</span> h == <span class="keyword">nil</span> <span class="keyword">then</span>
-       argerror(<span class="string">'std.io.slurp'</span>, <span class="number">1</span>, err, <span class="number">2</span>)
+       <span class="function-name">argerror</span>(<span class="string">'std.io.slurp'</span>, <span class="number">1</span>, err, <span class="number">2</span>)
    <span class="keyword">end</span>
    ...</pre>
     </ul>
@@ -280,14 +281,15 @@
 </dd>
     <dt>
     <a name = "getfenv"></a>
-    <strong>getfenv (fn)</strong>
+    <strong>getfenv ([fn=1])</strong>
     </dt>
     <dd>
     Get a function or functor environment. </p>
 
 <p> This version of getfenv works on all supported Lua versions, and
- knows how to unwrap functors (table's with a function valued
- <code>__call</code> metamethod).
+ knows how to unwrap functors: a table with a function valued
+ <code>call</code> field acts on that function, and any other functor acts on
+ its <code>__call</code> metamethod.
 
 
     <h3>Parameters:</h3>
@@ -295,17 +297,18 @@
         <li><span class="parameter">fn</span>
             <span class="types"><span class="type">function</span> or <span class="type">int</span></span>
 
-<p> stack level, C or Lua function or functor</p>
-<pre><code>to act on
+<p> stack level, C or Lua function or</p>
+<pre><code>functor to act on
 </code></pre>
 
+         (<em>default</em> 1)
         </li>
     </ul>
 
     <h3>Returns:</h3>
     <ol>
 
-           <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.6">table</a></span>
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.7">table</a></span>
         the execution environment of <em>fn</em>
     </ol>
 
@@ -313,7 +316,7 @@
 
     <h3>Usage:</h3>
     <ul>
-        <pre class="example">callers_environment = getfenv(<span class="number">1</span>)</pre>
+        <pre class="example">callers_environment = <span class="function-name">getfenv</span>(<span class="number">1</span>)</pre>
     </ul>
 
 </dd>
@@ -331,7 +334,7 @@
          item to act on
         </li>
         <li><span class="parameter">n</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a></span>
          name of metamethod to look up
         </li>
     </ul>
@@ -351,7 +354,7 @@
 
     <h3>Usage:</h3>
     <ul>
-        <pre class="example">normalize = getmetamethod(<span class="global">require</span> <span class="string">'std.normalize'</span>, <span class="string">'__call'</span>)</pre>
+        <pre class="example">normalize = <span class="function-name">getmetamethod</span>(<span class="global">require</span> <span class="string">'std.normalize'</span>, <span class="string">'__call'</span>)</pre>
     </ul>
 
 </dd>
@@ -374,7 +377,7 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">t</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.6">table</a></span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.7">table</a></span>
          table to iterate on
         </li>
     </ul>
@@ -385,7 +388,7 @@
            <span class="types"><span class="type">function</span></span>
         iterator function</li>
         <li>
-           <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.6">table</a></span>
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.7">table</a></span>
         <em>t</em> the table being iterated over</li>
         <li>
            <span class="types"><span class="type">int</span></span>
@@ -398,10 +401,10 @@
     <ul>
         <pre class="example">t, u = {}, {}
 <span class="keyword">for</span> i, v <span class="keyword">in</span> <span class="global">ipairs</span> {<span class="number">1</span>, <span class="number">2</span>, <span class="keyword">nil</span>, <span class="number">4</span>} <span class="keyword">do</span> t[i] = v <span class="keyword">end</span>
-<span class="global">assert</span>(len(t) == <span class="number">2</span>)
+<span class="global">assert</span>(<span class="function-name">len</span>(t) == <span class="number">2</span>)
 
-<span class="keyword">for</span> i, v <span class="keyword">in</span> <span class="global">ipairs</span>(pack(<span class="number">1</span>, <span class="number">2</span>, <span class="keyword">nil</span>, <span class="number">4</span>)) <span class="keyword">do</span> u[i] = v <span class="keyword">end</span>
-<span class="global">assert</span>(len(u) == <span class="number">4</span>)</pre>
+<span class="keyword">for</span> i, v <span class="keyword">in</span> <span class="global">ipairs</span>(<span class="function-name">pack</span>(<span class="number">1</span>, <span class="number">2</span>, <span class="keyword">nil</span>, <span class="number">4</span>)) <span class="keyword">do</span> u[i] = v <span class="keyword">end</span>
+<span class="global">assert</span>(<span class="function-name">len</span>(u) == <span class="number">4</span>)</pre>
     </ul>
 
 </dd>
@@ -439,7 +442,7 @@
     <ul>
         <pre class="example">x = {<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="keyword">nil</span>, <span class="number">5</span>}
 <span class="comment">--&gt; 5 3
-</span><span class="global">print</span>(#x, len(x))</pre>
+</span><span class="global">print</span>(#x, <span class="function-name">len</span>(x))</pre>
     </ul>
 
 </dd>
@@ -454,11 +457,11 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">ld</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a> or <span class="type">function</span></span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a> or <span class="type">function</span></span>
          chunk to load
         </li>
         <li><span class="parameter">source</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a></span>
          name of the source of <em>ld</em>
         </li>
     </ul>
@@ -499,7 +502,7 @@
     <h3>Returns:</h3>
     <ol>
 
-           <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.6">table</a></span>
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.7">table</a></span>
 
 <p>packed list of <em>...</em> values, with field <code>n</code> set to</p>
 <pre><code>number of tuple elements (including any explicit `nil` elements)
@@ -516,7 +519,7 @@
     <h3>Usage:</h3>
     <ul>
         <pre class="example"><span class="comment">--&gt; 5
-</span>len(pack(<span class="keyword">nil</span>, <span class="number">2</span>, <span class="number">5</span>, <span class="keyword">nil</span>, <span class="keyword">nil</span>))</pre>
+</span><span class="function-name">len</span>(<span class="function-name">pack</span>(<span class="keyword">nil</span>, <span class="number">2</span>, <span class="number">5</span>, <span class="keyword">nil</span>, <span class="keyword">nil</span>))</pre>
     </ul>
 
 </dd>
@@ -531,7 +534,7 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">t</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.6">table</a></span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.7">table</a></span>
          table to act on
         </li>
     </ul>
@@ -542,7 +545,7 @@
            <span class="types"><span class="type">function</span></span>
         iterator function</li>
         <li>
-           <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.6">table</a></span>
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.7">table</a></span>
         <em>t</em>, the table being iterated over</li>
         <li>
         the previous iteration key</li>
@@ -552,7 +555,7 @@
 
     <h3>Usage:</h3>
     <ul>
-        <pre class="example"><span class="keyword">for</span> k, v <span class="keyword">in</span> <span class="global">pairs</span> {<span class="string">'a'</span>, b=<span class="string">'c'</span>, foo=<span class="number">42</span>} <span class="keyword">do</span> process(k, v) <span class="keyword">end</span></pre>
+        <pre class="example"><span class="keyword">for</span> k, v <span class="keyword">in</span> <span class="global">pairs</span> {<span class="string">'a'</span>, b=<span class="string">'c'</span>, foo=<span class="number">42</span>} <span class="keyword">do</span> <span class="function-name">process</span>(k, v) <span class="keyword">end</span></pre>
     </ul>
 
 </dd>
@@ -567,7 +570,7 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a> or <a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.6">table</a></span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a> or <a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.7">table</a></span>
          object to act on
         </li>
     </ul>
@@ -596,7 +599,7 @@
     Set a function or functor environment. </p>
 
 <p> This version of setfenv works on all supported Lua versions, and
- knows how to unwrap functors.
+ knows how to unwrap functors, like <a href="index.html#getfenv">getfenv</a>.
 
 
     <h3>Parameters:</h3>
@@ -610,7 +613,7 @@
 
         </li>
         <li><span class="parameter">env</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.6">table</a></span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.7">table</a></span>
          new execution environment for <em>fn</em>
         </li>
     </ul>
@@ -626,7 +629,7 @@
 
     <h3>Usage:</h3>
     <ul>
-        <pre class="example"><span class="keyword">function</span> clearenv(fn) <span class="keyword">return</span> setfenv(fn, {}) <span class="keyword">end</span></pre>
+        <pre class="example"><span class="keyword">function</span> <span class="function-name">clearenv</span>(fn) <span class="keyword">return</span> <span class="function-name">setfenv</span>(fn, {}) <span class="keyword">end</span></pre>
     </ul>
 
 </dd>
@@ -648,7 +651,7 @@
     <h3>Returns:</h3>
     <ol>
 
-           <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a></span>
         compact string representing <em>x</em>
     </ol>
 
@@ -657,7 +660,7 @@
     <h3>Usage:</h3>
     <ul>
         <pre class="example"><span class="comment">-- {baz,5,foo=bar}
-</span><span class="global">print</span>(str{foo=<span class="string">'bar'</span>,<span class="string">'baz'</span>, <span class="number">5</span>})</pre>
+</span><span class="global">print</span>(<span class="function-name">str</span>{foo=<span class="string">'bar'</span>,<span class="string">'baz'</span>, <span class="number">5</span>})</pre>
     </ul>
 
 </dd>
@@ -672,16 +675,16 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">t</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.6">table</a></span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.7">table</a></span>
          table to act on
         </li>
         <li><span class="parameter">i</span>
-            <span class="types"><span class="type">int</span></span>
+            <span class="types"><span class="type">integer</span></span>
          first index to unpack
          (<em>default</em> 1)
         </li>
         <li><span class="parameter">j</span>
-            <span class="types"><span class="type">int</span></span>
+            <span class="types"><span class="type">integer</span></span>
          last index to unpack
          (<em>default</em> len(t))
         </li>
@@ -701,7 +704,7 @@
 
     <h3>Usage:</h3>
     <ul>
-        <pre class="example"><span class="keyword">local</span> a, b, c = unpack(pack(<span class="keyword">nil</span>, <span class="number">2</span>, <span class="keyword">nil</span>))
+        <pre class="example"><span class="keyword">local</span> a, b, c = <span class="function-name">unpack</span>(<span class="function-name">pack</span>(<span class="keyword">nil</span>, <span class="number">2</span>, <span class="keyword">nil</span>))
 <span class="global">assert</span>(a == <span class="keyword">nil</span> <span class="keyword">and</span> b == <span class="number">2</span> <span class="keyword">and</span> c == <span class="keyword">nil</span>)</pre>
     </ul>
 
@@ -744,7 +747,7 @@
            <span class="types"><span class="type">boolean</span></span>
         <code>false</code> when <code>f(...)</code> raised an error</li>
         <li>
-           <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a></span>
         error message</li>
     </ol>
      <h3>Or</h3>
@@ -816,13 +819,13 @@
     <h3>Returns:</h3>
     <ol>
 
-           <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a></span>
         'integer', if <em>x</em> is a whole number
     </ol>
      <h3>Or</h3>
     <ol>
 
-           <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a></span>
         'float', for other numbers
     </ol>
      <h3>Or</h3>
@@ -856,7 +859,7 @@
 
     <h3>Usage:</h3>
     <ul>
-        <pre class="example">exit(len(records.processed) &gt; <span class="number">0</span>)</pre>
+        <pre class="example"><span class="function-name">exit</span>(<span class="function-name">len</span>(records.processed) &gt; <span class="number">0</span>)</pre>
     </ul>
 
 </dd>
@@ -877,20 +880,20 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">name</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a></span>
          name of search file
         </li>
         <li><span class="parameter">path</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a></span>
          <code>package.pathsep</code> delimited list of full path templates
         </li>
         <li><span class="parameter">sep</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a></span>
          <em>name</em> component separator
          (<em>default</em> '.')
         </li>
         <li><span class="parameter">rep</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a></span>
          <em>sep</em> replacement in template
          (<em>default</em> `package.dirsep`)
         </li>
@@ -899,7 +902,7 @@
     <h3>Returns:</h3>
     <ol>
 
-           <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a></span>
 
 <p>first template substitution that names a file</p>
 <pre><code>that can be opened in read mode
@@ -911,7 +914,7 @@
         <li>
         <code>nil</code></li>
         <li>
-           <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a></span>
         error message listing all failed paths</li>
     </ol>
 
@@ -937,7 +940,7 @@
          table of virtual functions to control rendering
         </li>
         <li><span class="parameter">roots</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.6">table</a></span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.7">table</a></span>
          used internally for cycle detection
          (<em>optional</em>)
         </li>
@@ -946,7 +949,7 @@
     <h3>Returns:</h3>
     <ol>
 
-           <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a></span>
         a text recursive rendering of <em>x</em> using <em>vfns</em>
     </ol>
 
@@ -954,8 +957,8 @@
 
     <h3>Usage:</h3>
     <ul>
-        <pre class="example"><span class="keyword">function</span> printarray(x)
-   <span class="keyword">return</span> render(x, arrayvfns)
+        <pre class="example"><span class="keyword">function</span> <span class="function-name">printarray</span>(x)
+   <span class="keyword">return</span> <span class="function-name">render</span>(x, arrayvfns)
 <span class="keyword">end</span></pre>
     </ul>
 
@@ -971,7 +974,7 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">t</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.6">table</a></span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.7">table</a></span>
          table to operate on
         </li>
     </ul>
@@ -979,7 +982,7 @@
     <h3>Returns:</h3>
     <ol>
 
-           <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.6">table</a></span>
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.7">table</a></span>
         an unorderd list of keys in <em>t</em>
     </ol>
 
@@ -988,7 +991,7 @@
     <h3>Usage:</h3>
     <ul>
         <pre class="example"><span class="comment">--&gt; {'key2', 1, 42, 2, 'key1'}
-</span>keys{<span class="string">'a'</span>, <span class="string">'b'</span>, key1=<span class="number">1</span>, key2=<span class="number">2</span>, [<span class="number">42</span>]=<span class="number">3</span>}</pre>
+</span><span class="function-name">keys</span>{<span class="string">'a'</span>, <span class="string">'b'</span>, key1=<span class="number">1</span>, key2=<span class="number">2</span>, [<span class="number">42</span>]=<span class="number">3</span>}</pre>
     </ul>
 
 </dd>
@@ -1003,11 +1006,11 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">t</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.6">table</a></span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.7">table</a></span>
          take fields from this table
         </li>
         <li><span class="parameter">u</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.6">table</a></span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.7">table</a></span>
          and copy them into here, unless they are set already
          (<em>default</em> {})
         </li>
@@ -1016,7 +1019,7 @@
     <h3>Returns:</h3>
     <ol>
 
-           <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.6">table</a></span>
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.7">table</a></span>
         <em>u</em>
     </ol>
 
@@ -1025,7 +1028,7 @@
     <h3>Usage:</h3>
     <ul>
         <pre class="example"><span class="comment">--&gt; {'a', 'b', d='d'}
-</span>merge({<span class="string">'a'</span>, <span class="string">'b'</span>}, {<span class="string">'c'</span>, d=<span class="string">'d'</span>})</pre>
+</span><span class="function-name">merge</span>({<span class="string">'a'</span>, <span class="string">'b'</span>}, {<span class="string">'c'</span>, d=<span class="string">'d'</span>})</pre>
     </ul>
 
 </dd>
@@ -1039,20 +1042,23 @@
     </dt>
     <dd>
     Package module constants for <code>package.config</code> substrings.
+ Every other field, such as <code>path</code> and <code>loaded</code>, is read from and
+ written to the core <code>package</code> table, except that <code>loaded</code> holds
+ the normalized core modules.
 
 
     <h3>Fields:</h3>
     <ul>
         <li><span class="parameter">dirsep</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a></span>
          directory separator in path elements
         </li>
         <li><span class="parameter">execdir</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a></span>
          replaced by the executable's directory in a path
         </li>
         <li><span class="parameter">igmark</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a></span>
 
 <p> ignore everything before this when building</p>
 <pre><code>`luaopen_` function name
@@ -1060,11 +1066,11 @@
 
         </li>
         <li><span class="parameter">pathmark</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a></span>
          mark substitution points in a path template
         </li>
         <li><span class="parameter">pathsep</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a></span>
          element separator in a path template
         </li>
     </ul>
@@ -1128,7 +1134,7 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">env</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.6">table</a></span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.7">table</a></span>
          environment table
         </li>
         <li><span class="parameter">level</span>
@@ -1145,7 +1151,7 @@
     <h3>Returns:</h3>
     <ol>
 
-           <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.6">table</a></span>
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.7">table</a></span>
 
 <p><em>env</em> with this module's functions merge id.   Assign</p>
 <pre><code>back to `_ENV`
@@ -1178,7 +1184,7 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">name</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a></span>
          submodule name
         </li>
     </ul>
@@ -1186,7 +1192,7 @@
     <h3>Returns:</h3>
     <ol>
 
-           <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.6">table</a> or <span class="type">nil</span></span>
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.7">table</a> or <span class="type">nil</span></span>
 
 <p>the submodule that was loaded to satisfy the missing</p>
 <pre><code>`name`, otherwise `nil` if nothing was found
@@ -1266,7 +1272,7 @@
         <pre class="example">arrayvfns = {
   elem = <span class="global">tostring</span>,
   term = <span class="keyword">function</span>(x)
-     <span class="keyword">return</span> <span class="global">type</span>(x) ~= <span class="string">'table'</span> <span class="keyword">or</span> getmetamethod(x, <span class="string">'__tostring'</span>)
+     <span class="keyword">return</span> <span class="global">type</span>(x) ~= <span class="string">'table'</span> <span class="keyword">or</span> <span class="function-name">getmetamethod</span>(x, <span class="string">'__tostring'</span>)
   <span class="keyword">end</span>,
   sort = <span class="keyword">function</span>(keys)
      <span class="keyword">local</span> r = {}
@@ -1305,7 +1311,7 @@
     <h3>Returns:</h3>
     <ol>
 
-           <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a></span>
         stringified <em>x</em>
     </ol>
 
@@ -1354,7 +1360,7 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">keys</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.6">table</a></span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.7">table</a></span>
 
 <p> list of table keys, it's okay to mutate and return</p>
 <pre><code>this parameter
@@ -1366,7 +1372,7 @@
     <h3>Returns:</h3>
     <ol>
 
-           <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.6">table</a></span>
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.7">table</a></span>
         sorted list of keys for pairs to be rendered
     </ol>
 
@@ -1392,7 +1398,7 @@
     <h3>Returns:</h3>
     <ol>
 
-           <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a></span>
         string to render before first element
     </ol>
 
@@ -1418,7 +1424,7 @@
     <h3>Returns:</h3>
     <ol>
 
-           <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a></span>
         string to render after last element
     </ol>
 
@@ -1469,7 +1475,7 @@
     <h3>Returns:</h3>
     <ol>
 
-           <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a></span>
         stringified rendering of pair <em>kstr</em> and <em>vstr</em>
     </ol>
 
@@ -1514,7 +1520,7 @@
     <h3>Returns:</h3>
     <ol>
 
-           <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a></span>
 
 <p>stringified rendering of separator between previous and</p>
 <pre><code>next pairs
@@ -1532,8 +1538,8 @@
 </div> <!-- id="content" -->
 </div> <!-- id="main" -->
 <div id="about">
-<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2020-04-15 17:22:39 </i>
+<i>generated by <a href="http://github.com/lunarmodules/ldoc">LDoc 1.5.0</a></i>
+<i style="float:right;">Last updated 2026-10-20 16:26:04 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>
