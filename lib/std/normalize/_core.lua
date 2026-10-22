@@ -32,6 +32,17 @@ local host_getfenv = rawget(_G, 'getfenv') or false
 local host_setfenv = rawget(_G, 'setfenv') or false
 
 
+-- The field *n* of the metatable of *x*, or `nil` if there is no such
+-- field.  The metatable that getmetatable returns for a protected object
+-- is its `__metatable` field, which need not be a table, such as `true`.
+local function getmetafield(x, n)
+   local mt = getmetatable(x)
+   if type(mt) == 'table' then
+      return mt[n]
+   end
+end
+
+
 -- Whether *x* can be called, and so what it is if it can: *x* itself,
 -- rather than its `__call` metamethod, which needs `self` too.
 local function callable(x)
@@ -54,9 +65,7 @@ local function callable(x)
    if type(x) == 'function' then
       return x
    end
-   -- A protected metatable, from `__metatable`, need not be a table.
-   local mt = getmetatable(x)
-   if type(mt) == 'table' and mt.__call then
+   if getmetafield(x, '__call') then
       return x
    end
 end
@@ -69,10 +78,7 @@ end
 
 
 local function getmetamethod(x, n)
-   local mt = getmetatable(x)
-   if type(mt) == 'table' then
-      return callable(mt[n])
-   end
+   return callable(getmetafield(x, n))
 end
 
 
@@ -160,8 +166,7 @@ local function unwrap(fn)
    if type(call) == 'function' then
       return call
    end
-   local mt = getmetatable(fn)
-   return type(mt) == 'table' and mt.__call or fn
+   return getmetafield(fn, '__call') or fn
 end
 
 
@@ -277,6 +282,7 @@ end
 return {
    callable = callable,
    getfenv = make_getfenv(0),
+   getmetafield = getmetafield,
    getmetamethod = getmetamethod,
    iscallable = iscallable,
    len = len,

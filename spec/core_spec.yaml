@@ -10,7 +10,8 @@ specify std.normalize._core:
     for k in pairs(core) do keys[#keys + 1] = k end
     table.sort(keys)
     expect(keys).to_equal {
-       'callable', 'getfenv', 'getmetamethod', 'iscallable', 'len', 'pack',
+       'callable', 'getfenv', 'getmetafield', 'getmetamethod', 'iscallable',
+       'len', 'pack',
        'pairs', 'rawlen', 'setfenv', 'tointeger', 'with_frames',
     }
 - it is the pack that std.normalize exports:

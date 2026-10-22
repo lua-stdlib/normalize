@@ -47,8 +47,8 @@ specify std.normalize:
       ]]
       expect(luaproc(script)).to_output(table.concat({
          '_G', '_VERSION', 'arg', 'argerror', 'assert', 'callable',
-         'collectgarbage', 'dofile', 'error', 'getfenv', 'getmetamethod',
-         'getmetatable', 'ipairs', 'iscallable', 'len', 'load', 'loadfile',
+         'collectgarbage', 'dofile', 'error', 'getfenv', 'getmetafield',
+         'getmetamethod', 'getmetatable', 'ipairs', 'iscallable', 'len', 'load', 'loadfile',
          'next', 'pack', 'pairs', 'pcall', 'print', 'rawequal', 'rawget',
          'rawlen', 'rawset', 'require', 'select', 'setfenv', 'setmetatable',
          'str', 'tonumber', 'tostring', 'type', 'unpack', 'xpcall',
@@ -529,6 +529,50 @@ specify std.normalize:
         expect(luaproc(preamble .. [[
           os.exit(gn(2) == gnenv and 0 or 1)
         ]])).to_succeed_with ''
+
+
+- describe getmetafield:
+  - before:
+      f = M.getmetafield
+
+  - context with bad arguments: |
+      if have_typecheck then
+         examples {['it diagnoses missing argument #1'] = function()
+            expect(f()).to_raise 'argument expected, got no value'
+            expect(f(nil, 'x')).not_to_raise 'value expected'
+         end}
+         examples {['it diagnoses missing argument #2'] = function()
+            expect(f({})).to_raise 'string expected, got no value'
+         end}
+         examples {['it diagnoses argument #2 type not string'] = function()
+            expect(f({}, nil)).to_raise 'string expected, got nil'
+         end}
+      end
+
+  - context with a table:
+    - before:
+        t = setmetatable({field = 0}, {field = 1, _type = 'Thing', table = {}})
+    - it returns a field of the metatable:
+        expect(f(t, 'field')).to_be(1)
+        expect(f(t, '_type')).to_be 'Thing'
+    - it returns a field that is not callable:
+        expect(f(t, 'table')).to_be(M.getmetafield(t, 'table'))
+        expect(type(f(t, 'table'))).to_be 'table'
+    - it returns nil for a missing field:
+        expect(f(t, 'nothing')).to_be(nil)
+    - it does not look in the object:
+        expect(f(t, 'field')).not_to_be(0)
+  - it returns nil for an object without a metatable:
+      expect(f({}, 'x')).to_be(nil)
+      expect(f(nil, 'x')).to_be(nil)
+      expect(f(42, 'x')).to_be(nil)
+  - it looks in the metatable of a string:
+      expect(f('s', '__index')).to_be(getmetatable('').__index)
+  - it returns nil for a metatable that is protected by a non-table:
+      expect(f(setmetatable({}, {__metatable = true}), '_type')).to_be(nil)
+      expect(f(setmetatable({}, {__metatable = 42}), '_type')).to_be(nil)
+  - it returns nil for a field of a protected metatable string:
+      expect(f(setmetatable({}, {__metatable = 'locked'}), 'len')).to_be(nil)
 
 
 - describe getmetamethod:

@@ -145,6 +145,7 @@ local upper = string.upper
 
 local core = require 'std.normalize._core'
 local callable = core.callable
+local getmetafield = core.getmetafield
 local getmetamethod = core.getmetamethod
 local iscallable = core.iscallable
 local len = core.len
@@ -493,6 +494,22 @@ local F = {
    --    callers_environment = getfenv(1)
    getfenv = argscheck 'getfenv([callable|integer])'
       .. normalize_getfenv,
+
+   --- Return the named field of the metatable of an object, if any.
+   -- Unlike `getmetatable(x)[n]`, or `(getmetatable(x) or {})[n]`, this
+   -- does not raise an error for an object that has no metatable, or
+   -- whose `__metatable` field, which `getmetatable` returns, is not a
+   -- table.
+   -- @function getmetafield
+   -- @param x item to act on
+   -- @string n name of field to look up
+   -- @return the value of field *n* of the metatable of *x*, or `nil`
+   --    if it has none
+   -- @see getmetamethod
+   -- @usage
+   --    local kind = getmetafield(x, '_type') or type(x)
+   getmetafield = argscheck 'getmetafield(?any, string)'
+      .. getmetafield,
 
    --- Return named metamethod, if callable, otherwise `nil`.
    -- @function getmetamethod

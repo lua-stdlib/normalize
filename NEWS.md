@@ -4,13 +4,18 @@
 
 ### New features
 
+  - New `getmetafield` returns a named field of the metatable of an
+    object, or `nil`, without the error that `(getmetatable(x) or
+    {})[n]` raises when `__metatable` makes `getmetatable` return
+    something that is not a table.
+
   - New `callable` returns an object that can be called, a function or a
     functor, as it is, or `nil`; and `iscallable` says whether it can.
     They are in the core functions that `require 'std.normalize' {}`
     gives a module.
 
   - The functions that typecheck, std.strict and optparse would
-    otherwise copy, `callable`, `iscallable`, `getfenv`,
+    otherwise copy, `callable`, `iscallable`, `getfenv`, `getmetafield`,
     `getmetamethod`, `len`, `pack`, `pairs`, `rawlen`, `setfenv` and
     `tointeger`, are in `std.normalize._core`, which requires nothing,
     so that they can vendor a copy of that one file.
