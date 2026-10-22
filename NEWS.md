@@ -2,6 +2,19 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+### New features
+
+  - New `callable` returns an object that can be called, a function or a
+    functor, as it is, or `nil`; and `iscallable` says whether it can.
+    They are in the core functions that `require 'std.normalize' {}`
+    gives a module.
+
+  - The functions that typecheck, std.strict and optparse would
+    otherwise copy, `callable`, `iscallable`, `getmetamethod`, `len`,
+    `pack`, `pairs`, `rawlen` and `tointeger`, are in
+    `std.normalize._core`, which requires nothing, so that they can
+    vendor a copy of that one file.
+
 ### Bug fixes
 
   - `callable`, `getmetamethod` and `unwrap` no longer raise an error

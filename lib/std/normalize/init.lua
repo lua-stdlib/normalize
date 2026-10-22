@@ -153,6 +153,16 @@ local sort = table.sort
 local unpack = table.unpack or unpack
 local upper = string.upper
 
+local core = require 'std.normalize._core'
+local callable = core.callable
+local getmetamethod = core.getmetamethod
+local iscallable = core.iscallable
+local len = core.len
+local pack = core.pack
+local pairs = core.pairs
+local rawlen = core.rawlen
+local tointeger = core.tointeger
+
 --[[ =============== ]]--
 --[[ Implementation. ]]--
 --[[ =============== ]]--
@@ -167,56 +177,8 @@ local dirsep, pathsep, pathmark, execdir, igmark =
    match(config, '^([^\n]+)\n([^\n]+)\n([^\n]+)\n([^\n]+)\n([^\n]+)')
 
 
-local function callable(x)
-   -- Careful here!
-   -- Most versions of Lua don't recurse functables, so make sure you
-   -- always put a real function in __call metamethods.  Consequently,
-   -- no reason to recurse here.
-   -- func=function() print 'called' end
-   -- func() --> 'called'
-   -- functable=setmetatable({}, {__call=func})
-   -- functable() --> 'called'
-   -- nested=setmetatable({}, {__call=function(self, ...) return functable(...)end})
-   -- nested() -> 'called'
-   -- notnested=setmetatable({}, {__call=functable})
-   -- notnested()
-   -- --> stdin:1: attempt to call global 'nested' (a table value)
-   -- --> stack traceback:
-   -- -->	stdin:1: in main chunk
-   -- -->		[C]: in ?
-   if type(x) == 'function' then
-      return x
-   end
-   -- A protected metatable, from `__metatable`, need not be a table.
-   local mt = getmetatable(x)
-   if type(mt) == 'table' and mt.__call then
-      return x
-   end
-end
 
 
-local tointeger = (function(f)
-   if f == nil then
-      -- No host tointeger implementationm use our own.
-      local floor = math.floor
-      return function(x)
-         if type(x) == 'number' and x - floor(x) == 0.0 then
-            return x
-         end
-      end
-
-   elseif f '1' ~= nil then
-      -- Don't perform implicit string-to-number conversion!
-      return function(x)
-         if type(x) == 'number' then
-            return f(x)
-         end
-      end
-   end
-
-   -- Host tointeger is good!
-   return f
-end)(math.tointeger)
 
 
 -- It's hard to test at require-time whether the host `os.exit` handles
@@ -306,34 +268,10 @@ else
 end
 
 
-local function getmetamethod(x, n)
-   local mt = getmetatable(x)
-   if type(mt) == 'table' then
-      return callable(mt[n])
-   end
-end
 
 
-local function rawlen(x)
-   -- Lua 5.1 does not implement rawlen, and while # operator ignores
-   -- __len metamethod, `nil` in sequence is handled inconsistently.
-   if type(x) ~= 'table' then
-      return #x
-   end
-
-   local n = #x
-   for i = 1, n do
-      if x[i] == nil then
-         return i -1
-      end
-   end
-   return n
-end
 
 
-local function len(x)
-   return (getmetamethod(x, '__len') or rawlen)(x)
-end
 
 
 local function ipairs(l)
@@ -395,33 +333,8 @@ local function merge(t, r)
 end
 
 
-local pack = (function(f)
-   local pack_mt = {
-      __len = function(self)
-         return self.n
-      end,
-   }
-
-   local pack_fn = f or function(...)
-      return {n=select('#', ...), ...}
-   end
-
-   return function(...)
-      return setmetatable(pack_fn(...), pack_mt)
-   end
-end)(rawget(_G, "pack"))
 
 
-local pairs = (function(b)
-   if b then
-      -- Add support for __pairs when missing.
-      return function (t)
-         return (getmetamethod(t, '__pairs') or pairs)(t)
-      end
-   end
-
-   return _G.pairs
-end)(not not pairs(setmetatable({},{__pairs=function() return false end})))
 
 
 local function keys(t)
@@ -663,6 +576,22 @@ local F = {
    argerror = argerror,
 
    assert = _G.assert,
+
+   --- Return *x* if it can be called, otherwise `nil`.
+   -- A function can be called, and so can a table, or other object,
+   -- with a `__call` metamethod in its metatable, a functor.  Unlike the
+   -- `__call` metamethod, which takes the functor as its first argument,
+   -- the object that this returns can be called with just the arguments
+   -- that it is for.
+   -- @function callable
+   -- @param x an object or primitive
+   -- @return *x* if *x* can be called, otherwise `nil`
+   -- @see iscallable
+   -- @usage
+   --    (callable(functor) or function() end)(args, ...)
+   callable = argscheck 'callable(<?any>)'
+      .. callable,
+
    collectgarbage = _G.collectgarbage,
    dofile = _G.dofile,
    error = _G.error,
@@ -718,6 +647,17 @@ local F = {
    --    assert(len(u) == 4)
    ipairs = argscheck 'ipairs(table)'
       .. ipairs,
+
+   --- Whether *x* can be called.
+   -- @function iscallable
+   -- @param x an object or primitive
+   -- @treturn boolean `true` if *x* is a function or a functor,
+   --    otherwise `false`
+   -- @see callable
+   -- @usage
+   --    if iscallable(handler) then handler(event) end
+   iscallable = argscheck 'iscallable(<?any>)'
+      .. iscallable,
 
    --- Deterministic, functional version of core Lua `#` operator.
    --

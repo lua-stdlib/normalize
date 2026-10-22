@@ -12,6 +12,7 @@ ldocs    = 'build-aux/config.ld.in'
 
 modules  = {
    {['std.normalize']         = 'lib/std/normalize/init.lua'},
+   {['std.normalize._core']   = 'lib/std/normalize/_core.lua'},
    {['std.normalize.version'] = 'lib/std/normalize/version.lua.in'},
 }
 

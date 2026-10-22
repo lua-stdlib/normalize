@@ -46,12 +46,12 @@ specify std.normalize:
          end
       ]]
       expect(luaproc(script)).to_output(table.concat({
-         '_G', '_VERSION', 'arg', 'argerror', 'assert', 'collectgarbage',
-         'dofile', 'error', 'getfenv', 'getmetamethod', 'getmetatable',
-         'ipairs', 'len', 'load', 'loadfile', 'next', 'pack', 'pairs',
-         'pcall', 'print', 'rawequal', 'rawget', 'rawlen', 'rawset',
-         'require', 'select', 'setfenv', 'setmetatable', 'str', 'tonumber',
-         'tostring', 'type', 'unpack', 'xpcall',
+         '_G', '_VERSION', 'arg', 'argerror', 'assert', 'callable',
+         'collectgarbage', 'dofile', 'error', 'getfenv', 'getmetamethod',
+         'getmetatable', 'ipairs', 'iscallable', 'len', 'load', 'loadfile',
+         'next', 'pack', 'pairs', 'pcall', 'print', 'rawequal', 'rawget',
+         'rawlen', 'rawset', 'require', 'select', 'setfenv', 'setmetatable',
+         'str', 'tonumber', 'tostring', 'type', 'unpack', 'xpcall',
       }, '\n') .. '\n')
   - it diagnoses missed symbol dereferences in right-to-left order:
       expect(luaproc [[
@@ -366,6 +366,32 @@ specify std.normalize:
         ]])).to_fail_while_matching '^[^:]+: bad argument'
 
 
+- describe callable:
+  - before:
+      f = M.callable
+
+  - it accepts no argument, as nil:
+      expect(f()).to_be(nil)
+  - it returns a function:
+      fn = function() end
+      expect(f(fn)).to_be(fn)
+  - it returns a functor itself, rather than its __call metamethod:
+      functor = setmetatable({}, {__call = function() end})
+      expect(f(functor)).to_be(functor)
+  - it returns nil for anything that cannot be called:
+      expect(f(nil)).to_be(nil)
+      expect(f(false)).to_be(nil)
+      expect(f(42)).to_be(nil)
+      expect(f 'str').to_be(nil)
+      expect(f {}).to_be(nil)
+      expect(f(io.stderr)).to_be(nil)
+      expect(f(setmetatable({}, {__index = {}}))).to_be(nil)
+  - it returns nil for a metatable that is protected by a non-table:
+      expect(f(setmetatable({}, {__metatable = true}))).to_be(nil)
+      expect(f(setmetatable({}, {__metatable = 42}))).to_be(nil)
+      expect(f(setmetatable({}, {__metatable = 'locked'}))).to_be(nil)
+
+
 - describe getfenv:
   - before:
       f = M.getfenv
@@ -608,6 +634,28 @@ specify std.normalize:
          t[i] = v
       end
       expect(t).to_equal(src)
+
+
+- describe iscallable:
+  - before:
+      f = M.iscallable
+
+  - it accepts no argument, as nil:
+      expect(f()).to_be(false)
+  - it returns true for a function:
+      expect(f(function() end)).to_be(true)
+  - it returns true for a functor:
+      expect(f(setmetatable({}, {__call = function() end}))).to_be(true)
+  - it returns false for anything that cannot be called:
+      expect(f(nil)).to_be(false)
+      expect(f(false)).to_be(false)
+      expect(f(42)).to_be(false)
+      expect(f 'str').to_be(false)
+      expect(f {}).to_be(false)
+      expect(f(setmetatable({}, {__index = {}}))).to_be(false)
+  - it returns false for a metatable that is protected by a non-table:
+      expect(f(setmetatable({}, {__metatable = true}))).to_be(false)
+      expect(f(setmetatable({}, {__metatable = 42}))).to_be(false)
 
 
 - describe len:
