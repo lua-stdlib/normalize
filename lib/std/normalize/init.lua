@@ -184,7 +184,12 @@ local function callable(x)
    -- --> stack traceback:
    -- -->	stdin:1: in main chunk
    -- -->		[C]: in ?
-   if type(x) == 'function' or (getmetatable(x) or {}).__call then
+   if type(x) == 'function' then
+      return x
+   end
+   -- A protected metatable, from `__metatable`, need not be a table.
+   local mt = getmetatable(x)
+   if type(mt) == 'table' and mt.__call then
       return x
    end
 end
@@ -241,7 +246,8 @@ local function unwrap(fn)
    if type(call) == 'function' then
       return call
    end
-   return (getmetatable(fn) or {}).__call or fn
+   local mt = getmetatable(fn)
+   return type(mt) == 'table' and mt.__call or fn
 end
 
 
@@ -301,7 +307,10 @@ end
 
 
 local function getmetamethod(x, n)
-   return callable((getmetatable(x) or {})[n])
+   local mt = getmetatable(x)
+   if type(mt) == 'table' then
+      return callable(mt[n])
+   end
 end
 
 

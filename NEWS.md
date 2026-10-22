@@ -2,6 +2,12 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+### Bug fixes
+
+  - `callable`, `getmetamethod` and `unwrap` no longer raise an error
+    for an object whose `__metatable` field is not a table, such as
+    `true`, when asked whether it can be called.
+
 
 ## Noteworthy changes in release 3 (2026-10-20) [stable]
 

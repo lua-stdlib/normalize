@@ -538,6 +538,10 @@ specify std.normalize:
         expect(f(t, 'field')).to_be(nil)
     - it returns a function metamethod:
         expect(f(t, 'method')).to_be(method)
+    - it returns nil for a metatable that is protected by a non-table:
+        expect(f(setmetatable({}, {__metatable = true}), '__call')).to_be(nil)
+        expect(f(setmetatable({}, {__metatable = 42}), '__call')).to_be(nil)
+        expect(f(setmetatable({}, {__metatable = 'locked'}), '__call')).to_be(nil)
         expect(f(t, 'method')()).to_be 'called'
     - it returns a functor metamethod:
         expect(f(t, 'fn')).to_be(functor)
