@@ -10,10 +10,10 @@
     gives a module.
 
   - The functions that typecheck, std.strict and optparse would
-    otherwise copy, `callable`, `iscallable`, `getmetamethod`, `len`,
-    `pack`, `pairs`, `rawlen` and `tointeger`, are in
-    `std.normalize._core`, which requires nothing, so that they can
-    vendor a copy of that one file.
+    otherwise copy, `callable`, `iscallable`, `getfenv`,
+    `getmetamethod`, `len`, `pack`, `pairs`, `rawlen`, `setfenv` and
+    `tointeger`, are in `std.normalize._core`, which requires nothing,
+    so that they can vendor a copy of that one file.
 
 ### Bug fixes
 

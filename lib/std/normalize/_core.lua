@@ -16,6 +16,18 @@
 ]]
 
 
+local debug_getinfo = debug.getinfo
+local debug_getupvalue = debug.getupvalue
+local debug_setupvalue = debug.setupvalue
+local debug_upvaluejoin = debug.upvaluejoin
+-- In Lua 5.1, only debug.getfenv works on C functions; but compatibility
+-- layers (like specl) may supply only the best version as `getfenv`.
+local host_getfenv = rawget(_G, 'getfenv') or false
+local host_setfenv = rawget(_G, 'setfenv') or false
+local debug_getfenv = debug.getfenv or host_getfenv
+local debug_setfenv = debug.setfenv or host_setfenv
+
+
 -- Whether *x* can be called, and so what it is if it can: *x* itself,
 -- rather than its `__call` metamethod, which needs `self` too.
 local function callable(x)
@@ -135,13 +147,136 @@ local pairs = (function(b)
 end)(not not pairs(setmetatable({},{__pairs=function() return false end})))
 
 
+-- The function that a functor *fn* runs: its own `call` field, like the
+-- functables that share one `__call` dispatcher, or else its `__call`
+-- metamethod.  No need to recurse, because Lua doesn't support nested
+-- functors.
+local function unwrap(fn)
+   local call = type(fn) == 'table' and rawget(fn, 'call')
+   if type(call) == 'function' then
+      return call
+   end
+   local mt = getmetatable(fn)
+   return type(mt) == 'table' and mt.__call or fn
+end
+
+
+-- A getfenv that works on every Lua, for a caller that is *extra* stack
+-- frames beneath the function, such as one that checks its arguments.
+-- Choose by version: an environment that smooths over Lua differences
+-- may not provide the 5.1 debug.[gs]etfenv.
+local function make_getfenv(extra)
+   if _VERSION == 'Lua 5.1' then
+      return function(fn)
+         local n = tointeger(fn or 1)
+         if n then
+            if n > 0 then
+               -- Adjust for this function's stack frame, if fn is non-zero.
+               n = n + 1 + extra
+            end
+
+            -- The parentheses return only the environment, and keep this
+            -- from being a tail call, which would remove a stack frame and
+            -- break the numeric *fn* count.
+            return (host_getfenv(n))
+         end
+
+         if type(fn) ~= 'function' then
+            -- Unwrapping a functor doesn't change the stack frame offset.
+            fn = unwrap(fn)
+         end
+
+         -- In Lua 5.1, only debug.getfenv works on C functions; but it
+         -- does not work on stack counts.
+         return debug_getfenv(fn)
+      end
+   end
+
+   -- Thanks to http://lua-users.org/lists/lua-l/2010-06/msg00313.html
+   return function(fn)
+      if fn == 0 then
+         return _G
+      end
+      local n = tointeger(fn or 1)
+      if n then
+         fn = debug_getinfo(n + 1 + extra, 'f').func
+      elseif type(fn) ~= 'function' then
+         fn = unwrap(fn)
+      end
+
+      local name, env
+      local up = 0
+      repeat
+         up = up + 1
+         name, env = debug_getupvalue(fn, up)
+      until name == '_ENV' or name == nil
+      return env
+   end
+end
+
+
+-- A setfenv that works on every Lua, with *extra* stack frames, as for
+-- make_getfenv.
+local function make_setfenv(extra)
+   if _VERSION == 'Lua 5.1' then
+      return function(fn, env)
+         local n = tointeger(fn or 1)
+         if n then
+            if n > 0 then
+               n = n + 1 + extra
+            end
+            -- One value, and not a tail call, as in getfenv.
+            return (host_setfenv(n, env))
+         end
+         if type(fn) ~= 'function' then
+            fn = unwrap(fn)
+         end
+         return debug_setfenv(fn, env)
+      end
+   end
+
+   -- Thanks to http://lua-users.org/lists/lua-l/2010-06/msg00313.html
+   return function(fn, env)
+      local n = tointeger(fn or 1)
+      if n then
+         if n > 0 then
+            n = n + 1 + extra
+         end
+         fn = debug_getinfo(n, 'f').func
+      elseif type(fn) ~= 'function' then
+         fn = unwrap(fn)
+      end
+
+      local up, name = 0
+      repeat
+         up = up + 1
+         name = debug_getupvalue(fn, up)
+      until name == '_ENV' or name == nil
+      if name then
+         debug_upvaluejoin(fn, up, function() return name end, 1)
+         debug_setupvalue(fn, up, env)
+      end
+      return n ~= 0 and fn or nil
+   end
+end
+
+
 return {
    callable = callable,
+   getfenv = make_getfenv(0),
    getmetamethod = getmetamethod,
    iscallable = iscallable,
    len = len,
    pack = pack,
    pairs = pairs,
    rawlen = rawlen,
+   setfenv = make_setfenv(0),
    tointeger = tointeger,
+
+   -- The getfenv and setfenv for a function that is *extra* stack frames
+   -- beneath its caller, as std.normalize's are when typecheck checks
+   -- their arguments.
+   with_frames = function(extra)
+      return {getfenv = make_getfenv(extra), setfenv = make_setfenv(extra)}
+   end,
 }

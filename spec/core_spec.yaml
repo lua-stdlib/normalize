@@ -1,0 +1,69 @@
+# Normalized Lua API for Lua 5.1, 5.2, 5.3, 5.4 & 5.5
+# Copyright (C) 2014-2026 std.normalize authors
+
+before:
+  core = require 'std.normalize._core'
+
+specify std.normalize._core:
+- it has just the core functions:
+    keys = {}
+    for k in pairs(core) do keys[#keys + 1] = k end
+    table.sort(keys)
+    expect(keys).to_equal {
+       'callable', 'getfenv', 'getmetamethod', 'iscallable', 'len', 'pack',
+       'pairs', 'rawlen', 'setfenv', 'tointeger', 'with_frames',
+    }
+- it is the pack that std.normalize exports:
+    expect(require('std.normalize').pack).to_be(core.pack)
+
+- describe getfenv:
+  - it returns the environment of a function: |
+      expect(luaproc [[
+         local core = require 'std.normalize._core'
+         local env = {}
+         local fn = load('return 1', 'chunk', 't', env) or loadstring('return 1')
+         if setfenv then setfenv(fn, env) end
+         print(core.getfenv(fn) == env)
+      ]]).to_succeed_with 'true\n'
+  - it returns the environment of the caller for a stack level: |
+      expect(luaproc [[
+         local core = require 'std.normalize._core'
+         local _ENV = setmetatable({}, {__index = _G})
+         -- Not a tail call, which would remove the frame to look in, and
+         -- using a global, so that there is an _ENV to find.
+         local function fn() local _ = type; local r = core.getfenv(1) return r end
+         if setfenv then setfenv(fn, _ENV) end
+         print(fn() == _ENV)
+      ]]).to_succeed_with 'true\n'
+  - it returns the global environment for 0 on Lua 5.2 and later: |
+      expect(luaproc [[
+         local core = require 'std.normalize._core'
+         print(_VERSION == 'Lua 5.1' or core.getfenv(0) == _G)
+      ]]).to_succeed_with 'true\n'
+
+- describe setfenv:
+  - it sets the environment of a function: |
+      expect(luaproc [[
+         local core = require 'std.normalize._core'
+         local env = {answer = 42}
+         local function fn() return answer end
+         core.setfenv(fn, env)
+         print(core.getfenv(fn) == env, fn())
+      ]]).to_succeed_with 'true\t42\n'
+
+- describe with_frames:
+  - it makes a getfenv and setfenv:
+      f = core.with_frames(0)
+      expect(type(f.getfenv)).to_be 'function'
+      expect(type(f.setfenv)).to_be 'function'
+  - it counts extra stack frames beneath the function: |
+      expect(luaproc [[
+         local core = require 'std.normalize._core'
+         local f = core.with_frames(1)
+         -- A function that adds a frame, as an argument checker does.
+         local function checked(fn, ...) local r = fn(...) return r end
+         local _ENV = setmetatable({}, {__index = _G})
+         local function fn() local _ = type; local r = checked(f.getfenv, 1) return r end
+         if setfenv then setfenv(fn, _ENV) end
+         print(fn() == _ENV)
+      ]]).to_succeed_with 'true\n'

@@ -130,17 +130,8 @@ local argerror = typecheck.argerror
 local argscheck = typecheck.argscheck
 local concat = table.concat
 local config = package.config
--- In Lua 5.1, only debug.getfenv works on C functions; but compatibility
--- layers (like specl) may supply only the best version as `getfenv`.
-local debug_getfenv = debug.getfenv or rawget(_G, 'getfenv') or false
-local debug_getinfo = debug.getinfo
-local debug_getupvalue = debug.getupvalue
-local debug_setfenv = debug.setfenv or rawget(_G, 'setfenv') or false
-local debug_setupvalue = debug.setupvalue
-local debug_upvaluejoin = debug.upvaluejoin
 local exit = os.exit
 local format = string.format
-local getfenv = rawget(_G, 'getfenv') or false
 local gmatch = string.gmatch
 local gsub = string.gsub
 local loadstring = rawget(_G, 'loadstring') or load
@@ -148,7 +139,6 @@ local match = string.match
 local open = io.open
 local remove = table.remove
 local searchpath = package.searchpath or false
-local setfenv = rawget(_G, 'setfenv') or false
 local sort = table.sort
 local unpack = table.unpack or unpack
 local upper = string.upper
@@ -162,6 +152,9 @@ local pack = core.pack
 local pairs = core.pairs
 local rawlen = core.rawlen
 local tointeger = core.tointeger
+local fenv = core.with_frames(ARGCHECK_FRAME)
+local normalize_getfenv = fenv.getfenv
+local normalize_setfenv = fenv.setfenv
 
 --[[ =============== ]]--
 --[[ Implementation. ]]--
@@ -199,73 +192,8 @@ local function exit(...)
 end
 
 
--- Return the function that a functor *fn* runs: its own `call` field,
--- like the functables that share one `__call` dispatcher, or else its
--- `__call` metamethod.  No need to recurse, because Lua doesn't support
--- nested functors.
-local function unwrap(fn)
-   local call = type(fn) == 'table' and rawget(fn, 'call')
-   if type(call) == 'function' then
-      return call
-   end
-   local mt = getmetatable(fn)
-   return type(mt) == 'table' and mt.__call or fn
-end
 
 
--- Choose by version: an environment that smooths over Lua differences
--- may not provide the 5.1 debug.[gs]etfenv.
-local normalize_getfenv
-if _VERSION == 'Lua 5.1' then
-
-   normalize_getfenv = function(fn)
-      local n = tointeger(fn or 1)
-      if n then
-         if n > 0 then
-            -- Adjust for this function's stack frame, if fn is non-zero.
-            n = n + 1 + ARGCHECK_FRAME
-         end
-
-         -- The parentheses return only the environment, and keep this
-         -- from being a tail call, which would remove a stack frame and
-         -- break the numeric *fn* count.
-         return (getfenv(n))
-      end
-
-      if type(fn) ~= 'function' then
-         -- Unwrapping a functor doesn't change the stack frame offset.
-         fn = unwrap(fn)
-      end
-
-      -- In Lua 5.1, only debug.getfenv works on C functions; but it
-      -- does not work on stack counts.
-      return debug_getfenv(fn)
-   end
-
-else
-
-   -- Thanks to http://lua-users.org/lists/lua-l/2010-06/msg00313.html
-   normalize_getfenv = function(fn)
-      if fn == 0 then
-         return _G
-      end
-      local n = tointeger(fn or 1)
-      if n then
-         fn = debug_getinfo(n + 1 + ARGCHECK_FRAME, 'f').func
-      elseif type(fn) ~= 'function' then
-         fn = unwrap(fn)
-      end
-
-      local name, env
-      local up = 0
-      repeat
-         up = up + 1
-         name, env = debug_getupvalue(fn, up)
-      until name == '_ENV' or name == nil
-      return env
-   end
-
-end
 
 
 
@@ -365,51 +293,6 @@ local searchpath = searchpath or function(name, path, sep, rep)
 end
 
 
-local normalize_setfenv
-if _VERSION == 'Lua 5.1' then
-
-   normalize_setfenv = function(fn, env)
-      local n = tointeger(fn or 1)
-      if n then
-         if n > 0 then
-            n = n + 1 + ARGCHECK_FRAME
-         end
-         -- One value, and not a tail call, as in getfenv.
-         return (setfenv(n, env))
-      end
-      if type(fn) ~= 'function' then
-         fn = unwrap(fn)
-      end
-      return debug_setfenv(fn, env)
-   end
-
-else
-
-   -- Thanks to http://lua-users.org/lists/lua-l/2010-06/msg00313.html
-   normalize_setfenv = function(fn, env)
-      local n = tointeger(fn or 1)
-      if n then
-         if n > 0 then
-            n = n + 1 + ARGCHECK_FRAME
-         end
-         fn = debug_getinfo(n, 'f').func
-      elseif type(fn) ~= 'function' then
-         fn = unwrap(fn)
-      end
-
-      local up, name = 0
-      repeat
-         up = up + 1
-         name = debug_getupvalue(fn, up)
-      until name == '_ENV' or name == nil
-      if name then
-         debug_upvaluejoin(fn, up, function() return name end, 1)
-         debug_setupvalue(fn, up, env)
-      end
-      return n ~= 0 and fn or nil
-   end
-
-end
 
 
 local shallow_copy = merge
