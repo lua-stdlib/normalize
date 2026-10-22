@@ -40,6 +40,15 @@ specify std.normalize._core:
          local core = require 'std.normalize._core'
          print(_VERSION == 'Lua 5.1' or core.getfenv(0) == _G)
       ]]).to_succeed_with 'true\n'
+  - it does not use a global getfenv that the host supplies: |
+      expect(luaproc [[
+         getfenv = function() error 'used the global getfenv' end
+         local core = require 'std.normalize._core'
+         local _ENV = setmetatable({}, {__index = _G})
+         local function fn() local _ = type; local r = core.getfenv(1) return r end
+         if setfenv then setfenv(fn, _ENV) end
+         print(fn() == _ENV)
+      ]]).to_succeed_with 'true\n'
 
 - describe setfenv:
   - it sets the environment of a function: |
@@ -50,6 +59,15 @@ specify std.normalize._core:
          core.setfenv(fn, env)
          print(core.getfenv(fn) == env, fn())
       ]]).to_succeed_with 'true\t42\n'
+  - it does not use a global setfenv that the host supplies: |
+      expect(luaproc [[
+         setfenv = function() error 'used the global setfenv' end
+         local core = require 'std.normalize._core'
+         local env = {answer = 42}
+         local function fn() return answer end
+         core.setfenv(fn, env)
+         print(fn())
+      ]]).to_succeed_with '42\n'
 
 - describe with_frames:
   - it makes a getfenv and setfenv:

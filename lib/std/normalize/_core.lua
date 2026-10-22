@@ -20,12 +20,16 @@ local debug_getinfo = debug.getinfo
 local debug_getupvalue = debug.getupvalue
 local debug_setupvalue = debug.setupvalue
 local debug_upvaluejoin = debug.upvaluejoin
--- In Lua 5.1, only debug.getfenv works on C functions; but compatibility
--- layers (like specl) may supply only the best version as `getfenv`.
+-- Lua 5.1 has debug.getfenv and debug.setfenv, which work on C functions
+-- too, but only the global getfenv and setfenv work on level 0, the global
+-- environment.  An environment that smooths over Lua differences (like
+-- specl's sandbox) may hide the debug ones and supply a global of its own,
+-- probably this module's; so use the global ones only when nothing else
+-- will do.
+local debug_getfenv = debug.getfenv
+local debug_setfenv = debug.setfenv
 local host_getfenv = rawget(_G, 'getfenv') or false
 local host_setfenv = rawget(_G, 'setfenv') or false
-local debug_getfenv = debug.getfenv or host_getfenv
-local debug_setfenv = debug.setfenv or host_setfenv
 
 
 -- Whether *x* can be called, and so what it is if it can: *x* itself,
@@ -173,6 +177,10 @@ local function make_getfenv(extra)
             if n > 0 then
                -- Adjust for this function's stack frame, if fn is non-zero.
                n = n + 1 + extra
+               if debug_getfenv then
+                  -- Never the global getfenv, which may not be ours.
+                  return (debug_getfenv(debug_getinfo(n, 'f').func))
+               end
             end
 
             -- The parentheses return only the environment, and keep this
@@ -188,7 +196,7 @@ local function make_getfenv(extra)
 
          -- In Lua 5.1, only debug.getfenv works on C functions; but it
          -- does not work on stack counts.
-         return debug_getfenv(fn)
+         return (debug_getfenv or host_getfenv)(fn)
       end
    end
 
@@ -224,6 +232,11 @@ local function make_setfenv(extra)
          if n then
             if n > 0 then
                n = n + 1 + extra
+               if debug_setfenv then
+                  local f = debug_getinfo(n, 'f').func
+                  debug_setfenv(f, env)
+                  return f
+               end
             end
             -- One value, and not a tail call, as in getfenv.
             return (host_setfenv(n, env))
@@ -231,7 +244,7 @@ local function make_setfenv(extra)
          if type(fn) ~= 'function' then
             fn = unwrap(fn)
          end
-         return debug_setfenv(fn, env)
+         return (debug_setfenv or host_setfenv)(fn, env)
       end
    end
 

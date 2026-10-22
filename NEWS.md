@@ -21,6 +21,13 @@
     for an object whose `__metatable` field is not a table, such as
     `true`, when asked whether it can be called.
 
+  - In Lua 5.1, `getfenv` and `setfenv` find the function at a stack
+    level and use `debug.getfenv` and `debug.setfenv` on it, instead of
+    a global `getfenv` and `setfenv` that the host environment supplies,
+    which inside Specl's sandbox are std.normalize's own.  The global
+    ones are used only for level 0, or when there are no `debug`
+    versions.
+
 
 ## Noteworthy changes in release 3 (2026-10-20) [stable]
 
