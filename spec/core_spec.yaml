@@ -22,9 +22,14 @@ specify std.normalize._core:
       expect(luaproc [[
          local core = require 'std.normalize._core'
          local env = {}
-         local fn = loadstring and loadstring('return 1')
-            or load('return 1', 'chunk', 't', env)
-         if setfenv then setfenv(fn, env) end
+         -- Lua 5.2 may be built with a compatible loadstring, but has no
+         -- setfenv, so only look for the latter to decide how to load.
+         local fn
+         if setfenv then
+            fn = setfenv(loadstring('return 1'), env)
+         else
+            fn = load('return 1', 'chunk', 't', env)
+         end
          print(core.getfenv(fn) == env)
       ]]).to_succeed_with 'true\n'
   - it returns the environment of the caller for a stack level: |
