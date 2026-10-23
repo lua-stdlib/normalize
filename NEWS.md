@@ -2,6 +2,9 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+
+## Noteworthy changes in release 4 (2026-10-22) [stable]
+
 ### New features
 
   - New `getmetafield` returns a named field of the metatable of an
