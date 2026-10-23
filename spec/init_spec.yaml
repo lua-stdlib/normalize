@@ -1167,11 +1167,11 @@ specify std.normalize:
          end}
       end
 
-  - it returns nothing after setting the global environment:
+  - it raises an error for level 0, which has no global environment to set:
       expect(luaproc [[
          setfenv = require 'std.normalize'.setfenv
-         print(tostring(setfenv(0, _G)))
-      ]]).to_succeed_with 'nil\n'
+         setfenv(0, _G)
+      ]]).to_fail_while_matching 'cannot set the global environment'
   - it returns the actioned function otherwise:
       fn = function(env) return f(1, env), nil end
       expect((fn {})).to_be(fn)
@@ -1213,15 +1213,6 @@ specify std.normalize:
            __index = function(_, k) error('undeclared ' .. k) end,
         })
         expect(f(ftor, fnenv)).to_be(fn)
-    - it sets the global environment: |
-        pending 'what is this supposed to do, anyway?'
-        expect(luaproc [[
-           local os, print, setfenv = os, print, require 'std.normalize'.setfenv
-           _G.x = 'ohnoes'
-           setfenv(0, {x = 'woo!'})
-           print(_G.x)
-           os.exit(_G.x == 'woo!' and 0 or 1)
-        ]]).to_succeed_with 'woo!\n'
     - it sets the callers environment:
         fn = function(n, env) return f(n, env), nil end
         expect((fn(1, fnenv))).to_be(fn)
@@ -1262,15 +1253,6 @@ specify std.normalize:
            assert(M.getfenv(dispatcher) == dispatchenv)
            assert(ftor() == 'wrapped')
         ]])).to_succeed_with ''
-    - it sets the global environment: |
-        pending 'what is this supposed to do, anyway?'
-        expect(luaproc [[
-           local os, print, setfenv = os, print, require 'std.normalize'.setfenv
-           _G.x = 'ohnoes'
-           setfenv(0, {x='woo!'})
-           print(_G.x)
-           os.exit(_G.x == 'woo!' and 0 or 1)
-        ]]).to_succeed_with 'woo!\n'
     - it sets the callers environment:
         expect(luaproc(preamble .. [[
            fn = function(n, env) return f(n, env), nil end

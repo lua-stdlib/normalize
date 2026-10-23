@@ -635,7 +635,9 @@ local F = {
    --- Set a function or functor environment.
    --
    -- This version of setfenv works on all supported Lua versions, and
-   -- knows how to unwrap functors, like @{getfenv}.
+   -- knows how to unwrap functors, like @{getfenv}.  Lua 5.2 and later
+   -- have no global environment to set with level 0, so it is an error
+   -- in all of them.
    -- @function setfenv
    -- @tparam function|int fn stack level, C or Lua function or functor
    --    to act on

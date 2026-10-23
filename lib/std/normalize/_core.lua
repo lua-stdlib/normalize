@@ -21,11 +21,10 @@ local debug_getupvalue = debug.getupvalue
 local debug_setupvalue = debug.setupvalue
 local debug_upvaluejoin = debug.upvaluejoin
 -- Lua 5.1 has debug.getfenv and debug.setfenv, which work on C functions
--- too, but only the global getfenv and setfenv work on level 0, the global
--- environment.  An environment that smooths over Lua differences (like
--- specl's sandbox) may hide the debug ones and supply a global of its own,
--- probably this module's; so use the global ones only when nothing else
--- will do.
+-- too.  An environment that smooths over Lua differences (like specl's
+-- sandbox) may hide them and supply a global getfenv and setfenv of its
+-- own, probably this module's; so use the global ones only when nothing
+-- else will do.
 local debug_getfenv = debug.getfenv
 local debug_setfenv = debug.setfenv
 local host_getfenv = rawget(_G, 'getfenv') or false
@@ -179,8 +178,11 @@ local function make_getfenv(extra)
       return function(fn)
          local n = tointeger(fn or 1)
          if n then
+            if n == 0 then
+               return _G
+            end
             if n > 0 then
-               -- Adjust for this function's stack frame, if fn is non-zero.
+               -- Adjust for this function's stack frame.
                n = n + 1 + extra
                if debug_getfenv then
                   -- Never the global getfenv, which may not be ours.
@@ -235,6 +237,9 @@ local function make_setfenv(extra)
       return function(fn, env)
          local n = tointeger(fn or 1)
          if n then
+            if n == 0 then
+               error('cannot set the global environment', 2)
+            end
             if n > 0 then
                n = n + 1 + extra
                if debug_setfenv then
@@ -257,6 +262,9 @@ local function make_setfenv(extra)
    return function(fn, env)
       local n = tointeger(fn or 1)
       if n then
+         if n == 0 then
+            error('cannot set the global environment', 2)
+         end
          if n > 0 then
             n = n + 1 + extra
          end
@@ -274,7 +282,7 @@ local function make_setfenv(extra)
          debug_upvaluejoin(fn, up, function() return name end, 1)
          debug_setupvalue(fn, up, env)
       end
-      return n ~= 0 and fn or nil
+      return fn
    end
 end
 

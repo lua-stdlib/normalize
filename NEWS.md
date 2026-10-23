@@ -20,6 +20,13 @@
     `tointeger`, are in `std.normalize._core`, which requires nothing,
     so that they can vendor a copy of that one file.
 
+### Incompatible changes
+
+  - `setfenv(0, env)` raises an error in every Lua.  Lua 5.2 and later
+    have no global environment to replace, where Lua 5.1 did, so it used
+    to change the globals in 5.1 and silently do nothing in the others.
+    `getfenv(0)` returns `_G` in every Lua.
+
 ### Bug fixes
 
   - `callable`, `getmetamethod` and `unwrap` no longer raise an error
@@ -30,8 +37,7 @@
     level and use `debug.getfenv` and `debug.setfenv` on it, instead of
     a global `getfenv` and `setfenv` that the host environment supplies,
     which inside Specl's sandbox are std.normalize's own.  The global
-    ones are used only for level 0, or when there are no `debug`
-    versions.
+    ones are used only when there are no `debug` versions.
 
 
 ## Noteworthy changes in release 3 (2026-10-20) [stable]
