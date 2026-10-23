@@ -420,7 +420,7 @@ specify std.normalize:
 
   - context when std._debug.argcheck is true:
     - before:
-        fn = function(n) return getfenv(n), nil end
+        fn = function(...) return getfenv(...), nil end
         fnenv = {getfenv = f}
         M.setfenv(fn, fnenv)
         gn = function(n) return fn(n), nil end
@@ -470,8 +470,8 @@ specify std.normalize:
         expect((fn(1))).to_be(fnenv)
         expect((gn(1))).to_be(fnenv)
     - it returns the callers environment by default:
-        pending 'specl/luamacro fix to not add an invisible argument'
-        expect(fn()).to_be(fn(1))
+        expect((fn())).to_be(fnenv)
+        expect((fn(1))).to_be(fnenv)
     - it returns the environment of higher stack frames:
         expect((gn(2))).to_be(gnenv)
 
