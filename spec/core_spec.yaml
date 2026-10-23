@@ -22,7 +22,8 @@ specify std.normalize._core:
       expect(luaproc [[
          local core = require 'std.normalize._core'
          local env = {}
-         local fn = load('return 1', 'chunk', 't', env) or loadstring('return 1')
+         local fn = loadstring and loadstring('return 1')
+            or load('return 1', 'chunk', 't', env)
          if setfenv then setfenv(fn, env) end
          print(core.getfenv(fn) == env)
       ]]).to_succeed_with 'true\n'
