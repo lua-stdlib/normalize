@@ -22,10 +22,8 @@ specify std.normalize._core:
       expect(luaproc [[
          local core = require 'std.normalize._core'
          local env = {}
-         -- Lua 5.2 may be built with a compatible loadstring, but has no
-         -- setfenv, so only look for the latter to decide how to load.
          local fn
-         if setfenv then
+         if _VERSION == 'Lua 5.1' then
             fn = setfenv(loadstring('return 1'), env)
          else
             fn = load('return 1', 'chunk', 't', env)
@@ -39,7 +37,7 @@ specify std.normalize._core:
          -- Not a tail call, which would remove the frame to look in, and
          -- using a global, so that there is an _ENV to find.
          local function fn() local _ = type; local r = core.getfenv(1) return r end
-         if setfenv then setfenv(fn, _ENV) end
+         if _VERSION == 'Lua 5.1' then setfenv(fn, _ENV) end
          print(fn() == _ENV)
       ]]).to_succeed_with 'true\n'
   - it returns the global environment for 0: |
@@ -53,7 +51,7 @@ specify std.normalize._core:
          local core = require 'std.normalize._core'
          local _ENV = setmetatable({}, {__index = _G})
          local function fn() local _ = type; local r = core.getfenv(1) return r end
-         if setfenv then setfenv(fn, _ENV) end
+         if _VERSION == 'Lua 5.1' then setfenv(fn, _ENV) end
          print(fn() == _ENV)
       ]]).to_succeed_with 'true\n'
 
@@ -94,6 +92,6 @@ specify std.normalize._core:
          local function checked(fn, ...) local r = fn(...) return r end
          local _ENV = setmetatable({}, {__index = _G})
          local function fn() local _ = type; local r = checked(f.getfenv, 1) return r end
-         if setfenv then setfenv(fn, _ENV) end
+         if _VERSION == 'Lua 5.1' then setfenv(fn, _ENV) end
          print(fn() == _ENV)
       ]]).to_succeed_with 'true\n'
