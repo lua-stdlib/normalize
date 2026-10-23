@@ -1170,7 +1170,7 @@ specify std.normalize:
          setfenv(0, _G)
       ]]).to_fail_while_matching 'cannot set the global environment'
   - it returns the actioned function otherwise:
-      fn = function(env) return f(1, env), nil end
+      fn = function(env) local r = f(1, env) return r end
       expect((fn {})).to_be(fn)
       expect(f(fn, {})).to_be(fn)
   - it returns only the actioned function:
@@ -1181,7 +1181,7 @@ specify std.normalize:
 
   - context when std._debug.argcheck is true:
     - before:
-        fn = function(env) return f(1, env), nil end
+        fn = function(env) local r = f(1, env) return r end
         fnenv = {f = f}
 
     - it sets the environment of a function:
@@ -1211,9 +1211,9 @@ specify std.normalize:
         })
         expect(f(ftor, fnenv)).to_be(fn)
     - it sets the callers environment:
-        fn = function(n, env) return f(n, env), nil end
+        fn = function(n, env) local r = f(n, env) return r end
         expect((fn(1, fnenv))).to_be(fn)
-        gn = function(n, env) return fn(n, env), nil end
+        gn = function(n, env) local r = fn(n, env) return r end
         expect((gn(1, fnenv))).to_be(fn)
         expect((gn(2, {fn = fn}))).to_be(gn)
 
@@ -1223,7 +1223,7 @@ specify std.normalize:
            require 'std._debug'.argcheck = false
            M = require 'std.normalize'
            f = M.setfenv
-           fn = function(env) return f(1, env), nil end
+           fn = function(env) local r = f(1, env) return r end
            fnenv = {f = f}
         ]]
 
@@ -1252,12 +1252,12 @@ specify std.normalize:
         ]])).to_succeed_with ''
     - it sets the callers environment:
         expect(luaproc(preamble .. [[
-           fn = function(n, env) return f(n, env), nil end
+           fn = function(n, env) local r = f(n, env) return r end
            os.exit(fn(1, fnenv) == fn and 0 or 1)
         ]])).to_succeed_with ''
         expect(luaproc(preamble .. [[
-           fn = function(n, env) return f(n, env), nil end
-           gn = function(n, env) return fn(n, env), nil end
+           fn = function(n, env) local r = f(n, env) return r end
+           gn = function(n, env) local r = fn(n, env) return r end
            print(gn(1, fnenv) == fn)
            os.exit(gn(2, {fn = fn}) == gn and 0 or 1)
         ]])).to_succeed_with 'true\n'
