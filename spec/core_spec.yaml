@@ -79,6 +79,22 @@ specify std.normalize._core:
          print(pcall(core.setfenv, 0, {}))
       ]]).to_succeed_with 'false\tcannot set the global environment\n'
 
+- describe pack:
+  - it uses the host table.pack where there is one: |
+      expect(luaproc [[
+         local real = table.pack
+         local called = false
+         if real then
+            table.pack = function(...)
+               called = true
+               return real(...)
+            end
+         end
+         local core = require 'std.normalize._core'
+         local l = core.pack(nil, 1, nil, nil, false)
+         print(real == nil or called, l.n, core.len(l))
+      ]]).to_succeed_with 'true\t5\t5\n'
+
 - describe with_frames:
   - it makes a getfenv and setfenv:
       f = core.with_frames(0)

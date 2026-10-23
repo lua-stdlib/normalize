@@ -141,7 +141,7 @@ local pack = (function(f)
    return function(...)
       return setmetatable(pack_fn(...), pack_mt)
    end
-end)(rawget(_G, "pack"))
+end)(table.pack)
 
 
 local pairs = (function(b)
