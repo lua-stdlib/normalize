@@ -561,11 +561,10 @@ local F = {
 
    --- Deterministic, functional version of core Lua `#` operator.
    --
-   -- Respects `__len` metamethod (like Lua 5.2+), or else if there is
-   --   a `__tostring` metamethod return the length of the string it
-   -- returns.   Otherwise, always return one less than the lowest
-   -- integer index with a `nil` value in *x*, where the `#` operator
-   -- implementation might return the size of the array part of a table.
+   -- Respects `__len` metamethod (like Lua 5.2+).  Otherwise, always
+   -- return one less than the lowest integer index with a `nil` value in
+   -- *x*, where the `#` operator implementation might return the size of
+   -- the array part of a table.  A `__tostring` metamethod is ignored.
    -- @function len
    -- @param x item to act on
    -- @treturn int the length of *x*

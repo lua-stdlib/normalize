@@ -29,6 +29,10 @@
 
 ### Bug fixes
 
+  - The documentation of `len` no longer says that it uses a
+    `__tostring` metamethod, which it has not done since release 2.0.4.
+    (It returns the length of the object, ignoring that metamethod.)
+
   - `load` accepts a string-like object, one with a `__tostring`
     metamethod, as the chunk or the chunk name again, as it did before
     its arguments were checked with typecheck.
