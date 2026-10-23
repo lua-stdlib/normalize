@@ -3,7 +3,7 @@
 <html>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
 <head>
-    <title>std.normalize 3 Reference</title>
+    <title>std.normalize 4 Reference</title>
     <link rel="stylesheet" href="ldoc.css" type="text/css" />
 </head>
 <body>
@@ -24,7 +24,7 @@
 
 <div id="navigation">
 <br/>
-<h1>std.normalize 3</h1>
+<h1>std.normalize 4</h1>
 
 
 
@@ -91,8 +91,16 @@
 	<td class="summary">Raise a bad argument error.</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#callable">callable (x)</a></td>
+	<td class="summary">Return <em>x</em> if it can be called, otherwise <code>nil</code>.</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#getfenv">getfenv ([fn=1])</a></td>
 	<td class="summary">Get a function or functor environment.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#getmetafield">getmetafield (x, n)</a></td>
+	<td class="summary">Return the named field of the metatable of an object, if any.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#getmetamethod">getmetamethod (x, n)</a></td>
@@ -101,6 +109,10 @@
 	<tr>
 	<td class="name" nowrap><a href="#ipairs">ipairs (t)</a></td>
 	<td class="summary">Iterate over elements of a sequence, until the first <code>nil</code> value.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#iscallable">iscallable (x)</a></td>
+	<td class="summary">Whether <em>x</em> can be called.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#len">len (x)</a></td>
@@ -280,6 +292,44 @@
 
 </dd>
     <dt>
+    <a name = "callable"></a>
+    <strong>callable (x)</strong>
+    </dt>
+    <dd>
+    Return <em>x</em> if it can be called, otherwise <code>nil</code>.
+ A function can be called, and so can a table, or other object,
+ with a <code>__call</code> metamethod in its metatable, a functor.  Unlike the
+ <code>__call</code> metamethod, which takes the functor as its first argument,
+ the object that this returns can be called with just the arguments
+ that it is for.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         an object or primitive
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        <em>x</em> if <em>x</em> can be called, otherwise <code>nil</code>
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="index.html#iscallable">iscallable</a>
+    </ul>
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">(<span class="function-name">callable</span>(functor) <span class="keyword">or</span> <span class="keyword">function</span>() <span class="keyword">end</span>)(args, ...)</pre>
+    </ul>
+
+</dd>
+    <dt>
     <a name = "getfenv"></a>
     <strong>getfenv ([fn=1])</strong>
     </dt>
@@ -317,6 +367,51 @@
     <h3>Usage:</h3>
     <ul>
         <pre class="example">callers_environment = <span class="function-name">getfenv</span>(<span class="number">1</span>)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "getmetafield"></a>
+    <strong>getmetafield (x, n)</strong>
+    </dt>
+    <dd>
+    Return the named field of the metatable of an object, if any.
+ Unlike <code>getmetatable(x)[n]</code>, or <code>(getmetatable(x) or {})[n]</code>, this
+ does not raise an error for an object that has no metatable, or
+ whose <code>__metatable</code> field, which <code>getmetatable</code> returns, is not a
+ table.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         item to act on
+        </li>
+        <li><span class="parameter">n</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a></span>
+         name of field to look up
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+
+<p>the value of field <em>n</em> of the metatable of <em>x</em>, or <code>nil</code></p>
+<pre><code>if it has none
+</code></pre>
+
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="index.html#getmetamethod">getmetamethod</a>
+    </ul>
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="keyword">local</span> kind = <span class="function-name">getmetafield</span>(x, <span class="string">'_type'</span>) <span class="keyword">or</span> <span class="global">type</span>(x)</pre>
     </ul>
 
 </dd>
@@ -409,17 +504,54 @@
 
 </dd>
     <dt>
+    <a name = "iscallable"></a>
+    <strong>iscallable (x)</strong>
+    </dt>
+    <dd>
+    Whether <em>x</em> can be called.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         an object or primitive
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">boolean</span></span>
+
+<p><code>true</code> if <em>x</em> is a function or a functor,</p>
+<pre><code>otherwise `false`
+</code></pre>
+
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="index.html#callable">callable</a>
+    </ul>
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="keyword">if</span> <span class="function-name">iscallable</span>(handler) <span class="keyword">then</span> <span class="function-name">handler</span>(event) <span class="keyword">end</span></pre>
+    </ul>
+
+</dd>
+    <dt>
     <a name = "len"></a>
     <strong>len (x)</strong>
     </dt>
     <dd>
     Deterministic, functional version of core Lua <code>#</code> operator. </p>
 
-<p> Respects <code>__len</code> metamethod (like Lua 5.2+), or else if there is
-   a <code>__tostring</code> metamethod return the length of the string it
- returns.   Otherwise, always return one less than the lowest
- integer index with a <code>nil</code> value in <em>x</em>, where the <code>#</code> operator
- implementation might return the size of the array part of a table.
+<p> Respects <code>__len</code> metamethod (like Lua 5.2+).  Otherwise, always
+ return one less than the lowest integer index with a <code>nil</code> value in
+ <em>x</em>, where the <code>#</code> operator implementation might return the size of
+ the array part of a table.  A <code>__tostring</code> metamethod is ignored.
 
 
     <h3>Parameters:</h3>
@@ -458,11 +590,15 @@
     <ul>
         <li><span class="parameter">ld</span>
             <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a> or <span class="type">function</span></span>
-         chunk to load
+
+<p> chunk to load, or a functor or string-like</p>
+<pre><code>object that stands for one
+</code></pre>
+
         </li>
         <li><span class="parameter">source</span>
             <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a></span>
-         name of the source of <em>ld</em>
+         name of the source of <em>ld</em>, or a string-like object
         </li>
     </ul>
 
@@ -599,7 +735,9 @@
     Set a function or functor environment. </p>
 
 <p> This version of setfenv works on all supported Lua versions, and
- knows how to unwrap functors, like <a href="index.html#getfenv">getfenv</a>.
+ knows how to unwrap functors, like <a href="index.html#getfenv">getfenv</a>.  Lua 5.2 and later
+ have no global environment to set with level 0, so it is an error
+ in all of them.
 
 
     <h3>Parameters:</h3>
@@ -1539,7 +1677,7 @@
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/lunarmodules/ldoc">LDoc 1.5.0</a></i>
-<i style="float:right;">Last updated 2026-10-20 16:26:04 </i>
+<i style="float:right;">Last updated 2026-10-22 17:31:35 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>
