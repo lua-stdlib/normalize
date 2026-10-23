@@ -578,13 +578,15 @@ local F = {
 
    --- Load a string or a function, just like Lua 5.2+.
    -- @function load
-   -- @tparam string|function ld chunk to load
-   -- @string source name of the source of *ld*
+   -- @tparam string|function ld chunk to load, or a functor or string-like
+   --    object that stands for one
+   -- @string source name of the source of *ld*, or a string-like object
    -- @treturn function a Lua function to execute *ld* in global scope.
    -- @usage
    --    assert(load 'print "woo"')()
-   load = argscheck 'load(callable|string, [string])'
+   load = argscheck 'load(callable|string|table, [string|table])'
       .. normalize_load,
+   -- TODO: when typecheck has `stringy` equivalent again tighten up the signature
 
    loadfile = _G.loadfile,
    next = _G.next,

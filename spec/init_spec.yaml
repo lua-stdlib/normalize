@@ -753,18 +753,18 @@ specify std.normalize:
   - context with bad arguments: |
       if have_typecheck then
          examples {['it diagnoses missing argument #1'] = function()
-            expect(f()).to_raise 'callable or string expected, got no value'
+            expect(f()).to_raise 'callable, string or table expected, got no value'
          end}
          examples {['it diagnoses nil-valued argument #1'] = function()
-            expect(f(nil)).to_raise 'callable or string expected, got nil'
+            expect(f(nil)).to_raise 'callable, string or table expected, got nil'
          end}
-         examples {['it diagnoses argument #1 type not callable or string'] = function()
-            expect(f(false)).to_raise 'callable or string expected, got boolean'
+         examples {['it diagnoses argument #1 type not callable, string or table'] = function()
+            expect(f(false)).to_raise 'callable, string or table expected, got boolean'
             functable = setmetatable({}, {__call = function() end})
-            expect(f(functable)).not_to_raise 'callable or string expected'
+            expect(f(functable)).not_to_raise 'callable, string or table expected'
          end}
-         examples {['it diagnoses argument #2 type not string'] = function()
-            expect(f('_=1', false)).to_raise 'string expected, got boolean'
+         examples {['it diagnoses argument #2 type not string or table'] = function()
+            expect(f('_=1', false)).to_raise 'string or table expected, got boolean'
          end}
       end
 
@@ -779,26 +779,24 @@ specify std.normalize:
   - it calls a functor for successive chunks:
       fn = f(setmetatable({}, {__call  = chunky}))
       expect(fn()).to_be(math.pi)
-  - it uses chunk string for error messages by default: |
-      pending 'specl release with working load interception'
-      expect(assert(f('blow'))).to_raise '%[string "blow"%]:1:'
-  - it uses '(load)' for function error messages by default: |
-      pending 'specl release with working load interception'
-      expect(assert(f(chunky))).to_raise '%(load%):1:'
-  - it uses chunkname for error messages: |
-      pending 'specl release with working load interception'
-      expect(assert(f('blow', 'the chunks'))).
-         to_raise '^%[string "the chunks"%]:1:'
-      expect(assert(f(chunky, 'the chunks'))).
-         to_raise '^%[string "the chunks"%]:1:'
-  - it supports string-like chunkname: |
-      pending 'specl release with working load interception'
+  - it accepts a string-like chunk:
+      __tostring = function() return 'return 42' end
+      fn = f(setmetatable({}, {__tostring = __tostring}))
+      expect(fn()).to_be(42)
+  - it uses chunk string for error messages by default:
+      expect(select(2, f 'blow')).to_contain '[string "blow"]:1:'
+  - it uses '(load)' for function error messages by default:
+      pieces = {'blow'}
+      reader = function() return table.remove(pieces) end
+      expect(select(2, f(reader))).to_contain '(load):1:'
+  - it uses chunkname for error messages:
+      expect(select(2, f('blow', 'the chunks'))).
+         to_contain '[string "the chunks"]:1:'
+  - it supports string-like chunkname:
       __tostring = function() return 'teh chunks' end
       chunkname = setmetatable({}, {__tostring = __tostring})
-      expect(assert(f('blow', chunkname))).
-         to_raise '^%[string "teh chunks"%]:1:'
-      expect(assert(f(chunky, chunkname))).
-         to_raise '^%[string "teh chunks"%]:1:'
+      expect(select(2, f('blow', chunkname))).
+         to_contain '[string "teh chunks"]:1:'
 
 
 - describe math:

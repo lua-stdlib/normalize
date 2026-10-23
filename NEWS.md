@@ -29,6 +29,10 @@
 
 ### Bug fixes
 
+  - `load` accepts a string-like object, one with a `__tostring`
+    metamethod, as the chunk or the chunk name again, as it did before
+    its arguments were checked with typecheck.
+
   - `callable`, `getmetamethod` and `unwrap` no longer raise an error
     for an object whose `__metatable` field is not a table, such as
     `true`, when asked whether it can be called.
