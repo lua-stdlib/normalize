@@ -796,6 +796,25 @@ specify std.normalize:
       chunkname = setmetatable({}, {__tostring = __tostring})
       expect(select(2, f('blow', chunkname))).
          to_contain '[string "teh chunks"]:1:'
+  - it accepts a nil chunkname and mode before the environment:
+      fn = f('return x', nil, nil, {x = 'in env'})
+      expect(fn()).to_be 'in env'
+  - it runs a string chunk in the environment:
+      fn = f('return x', 'chunk', 't', {x = 'in env'})
+      expect(fn()).to_be 'in env'
+  - it runs a function chunk in the environment:
+      fn = f(chunky, 'chunk', 't', {math = {pi = 'in env'}})
+      expect(fn()).to_be 'in env'
+  - it keeps the global environment without an environment argument: |
+      expect(luaproc [[
+         x = 'global'
+         local load = require 'std.normalize'.load
+         print(load 'return x'(), load('return x', 'chunk', 't')())
+      ]]).to_succeed_with 'global\tglobal\n'
+  - it returns nil and a message for a bad chunk, with an environment:
+      fn, err = f('blow', 'chunk', 't', {})
+      expect(fn).to_be(nil)
+      expect(err).to_contain '[string "chunk"]:1:'
 
 
 - describe math:

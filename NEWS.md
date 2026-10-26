@@ -2,6 +2,12 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+### New features
+
+  - `load` takes the `mode` and `env` arguments of Lua 5.2 and later in
+    every Lua: in Lua 5.1 the environment is set with `setfenv`, and
+    `mode` is ignored.  A `nil` chunk name is accepted before them.
+
 ### Bug fixes
 
   - `string.format` accepts any value for `%s` in Lua 5.1, as the later

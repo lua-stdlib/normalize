@@ -239,7 +239,14 @@ local load = (function(ok)
 end)(pcall(load, '_=1'))
 
 
-local function normalize_load(chunk, chunkname)
+-- Whether the host `load` takes an environment, as Lua 5.2 and later do.
+local load_takes_env = (function()
+   local fn = load('return x', '=probe', 't', {x = true})
+   return fn ~= nil and fn() == true
+end)()
+
+
+local function normalize_load(chunk, chunkname, mode, ...)
    local m = getmetamethod(chunk, '__call')
    if m then
       chunk = m
@@ -249,7 +256,15 @@ local function normalize_load(chunk, chunkname)
    if getmetamethod(chunkname, '__tostring') then
       chunkname = tostring(chunkname)
    end
-   return load(chunk, chunkname)
+   if select('#', ...) == 0 or load_takes_env then
+      return load(chunk, chunkname, mode, ...)
+   end
+
+   local fn, err = load(chunk, chunkname)
+   if fn ~= nil then
+      normalize_setfenv(fn, (...))
+   end
+   return fn, err
 end
 
 
@@ -602,10 +617,17 @@ local F = {
    -- @tparam string|function ld chunk to load, or a functor or string-like
    --    object that stands for one
    -- @string source name of the source of *ld*, or a string-like object
-   -- @treturn function a Lua function to execute *ld* in global scope.
+   -- @string[opt] mode `'t'`, `'b'` or `'bt'` to allow only text, only
+   --    binary, or either kind of chunk; only Lua 5.2 and later check it
+   -- @tparam[opt] table env the environment for the chunk, in place of
+   --    the global one; in Lua 5.1 it must be a table, and is set with
+   --    `setfenv`
+   -- @treturn function a Lua function to execute *ld* in global scope,
+   --    or in *env* if one is given
    -- @usage
    --    assert(load 'print "woo"')()
-   load = argscheck 'load(callable|string|table, [string|table])'
+   --    assert(load('return x', 'chunk', 't', {x = 'woo'}))()
+   load = argscheck 'load(callable|string|table, <?string|table>, <?string>, <?any>)'
       .. normalize_load,
    -- TODO: when typecheck has `stringy` equivalent again tighten up the signature
 
