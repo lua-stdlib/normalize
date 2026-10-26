@@ -8,6 +8,9 @@
     every Lua: in Lua 5.1 the environment is set with `setfenv`, and
     `mode` is ignored.  A `nil` chunk name is accepted before them.
 
+  - New `table.maxn`, which Lua 5.2 dropped, returns the largest
+    positive number that is a key of a table.
+
 ### Bug fixes
 
   - `string.format` accepts any value for `%s` in Lua 5.1, as the later

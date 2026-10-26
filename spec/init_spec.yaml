@@ -1388,6 +1388,22 @@ specify std.normalize:
         expect(f(a)).to_match '^%[1, 2, 3, table:.*%]$'
 
 - describe table:
+  - describe maxn:
+    - before:
+        f = M.table.maxn
+
+    - context with bad arguments:
+        badargs.diagnose('table.maxn(table)', f)
+
+    - it is 0 for an empty table:
+        expect(f {}).to_be(0)
+    - it is the largest positive number key:
+        expect(f {'a', 'b', [5]='e', x=9}).to_be(5)
+    - it ignores holes, and the keys that are not positive numbers:
+        expect(f {[2]=true, [-4]=true, [0]=true, x=1}).to_be(2)
+    - it finds a number key that is not an integer:
+        expect(f {[1]=true, [2.5]=true}).to_be(2.5)
+
   - describe keys:
     - before:
         f = M.table.keys

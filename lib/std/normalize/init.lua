@@ -268,6 +268,17 @@ local function normalize_load(chunk, chunkname, mode, ...)
 end
 
 
+local function maxn(t)
+   local n = 0
+   for k in next, t do
+      if type(k) == 'number' and k > n then
+         n = k
+      end
+   end
+   return n
+end
+
+
 local function merge(t, r)
    r = r or {}
    for k, v in next, t do
@@ -931,6 +942,19 @@ local G = {
    table = {
       concat = _G.table.concat,
       insert = _G.table.insert,
+
+      --- Return the largest positive numerical key of a table.
+      -- This was `table.maxn` in Lua 5.1, and is not in the later
+      -- releases.
+      -- @function table.maxn
+      -- @tparam table t table to operate on
+      -- @treturn number the largest positive number that is a key of *t*,
+      --    or `0` if there is none
+      -- @usage
+      --    --> 5
+      --    maxn{'a', [5]='e', x=9}
+      maxn = argscheck 'table.maxn(table)'
+         .. maxn,
 
       --- Return an unordered list of all keys in a table.
       -- @function table.keys
