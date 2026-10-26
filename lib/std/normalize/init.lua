@@ -413,6 +413,28 @@ local function unpack(t, i, j)
 end
 
 
+-- Lua 5.1 formats only strings and numbers with `%s`, where later Luas
+-- convert anything else with `tostring`, so do that here for 5.1.
+local normalize_format = (function(f)
+   if pcall(f, '%s', nil) then
+      return f
+   end
+
+   return function(fmt, ...)
+      local argu, i = {n=select('#', ...), ...}, 0
+      for conversion in gmatch(fmt, '%%[-+ #0]*%d*%.?%d*([%a%%])') do
+         if conversion ~= '%' then
+            i = i + 1
+            if conversion == 's' then
+               argu[i] = tostring(argu[i])
+            end
+         end
+      end
+      return f(fmt, unpack(argu, 1, argu.n))
+   end
+end)(format)
+
+
 do
    local have_xpcall_args = false
    local function catch(arg) have_xpcall_args = arg end
@@ -851,7 +873,16 @@ local G = {
       char = _G.string.char,
       dump = _G.string.dump,
       find = _G.string.find,
-      format = _G.string.format,
+
+      --- Return a formatted string, converting any `%s` argument with `tostring`.
+      -- Lua 5.1 only accepts strings and numbers for `%s`, so wrap it there
+      -- to match the later Luas; elsewhere this is `string.format`.
+      -- @function string.format
+      -- @string fmt a format string
+      -- @param ... values to substitute into *fmt*
+      -- @treturn string *fmt* with each conversion replaced by an argument
+      format = normalize_format,
+
       gmatch = _G.string.gmatch,
       gsub = _G.string.gsub,
       lower = _G.string.lower,

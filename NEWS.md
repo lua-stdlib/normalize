@@ -4,6 +4,10 @@
 
 ### Bug fixes
 
+  - `string.format` accepts any value for `%s` in Lua 5.1, as the later
+    Luas do, converting it with `tostring`.  Lua 5.1 raised an error for
+    anything but a string or a number, such as `nil` or a table.
+
   - The documentation of `str` says that it escapes control characters
     in strings (`str('a\nb')` is `a\nb`, not the original string), so
     code that wants a string as it is should use `tostring`.

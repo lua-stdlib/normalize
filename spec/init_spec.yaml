@@ -1298,6 +1298,39 @@ specify std.normalize:
 
 
 - describe string:
+  - describe format:
+    - before:
+        f = M.string.format
+
+    - it formats like the host string.format:
+        expect(f('%5.2f|%-3d|%s|%%', 3.14159, 7, 'x')).
+           to_be ' 3.14|7  |x|%'
+    - it converts any other argument of %s with tostring:
+        obj = setmetatable({}, {__tostring = function() return 'obj' end})
+        expect(f('%s %s %s %s', nil, false, obj, 42)).
+           to_be 'nil false obj 42'
+    - it matches arguments to conversions around %%:
+        expect(f('%d%%%s', 5, nil)).to_be '5%nil'
+    - it accepts trailing nils: |
+        expect(f('%s,%s', 1, nil)).to_be '1,nil'
+    - it does the same where the host rejects them: |
+        expect(luaproc [[
+           local host = string.format
+           string.format = function(fmt, ...)
+              for i = 1, select('#', ...) do
+                 local v = select(i, ...)
+                 if fmt:find('%%s') and type(v) ~= 'string' and
+                    type(v) ~= 'number' then
+                    error('bad argument #' .. i + 1 .. " to 'format'", 2)
+                 end
+              end
+              return host(fmt, ...)
+           end
+           local format = require 'std.normalize'.string.format
+           print(format('%s|%s|%5.1f|%%|%s', nil, {}, 2, false):
+              gsub('table: 0x%x+', 'table'))
+        ]]).to_succeed_with 'nil|table|  2.0|%|false\t1\n'
+
   - describe render:
     - before: |
         arrayvfns = {
