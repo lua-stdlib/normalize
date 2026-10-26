@@ -2,6 +2,12 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+### Bug fixes
+
+  - The documentation of `str` says that it escapes control characters
+    in strings (`str('a\nb')` is `a\nb`, not the original string), so
+    code that wants a string as it is should use `tostring`.
+
 
 ## Noteworthy changes in release 4 (2026-10-22) [stable]
 

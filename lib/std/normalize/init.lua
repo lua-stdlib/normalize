@@ -652,6 +652,9 @@ local F = {
    setmetatable = _G.setmetatable,
 
    --- Return a compact stringified representation of argument.
+   -- A string argument has its control characters (`\a\b\t\n\v\f\r`)
+   -- written as C-like escape sequences, so use `tostring` to get a
+   -- string exactly as it is.
    -- @function str
    -- @param x item to act on
    -- @treturn string compact string representing *x*
