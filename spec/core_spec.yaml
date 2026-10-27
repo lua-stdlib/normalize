@@ -10,9 +10,9 @@ specify std.normalize._core:
     for k in pairs(core) do keys[#keys + 1] = k end
     table.sort(keys)
     expect(keys).to_equal {
-       'callable', 'getfenv', 'getmetafield', 'getmetamethod', 'iscallable',
-       'len', 'pack',
-       'pairs', 'rawlen', 'setfenv', 'tointeger', 'with_frames',
+       'callable', 'getfenv', 'getmetafield', 'getmetamethod', 'hints',
+       'iscallable', 'len', 'pack',
+       'pairs', 'rawlen', 'setfenv', 'strictness', 'tointeger', 'with_frames',
     }
 - it is the pack that std.normalize exports:
     expect(require('std.normalize').pack).to_be(core.pack)
@@ -110,4 +110,69 @@ specify std.normalize._core:
          local function fn() local _ = type; local r = checked(f.getfenv, 1) return r end
          if _VERSION == 'Lua 5.1' then setfenv(fn, _ENV) end
          print(fn() == _ENV)
+      ]]).to_succeed_with 'true\n'
+
+- describe hints:
+  - it has argcheck and strict on when std._debug is not installed: |
+      expect(luaproc [[
+         package.preload['std._debug'] = function() error('not installed', 0) end
+         local h = require 'std.normalize._core'.hints()
+         print(h.argcheck, h.strict)
+      ]]).to_succeed_with 'true\ttrue\n'
+  - it is the same table every time: |
+      expect(luaproc [[
+         package.preload['std._debug'] = function() error('not installed', 0) end
+         local core = require 'std.normalize._core'
+         print(core.hints() == core.hints())
+      ]]).to_succeed_with 'true\n'
+  - it turns both off when called with false, as std._debug does: |
+      expect(luaproc [[
+         package.preload['std._debug'] = function() error('not installed', 0) end
+         local h = require 'std.normalize._core'.hints()
+         h(false)
+         print(h.argcheck, h.strict)
+      ]]).to_succeed_with 'false\tfalse\n'
+  - it turns both back on when called with true, or with nothing: |
+      expect(luaproc [[
+         package.preload['std._debug'] = function() error('not installed', 0) end
+         local h = require 'std.normalize._core'.hints()
+         h(false)
+         h(true)
+         io.write(tostring(h.argcheck), ' ', tostring(h.strict), ' ')
+         h(false)
+         h()
+         print(h.argcheck, h.strict)
+      ]]).to_succeed_with 'true true true\ttrue\n'
+  - it is std._debug, with its own hints, when that is installed: |
+      expect(luaproc [[
+         local debug = {argcheck = false}
+         package.preload['std._debug'] = function() return debug end
+         local h = require 'std.normalize._core'.hints()
+         print(h == debug, h.strict)
+      ]]).to_succeed_with 'true\tnil\n'
+
+- describe strictness:
+  - it is std.strict when that is installed: |
+      expect(luaproc [[
+         package.preload['std._debug'] = function() error('not installed', 0) end
+         local strict = function() end
+         package.preload['std.strict.init'] = function() return strict end
+         print(require 'std.normalize._core'.strictness() == strict)
+      ]]).to_succeed_with 'true\n'
+  - it is std.strict with std._debug installed, until strict is set false: |
+      expect(luaproc [[
+         local debug = {strict = true}
+         package.preload['std._debug'] = function() return debug end
+         local strict = function() end
+         package.preload['std.strict.init'] = function() return strict end
+         local core = require 'std.normalize._core'
+         io.write(tostring(core.strictness() == strict), ' ')
+         debug.strict = false
+         print(core.strictness() == strict)
+      ]]).to_succeed_with 'true false\n'
+  - it only gives the environment back when std.strict is not installed: |
+      expect(luaproc [[
+         package.preload['std.strict.init'] = function() error('not installed', 0) end
+         local env = {}
+         print(require 'std.normalize._core'.strictness()(env, 1) == env)
       ]]).to_succeed_with 'true\n'

@@ -4,6 +4,13 @@
 
 ### New features
 
+  - `std.normalize._core`, the file that typecheck, std.strict and
+    optparse keep a copy of, has `hints` and `strictness`.  They say
+    whether to check arguments and variable declarations: from std._debug
+    when it is installed, and otherwise on, for as long as typecheck and
+    std.strict are installed.  Every library that has a copy of the file
+    now agrees, and the defaults are changed in one place.
+
   - `load` takes the `mode` and `env` arguments of Lua 5.2 and later in
     every Lua: in Lua 5.1 the environment is set with `setfenv`, and
     `mode` is ignored.  A `nil` chunk name is accepted before them.
