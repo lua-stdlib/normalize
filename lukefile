@@ -8,13 +8,10 @@ luke_format = 0
 package  = 'std.normalize'
 version  = '$USER'
 
+-- LuaRocks builds the modules from the rockspec, which is how `luke release`
+-- builds them too, so what is left is for `luke`, to build the LDocs, and
+-- for `luke release`.
 ldocs    = 'build-aux/config.ld.in'
-
-modules  = {
-   {['std.normalize']         = 'lib/std/normalize/init.lua'},
-   {['std.normalize._core']   = 'lib/std/normalize/_core.lua'},
-   {['std.normalize.version'] = 'lib/std/normalize/version.lua.in'},
-}
 
 release  = {
    news               = 'NEWS.md',
