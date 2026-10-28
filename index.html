@@ -3,7 +3,7 @@
 <html>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
 <head>
-    <title>std.normalize 4 Reference</title>
+    <title>std.normalize 4.1 Reference</title>
     <link rel="stylesheet" href="ldoc.css" type="text/css" />
 </head>
 <body>
@@ -24,7 +24,7 @@
 
 <div id="navigation">
 <br/>
-<h1>std.normalize 4</h1>
+<h1>std.normalize 4.1</h1>
 
 
 
@@ -119,7 +119,7 @@
 	<td class="summary">Deterministic, functional version of core Lua <code>#</code> operator.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#load">load (ld, source)</a></td>
+	<td class="name" nowrap><a href="#load">load (ld, source[, mode[, env]])</a></td>
 	<td class="summary">Load a string or a function, just like Lua 5.2+.</td>
 	</tr>
 	<tr>
@@ -167,8 +167,16 @@
 	<td class="summary">Searches for a named file in a given path.</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#string.format">string.format (fmt, ...)</a></td>
+	<td class="summary">Return a formatted string, converting any <code>%s</code> argument with <code>tostring</code>.</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#string.render">string.render (x, vfns[, roots])</a></td>
 	<td class="summary">Low-level recursive data to string rendering.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#table.maxn">table.maxn (t)</a></td>
+	<td class="summary">Return the largest positive numerical key of a table.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#table.keys">table.keys (t)</a></td>
@@ -580,7 +588,7 @@
 </dd>
     <dt>
     <a name = "load"></a>
-    <strong>load (ld, source)</strong>
+    <strong>load (ld, source[, mode[, env]])</strong>
     </dt>
     <dd>
     Load a string or a function, just like Lua 5.2+.
@@ -600,20 +608,44 @@
             <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a></span>
          name of the source of <em>ld</em>, or a string-like object
         </li>
+        <li><span class="parameter">mode</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a></span>
+
+<p> <code>'t'</code>, <code>'b'</code> or <code>'bt'</code> to allow only text, only</p>
+<pre><code>binary, or either kind of chunk; only Lua 5.2 and later check it
+</code></pre>
+
+         (<em>optional</em>)
+        </li>
+        <li><span class="parameter">env</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.7">table</a></span>
+
+<p> the environment for the chunk, in place of</p>
+<pre><code>the global one; in Lua 5.1 it must be a table, and is set with
+`setfenv`
+</code></pre>
+
+         (<em>optional</em>)
+        </li>
     </ul>
 
     <h3>Returns:</h3>
     <ol>
 
            <span class="types"><span class="type">function</span></span>
-        a Lua function to execute <em>ld</em> in global scope.
+
+<p>a Lua function to execute <em>ld</em> in global scope,</p>
+<pre><code>or in *env* if one is given
+</code></pre>
+
     </ol>
 
 
 
     <h3>Usage:</h3>
     <ul>
-        <pre class="example"><span class="global">assert</span>(<span class="global">load</span> <span class="string">'print "woo"'</span>)()</pre>
+        <pre class="example"><span class="global">assert</span>(<span class="global">load</span> <span class="string">'print "woo"'</span>)()
+<span class="global">assert</span>(<span class="global">load</span>(<span class="string">'return x'</span>, <span class="string">'chunk'</span>, <span class="string">'t'</span>, {x = <span class="string">'woo'</span>}))()</pre>
     </ul>
 
 </dd>
@@ -777,6 +809,9 @@
     </dt>
     <dd>
     Return a compact stringified representation of argument.
+ A string argument has its control characters (<code>\a\b\t\n\v\f\r</code>)
+ written as C-like escape sequences, so use <code>tostring</code> to get a
+ string exactly as it is.
 
 
     <h3>Parameters:</h3>
@@ -1061,6 +1096,38 @@
 
 </dd>
     <dt>
+    <a name = "string.format"></a>
+    <strong>string.format (fmt, ...)</strong>
+    </dt>
+    <dd>
+    Return a formatted string, converting any <code>%s</code> argument with <code>tostring</code>.
+ Lua 5.1 only accepts strings and numbers for <code>%s</code>, so wrap it there
+ to match the later Luas; elsewhere this is <code>string.format</code>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">fmt</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a></span>
+         a format string
+        </li>
+        <li><span class="parameter">...</span>
+         values to substitute into <em>fmt</em>
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.5">string</a></span>
+        <em>fmt</em> with each conversion replaced by an argument
+    </ol>
+
+
+
+
+</dd>
+    <dt>
     <a name = "string.render"></a>
     <strong>string.render (x, vfns[, roots])</strong>
     </dt>
@@ -1098,6 +1165,44 @@
         <pre class="example"><span class="keyword">function</span> <span class="function-name">printarray</span>(x)
    <span class="keyword">return</span> <span class="function-name">render</span>(x, arrayvfns)
 <span class="keyword">end</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "table.maxn"></a>
+    <strong>table.maxn (t)</strong>
+    </dt>
+    <dd>
+    Return the largest positive numerical key of a table.
+ This was <code>table.maxn</code> in Lua 5.1, and is not in the later
+ releases.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">t</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.5/manual.html#6.7">table</a></span>
+         table to operate on
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">number</span></span>
+
+<p>the largest positive number that is a key of <em>t</em>,</p>
+<pre><code>or `0` if there is none
+</code></pre>
+
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--&gt; 5
+</span><span class="function-name">maxn</span>{<span class="string">'a'</span>, [<span class="number">5</span>]=<span class="string">'e'</span>, x=<span class="number">9</span>}</pre>
     </ul>
 
 </dd>
@@ -1677,7 +1782,7 @@
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/lunarmodules/ldoc">LDoc 1.5.0</a></i>
-<i style="float:right;">Last updated 2026-10-22 17:31:35 </i>
+<i style="float:right;">Last updated 2026-10-28 08:04:06 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>
