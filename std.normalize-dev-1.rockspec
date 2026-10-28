@@ -50,8 +50,6 @@ test_dependencies = {
    'ansicolors',
    'luacov',
    'specl >= 17',
-   'std._debug ~> 1',
-   'typecheck >= 3.0',
 }
 
 test = {
