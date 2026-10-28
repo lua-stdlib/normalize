@@ -2,6 +2,9 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+
+## Noteworthy changes in release 4.1 (2026-10-28) [stable]
+
 ### Incompatible changes
 
   - std.normalize is built from the `build` table of its rockspec, by the
