@@ -49,7 +49,7 @@ build = {
 test_dependencies = {
    'ansicolors',
    'luacov',
-   'specl >= 16',
+   'specl >= 17',
    'std._debug ~> 1',
    'typecheck >= 3.0',
 }
