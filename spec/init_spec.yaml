@@ -263,7 +263,7 @@ specify std.normalize:
   - context when std._debug is false:
     - before: |
         shamble = [[
-           local _debug = require 'std._debug' (false)	-- line 1
+           local _debug = require 'std.normalize._core'.hints() (false)	-- line 1
         ]] .. preamble
     - it blames the call site by default: |
         expect(luaproc(shamble .. [[
@@ -284,7 +284,7 @@ specify std.normalize:
   - context when std._debug is true:
     - before: |
         shamble = [[
-           local _debug = require 'std._debug' (true)	-- line 1
+           local _debug = require 'std.normalize._core'.hints() (true)	-- line 1
         ]] .. preamble
     - it blames the call site by default: |
         expect(luaproc(shamble .. [[
@@ -305,7 +305,7 @@ specify std.normalize:
   - context when std._debug.argcheck is nil:
     - before: |
         shamble = [[
-           require 'std._debug'.argcheck = nil		-- line 1
+           require 'std.normalize._core'.hints().argcheck = nil		-- line 1
         ]] .. preamble
     - it blames the call site by default: |
         expect(luaproc(shamble .. [[
@@ -326,7 +326,7 @@ specify std.normalize:
   - context when std._debug.argcheck is false:
     - before: |
         shamble = [[
-           require 'std._debug'.argcheck = false	-- line 1
+           require 'std.normalize._core'.hints().argcheck = false	-- line 1
         ]] .. preamble
     - it blames the call site by default: |
         expect(luaproc(shamble .. [[
@@ -347,7 +347,7 @@ specify std.normalize:
   - context when std._debug.argcheck is true:
     - before: |
         shamble = [[
-           require 'std._debug'.argcheck = true		-- line 1
+           require 'std.normalize._core'.hints().argcheck = true		-- line 1
         ]] .. preamble
     - it blames the call site by default: |
         expect(luaproc(shamble .. [[
@@ -477,7 +477,7 @@ specify std.normalize:
   - context when std._debug.argcheck is false:
     - before:
         preamble = [[
-           require 'std._debug'.argcheck = false
+           require 'std.normalize._core'.hints().argcheck = false
            M = require 'std.normalize'
            f = M.getfenv
            fn = function(...) local r = getfenv(...) return r end
@@ -1239,7 +1239,7 @@ specify std.normalize:
   - context when std._debug.argcheck is false:
     - before:
         preamble = [[
-           require 'std._debug'.argcheck = false
+           require 'std.normalize._core'.hints().argcheck = false
            M = require 'std.normalize'
            f = M.setfenv
            fn = function(env) local r = f(1, env) return r end
