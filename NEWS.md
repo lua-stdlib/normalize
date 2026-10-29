@@ -2,6 +2,14 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+### Bug fixes
+
+  - std.normalize loads when the host `load` is the `load` of another
+    std.normalize, as it is in the examples of a specl that is built with
+    release 5, which raised "binary chunks are not portable" as the probe
+    of whether the host checks the mode of a chunk, and so failed to load.
+    The probe no longer asks for a mode that does not allow text.
+
 
 ## Noteworthy changes in release 5 (2026-10-28) [stable]
 

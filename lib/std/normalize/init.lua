@@ -212,7 +212,10 @@ end)()
 -- Whether the host `load` checks the mode, as Lua 5.2 and later do: Lua 5.1
 -- ignores it, and so loads the binary chunk that a mode of 't' is there to
 -- refuse.
-local load_checks_mode = load('return 1', '=probe', 'b') == nil
+local load_checks_mode = (function()
+   local ok, fn = pcall(load, string.dump(function() end), '=probe', 't')
+   return not ok or fn == nil
+end)()
 
 
 -- Whether the string *chunk* is binary, which is to say Lua byte code,

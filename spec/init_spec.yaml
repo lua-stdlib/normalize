@@ -27,6 +27,16 @@ specify std.normalize:
   - before:
       f = M
 
+  - it loads when the host load is the load of another std.normalize:
+      expect(luaproc [[
+         _G.load = require 'std.normalize'.load
+         for name in pairs(package.loaded) do
+            if name:match '^std%.normalize' then
+               package.loaded[name] = nil
+            end
+         end
+         print((pcall(require, 'std.normalize')))
+      ]]).to_succeed_with 'true\n'
   - it returns only the environment:
       expect(luaproc [[
          local print, select = print, select
