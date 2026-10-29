@@ -1,4 +1,4 @@
-local _MODREV, _SPECREV = 'dev', '-1'
+local _MODREV, _SPECREV = '5', '-1'
 
 package = 'std.normalize'
 version = _MODREV .. _SPECREV
