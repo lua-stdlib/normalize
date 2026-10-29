@@ -2,6 +2,9 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+
+## Noteworthy changes in release 5.0.1 (2026-10-28) [stable]
+
 ### Bug fixes
 
   - std.normalize loads when the host `load` is the `load` of another
