@@ -2,6 +2,9 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+
+## Noteworthy changes in release 5 (2026-10-28) [stable]
+
 ### Incompatible changes
 
   - `load` raises an error for a `mode` that does not allow text, such as
