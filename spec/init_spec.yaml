@@ -815,6 +815,35 @@ specify std.normalize:
       fn, err = f('blow', 'chunk', 't', {})
       expect(fn).to_be(nil)
       expect(err).to_contain '[string "chunk"]:1:'
+  - context with a mode:
+    - before:
+        binary = string.dump(function() return 42 end)
+    - it loads a text chunk that the mode allows:
+        expect(f('return 42', 'chunk', 't')()).to_be(42)
+        expect(f('return 42', 'chunk', 'bt')()).to_be(42)
+    - it loads a binary chunk that the mode allows:
+        expect(f(binary, 'chunk', 'bt')()).to_be(42)
+    - it loads either kind of chunk without a mode:
+        expect(f('return 42')()).to_be(42)
+        expect(f(binary)()).to_be(42)
+    - it refuses a binary chunk in text mode:
+        fn, err = f(binary, 'chunk', 't')
+        expect(fn).to_be(nil)
+        expect(err).to_contain 'mode'
+    - it refuses a binary string-like chunk in text mode:
+        __tostring = function() return binary end
+        fn, err = f(setmetatable({}, {__tostring = __tostring}), 'chunk', 't')
+        expect(fn).to_be(nil)
+        expect(err).to_contain 'mode'
+    - it refuses a binary chunk in text mode, with an environment:
+        fn, err = f(binary, 'chunk', 't', {})
+        expect(fn).to_be(nil)
+        expect(err).to_contain 'mode'
+    - it raises an error for a mode that does not allow text: |
+        expect(f('return 42', 'chunk', 'b')).
+           to_raise "bad argument #3 to 'load' (binary chunks are not portable"
+        expect(f(binary, 'chunk', 'b')).to_raise "bad argument #3 to 'load'"
+        expect(f('return 42', 'chunk', '')).to_raise "bad argument #3 to 'load'"
 
 
 - describe math:

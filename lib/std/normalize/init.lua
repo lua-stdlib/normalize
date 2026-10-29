@@ -93,6 +93,7 @@ local argscheck = typecheck.argscheck
 local concat = table.concat
 local config = package.config
 local exit = os.exit
+local find = string.find
 local format = string.format
 local gmatch = string.gmatch
 local gsub = string.gsub
@@ -102,6 +103,7 @@ local open = io.open
 local remove = table.remove
 local searchpath = package.searchpath or false
 local sort = table.sort
+local sub = string.sub
 local unpack = table.unpack or unpack
 local upper = string.upper
 
@@ -207,6 +209,19 @@ local load_takes_env = (function()
 end)()
 
 
+-- Whether the host `load` checks the mode, as Lua 5.2 and later do: Lua 5.1
+-- ignores it, and so loads the binary chunk that a mode of 't' is there to
+-- refuse.
+local load_checks_mode = load('return 1', '=probe', 'b') == nil
+
+
+-- Whether the string *chunk* is binary, which is to say Lua byte code,
+-- that starts with the escape character.
+local function is_binary(chunk)
+   return sub(chunk, 1, 1) == '\27'
+end
+
+
 local function normalize_load(chunk, chunkname, mode, ...)
    local m = getmetamethod(chunk, '__call')
    if m then
@@ -216,6 +231,19 @@ local function normalize_load(chunk, chunkname, mode, ...)
    end
    if getmetamethod(chunkname, '__tostring') then
       chunkname = tostring(chunkname)
+   end
+   if mode ~= nil then
+      -- Byte code is not portable between hosts, and not part of the
+      -- dialect that std.normalize provides, so don't pretend to load it.
+      if not find(mode, 't', 1, true) then
+         argerror('load', 3, 'binary chunks are not portable, so the mode must allow text',
+            2 + ARGCHECK_FRAME)
+      end
+      if not load_checks_mode and not find(mode, 'b', 1, true) and
+         type(chunk) == 'string' and is_binary(chunk)
+      then
+         return nil, "attempt to load a binary chunk (mode is '" .. mode .. "')"
+      end
    end
    if select('#', ...) == 0 or load_takes_env then
       return load(chunk, chunkname, mode, ...)
@@ -589,8 +617,11 @@ local F = {
    -- @tparam string|function ld chunk to load, or a functor or string-like
    --    object that stands for one
    -- @string source name of the source of *ld*, or a string-like object
-   -- @string[opt] mode `'t'`, `'b'` or `'bt'` to allow only text, only
-   --    binary, or either kind of chunk; only Lua 5.2 and later check it
+   -- @string[opt] mode `'t'` or `'bt'` to allow only text, or either kind
+   --    of chunk, and so Lua byte code, which is not portable between
+   --    hosts.  A mode that does not allow text is an error.  Lua 5.1 checks
+   --    that a string *ld* is text for `'t'`, but can't read ahead in a
+   --    function
    -- @tparam[opt] table env the environment for the chunk, in place of
    --    the global one; in Lua 5.1 it must be a table, and is set with
    --    `setfenv`

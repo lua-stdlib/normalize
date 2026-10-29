@@ -2,6 +2,20 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+### Incompatible changes
+
+  - `load` raises an error for a `mode` that does not allow text, such as
+    `'b'`, in every Lua.  Lua byte code is not portable between hosts, so
+    it is not part of the dialect that std.normalize provides: use `'t'`,
+    or `'bt'` if byte code that the host can read is acceptable.
+
+### Bug fixes
+
+  - `load` checks its `mode` argument for a string chunk in Lua 5.1 too, as
+    Lua 5.2 and later do, so that `'t'` refuses a binary chunk, which Lua 5.1
+    used to load.  A function that reads a chunk in pieces is still not
+    checked in Lua 5.1, which can't read ahead in it.
+
 
 ## Noteworthy changes in release 4.1 (2026-10-28) [stable]
 
