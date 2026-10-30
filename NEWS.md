@@ -2,6 +2,9 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+
+## Noteworthy changes in release 5.1 (2026-10-29) [stable]
+
 ### New features
 
   - New `bit32` library, with every function of the `bit32` of Lua 5.2
