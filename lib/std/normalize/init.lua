@@ -134,10 +134,6 @@ local dirsep, pathsep, pathmark, execdir, igmark =
    match(config, '^([^\n]+)\n([^\n]+)\n([^\n]+)\n([^\n]+)\n([^\n]+)')
 
 
-
-
-
-
 -- It's hard to test at require-time whether the host `os.exit` handles
 -- boolean argument properly (ostensibly to defer to it in that case).
 -- We're shutting down anyway, so sacrifice a bit of speed for timely
@@ -154,16 +150,6 @@ local function exit(...)
    end
    _exit(status)
 end
-
-
-
-
-
-
-
-
-
-
 
 
 local function ipairs(l)
@@ -280,10 +266,6 @@ local function merge(t, r)
 end
 
 
-
-
-
-
 local function keys(t)
    local r = {}
    for k in pairs(t) do
@@ -310,8 +292,6 @@ local searchpath = searchpath or function(name, path, sep, rep)
    end
    return nil, concat(errbuf, '\n')
 end
-
-
 
 
 local shallow_copy = merge
@@ -747,7 +727,312 @@ local F = {
       .. xpcall,
 }
 
+-- The `bit32` library of Lua 5.2 for every host: all of its functions work
+-- on unsigned 32-bit integers, and wrap what is out of range modulo 2^32.
+-- Where the host has `bit32` that is it, so is the same everywhere, and
+-- otherwise each is made from the best the host has: the operators of Lua
+-- 5.3 and later, the `bit` library of LuaJIT, or else plain arithmetic.
+local bit32 = (function()
+   local MOD = 4294967296   -- 2^32
+   local MASK = MOD - 1
+   local floor = _G.math.floor
+
+   local host = rawget(_G, 'bit32')
+   if type(host) == 'table' and host.band and host.extract and host.replace then
+      return host
+   end
+
+   -- *x* as an unsigned 32-bit integer.
+   local function u32(x)
+      return floor(x) % MOD
+   end
+
+   -- The operations of two unsigned 32-bit integers, or an integer and a
+   -- shift of 0 to 31 bits, that give an unsigned 32-bit integer.
+   local op = loadstring [[
+      local MASK = 0xFFFFFFFF
+      return {
+         band = function(a, b) return a & b end,
+         bor = function(a, b) return a | b end,
+         bxor = function(a, b) return a ~ b end,
+         bnot = function(a) return ~a & MASK end,
+         shl = function(a, d) return (a << d) & MASK end,
+         shr = function(a, d) return a >> d end,
+      }
+   ]]
+   op = op and op()
+
+   -- Whether *ops* give unsigned 32-bit integers, which a host with
+   -- operators of another width, or signed, might not.
+   local function unsigned(ops)
+      return ops ~= nil and ops.bnot(0) == MASK and ops.shl(1, 31) == MOD / 2 and
+         ops.band(MASK, MASK) == MASK and ops.bor(MASK, 0) == MASK and
+         ops.bxor(MASK, 0) == MASK and ops.shr(MASK, 31) == 1
+   end
+   if not unsigned(op) then
+      op = nil
+   end
+
+   local luajit_bit = rawget(_G, 'jit') and rawget(_G, 'bit')
+   if op == nil and luajit_bit then
+      op = {
+         band = function(a, b) return luajit_bit.band(a, b) % MOD end,
+         bor = function(a, b) return luajit_bit.bor(a, b) % MOD end,
+         bxor = function(a, b) return luajit_bit.bxor(a, b) % MOD end,
+         bnot = function(a) return luajit_bit.bnot(a) % MOD end,
+         shl = function(a, d) return luajit_bit.lshift(a, d) % MOD end,
+         shr = function(a, d) return luajit_bit.rshift(a, d) % MOD end,
+      }
+      if not unsigned(op) then
+         op = nil
+      end
+   end
+
+   if op == nil then
+      local function bitwise(truth)
+         return function(a, b)
+            local r, p = 0, 1
+            for _ = 1, 32 do
+               local x, y = a % 2, b % 2
+               r = r + truth[x * 2 + y + 1] * p
+               a, b, p = (a - x) / 2, (b - y) / 2, p * 2
+            end
+            return r
+         end
+      end
+      op = {
+         band = bitwise {0, 0, 0, 1},
+         bor = bitwise {0, 1, 1, 1},
+         bxor = bitwise {0, 1, 1, 0},
+         bnot = function(a) return MASK - a end,
+         shl = function(a, d) return (a * 2 ^ d) % MOD end,
+         shr = function(a, d) return floor(a / 2 ^ d) end,
+      }
+   end
+
+   local function nary(binary, identity)
+      return function(...)
+         local r = identity
+         local args = {...}
+         for i = 1, #args do
+            r = binary(r, u32(args[i]))
+         end
+         return r
+      end
+   end
+
+   local band = nary(op.band, MASK)
+   local bor = nary(op.bor, 0)
+   local bxor = nary(op.bxor, 0)
+
+   local function bnot(x)
+      return op.bnot(u32(x))
+   end
+
+   local function btest(...)
+      return band(...) ~= 0
+   end
+
+   local function rshift(x, disp)
+      x, disp = u32(x), floor(disp)
+      if disp < 0 then
+         return (disp <= -32) and 0 or op.shl(x, -disp)
+      end
+      return (disp >= 32) and 0 or op.shr(x, disp)
+   end
+
+   local function lshift(x, disp)
+      return rshift(x, -floor(disp))
+   end
+
+   local function arshift(x, disp)
+      x, disp = u32(x), floor(disp)
+      if disp < 0 then
+         return lshift(x, -disp)
+      elseif x < MOD / 2 then
+         return rshift(x, disp)
+      elseif disp >= 32 then
+         return MASK
+      end
+      return op.bor(op.shr(x, disp), op.bxor(MASK, op.shr(MASK, disp)))
+   end
+
+   local function lrotate(x, disp)
+      x, disp = u32(x), floor(disp) % 32
+      if disp == 0 then
+         return x
+      end
+      return op.bor(op.shl(x, disp), op.shr(x, 32 - disp))
+   end
+
+   local function rrotate(x, disp)
+      return lrotate(x, -floor(disp))
+   end
+
+   local function field_mask(field, width, level)
+      field, width = floor(field), floor(width or 1)
+      if field < 0 then
+         error('field cannot be negative', level + 1)
+      elseif width <= 0 then
+         error('width must be positive', level + 1)
+      elseif field + width > 32 then
+         error('trying to access non-existent bits', level + 1)
+      end
+      return field, floor(2 ^ width) - 1
+   end
+
+   local function extract(n, field, width)
+      local mask
+      field, mask = field_mask(field, width, 2)
+      return op.band(op.shr(u32(n), field), mask)
+   end
+
+   local function replace(n, v, field, width)
+      local mask
+      field, mask = field_mask(field, width, 2)
+      local cleared = op.band(u32(n), op.bnot(op.shl(mask, field)))
+      return op.bor(cleared, op.shl(op.band(u32(v), mask), field))
+   end
+
+   return {
+      arshift = arshift,
+      band = band,
+      bnot = bnot,
+      bor = bor,
+      btest = btest,
+      bxor = bxor,
+      extract = extract,
+      lrotate = lrotate,
+      lshift = lshift,
+      replace = replace,
+      rrotate = rrotate,
+      rshift = rshift,
+   }
+end)()
+
+
 local G = {
+   bit32 = {
+      --- Shift right, filling the left with the sign bit.
+      -- @function bit32.arshift
+      -- @tparam integer x value to shift, as an unsigned 32-bit integer
+      -- @tparam integer disp number of bits to shift, left if negative
+      -- @treturn integer the shifted value
+      -- @usage
+      --    --> 0xFFFFFFFE
+      --    arshift(0xFFFFFFFC, 1)
+      arshift = bit32.arshift,
+
+      --- Bitwise and.
+      -- @function bit32.band
+      -- @tparam integer ... values, as unsigned 32-bit integers
+      -- @treturn integer the bits that are set in every value
+      -- @usage
+      --    --> 0x0F
+      --    band(0xFF, 0x0F)
+      band = bit32.band,
+
+      --- Bitwise not.
+      -- @function bit32.bnot
+      -- @tparam integer x value, as an unsigned 32-bit integer
+      -- @treturn integer *x* with every bit of the 32 flipped
+      -- @usage
+      --    --> 0xFFFFFF00
+      --    bnot(0xFF)
+      bnot = bit32.bnot,
+
+      --- Bitwise or.
+      -- @function bit32.bor
+      -- @tparam integer ... values, as unsigned 32-bit integers
+      -- @treturn integer the bits that are set in any value
+      -- @usage
+      --    --> 0xFF
+      --    bor(0xF0, 0x0F)
+      bor = bit32.bor,
+
+      --- Whether the bitwise and of the values is not zero.
+      -- @function bit32.btest
+      -- @tparam integer ... values, as unsigned 32-bit integers
+      -- @treturn boolean `true` if some bit is set in every value
+      -- @usage
+      --    --> true
+      --    btest(0x03, 0x02)
+      btest = bit32.btest,
+
+      --- Bitwise exclusive or.
+      -- @function bit32.bxor
+      -- @tparam integer ... values, as unsigned 32-bit integers
+      -- @treturn integer the bits that are set in an odd number of values
+      -- @usage
+      --    --> 0xF0
+      --    bxor(0xFF, 0x0F)
+      bxor = bit32.bxor,
+
+      --- Extract bits of a value.
+      -- @function bit32.extract
+      -- @tparam integer n value to read, as an unsigned 32-bit integer
+      -- @tparam integer field the lowest bit to read, from 0
+      -- @tparam[opt=1] integer width the number of bits to read
+      -- @treturn integer the bits, as the low bits of the result
+      -- @raise if the bits are not all among the 32
+      -- @usage
+      --    --> 0x0A
+      --    extract(0xAB, 4, 4)
+      extract = bit32.extract,
+
+      --- Rotate left.
+      -- @function bit32.lrotate
+      -- @tparam integer x value to rotate, as an unsigned 32-bit integer
+      -- @tparam integer disp number of bits to rotate, right if negative
+      -- @treturn integer the rotated value
+      -- @usage
+      --    --> 0x00000001
+      --    lrotate(0x80000000, 1)
+      lrotate = bit32.lrotate,
+
+      --- Shift left, filling the right with zeros.
+      -- @function bit32.lshift
+      -- @tparam integer x value to shift, as an unsigned 32-bit integer
+      -- @tparam integer disp number of bits to shift, right if negative
+      -- @treturn integer the shifted value
+      -- @usage
+      --    --> 0xF0
+      --    lshift(0x0F, 4)
+      lshift = bit32.lshift,
+
+      --- Replace bits of a value.
+      -- @function bit32.replace
+      -- @tparam integer n value to change, as an unsigned 32-bit integer
+      -- @tparam integer v the bits to put in, as the low bits of *v*
+      -- @tparam integer field the lowest bit to replace, from 0
+      -- @tparam[opt=1] integer width the number of bits to replace
+      -- @treturn integer *n* with the bits replaced
+      -- @raise if the bits are not all among the 32
+      -- @usage
+      --    --> 0xFF
+      --    replace(0x0F, 0x0F, 4, 4)
+      replace = bit32.replace,
+
+      --- Rotate right.
+      -- @function bit32.rrotate
+      -- @tparam integer x value to rotate, as an unsigned 32-bit integer
+      -- @tparam integer disp number of bits to rotate, left if negative
+      -- @treturn integer the rotated value
+      -- @usage
+      --    --> 0x80000000
+      --    rrotate(0x00000001, 1)
+      rrotate = bit32.rrotate,
+
+      --- Shift right, filling the left with zeros.
+      -- @function bit32.rshift
+      -- @tparam integer x value to shift, as an unsigned 32-bit integer
+      -- @tparam integer disp number of bits to shift, left if negative
+      -- @treturn integer the shifted value
+      -- @usage
+      --    --> 0x0F
+      --    rshift(0xF0, 4)
+      rshift = bit32.rshift,
+   },
    coroutine = {
       create = _G.coroutine.create,
       resume = _G.coroutine.resume,
@@ -1016,6 +1301,7 @@ setmetatable(G.package, {
 -- the normalized core modules.
 local normalized = {
    _G = G,
+   bit32 = G.bit32,
    coroutine = G.coroutine,
    debug = G.debug,
    io = G.io,

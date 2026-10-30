@@ -2,6 +2,19 @@
 
 ## Noteworthy changes in release ?.? (????-??-??) [?]
 
+### New features
+
+  - New `bit32` library, with every function of the `bit32` of Lua 5.2
+    (`arshift`, `band`, `bnot`, `bor`, `btest`, `bxor`, `extract`,
+    `lrotate`, `lshift`, `replace`, `rrotate` and `rshift`), for every
+    host, so that `{'bit32.band'}` imports it for a library that needs
+    bitwise operations, without a rock or a different file for each Lua.
+    All of its functions work on unsigned 32-bit integers, and wrap what
+    is out of range modulo 2^32.  In a Lua that has `bit32` it is that,
+    and otherwise it is made of the operators of Lua 5.3 and later, the
+    `bit` library of LuaJIT, or else plain arithmetic, whichever is first
+    to give the same results.
+
 
 ## Noteworthy changes in release 5.0.1 (2026-10-28) [stable]
 

@@ -376,6 +376,106 @@ specify std.normalize:
         ]])).to_fail_while_matching '^[^:]+: bad argument'
 
 
+- describe bit32:
+  - before: |
+      -- What each function gives for some arguments, as the bit32 of Lua 5.2
+      -- does, written as a Lua chunk that says which differ.
+      checks = [=[
+         local unpack = table.unpack or unpack
+         local b = require 'std.normalize'.bit32
+         local cases = {
+            {'band', {0xFF, 0x0F}, 15},
+            {'band', {-1, 0xFFFF}, 65535},
+            {'band', {}, 4294967295},
+            {'band', {0xF0F0, 0xFF00, 0x0FF0}, 0},
+            {'bor', {0xF0, 0x0F}, 255},
+            {'bor', {}, 0},
+            {'bxor', {0xFF, 0x0F}, 240},
+            {'bxor', {1, 2, 4}, 7},
+            {'bnot', {0xFF}, 4294967040},
+            {'bnot', {-1}, 0},
+            {'lshift', {0x0F, 4}, 240},
+            {'lshift', {1, 31}, 2147483648},
+            {'lshift', {1, 32}, 0},
+            {'lshift', {1, -1}, 0},
+            {'lshift', {0xFFFFFFFF, 4}, 4294967280},
+            {'rshift', {0xF0, 4}, 15},
+            {'rshift', {0x80000000, 31}, 1},
+            {'rshift', {1, 32}, 0},
+            {'rshift', {2, -1}, 4},
+            {'arshift', {0xFFFFFFFC, 1}, 4294967294},
+            {'arshift', {0x80000000, 40}, 4294967295},
+            {'arshift', {0x40000000, 40}, 0},
+            {'arshift', {0x7FFFFFFF, 4}, 0x07FFFFFF},
+            {'arshift', {2, -1}, 4},
+            {'lrotate', {0x80000000, 1}, 1},
+            {'lrotate', {1, -1}, 2147483648},
+            {'lrotate', {1, 33}, 2},
+            {'lrotate', {0x12345678, 0}, 0x12345678},
+            {'rrotate', {1, 1}, 2147483648},
+            {'rrotate', {0x12345678, 8}, 0x78123456},
+            {'extract', {0xAB, 4, 4}, 10},
+            {'extract', {0xAB, 0}, 1},
+            {'extract', {0xAB, 2}, 0},
+            {'extract', {0xFFFFFFFF, 0, 32}, 4294967295},
+            {'replace', {0x0F, 0x0F, 4, 4}, 255},
+            {'replace', {0xFF, 0, 0, 4}, 240},
+            {'replace', {0, 1, 31}, 2147483648},
+            {'btest', {3, 2}, true},
+            {'btest', {1, 2}, false},
+            {'btest', {}, true},
+         }
+         local bad = {}
+         for _, c in ipairs(cases) do
+            local got = b[c[1]](unpack(c[2]))
+            if got ~= c[3] then
+               bad[#bad + 1] = c[1] .. ' ' .. tostring(got) .. ' not ' .. tostring(c[3])
+            end
+         end
+         io.write(#bad == 0 and 'ok' or table.concat(bad, '\n'), '\n')
+      ]=]
+  - it has every function of bit32 in Lua 5.2: |
+      for _, name in ipairs {'arshift', 'band', 'bnot', 'bor', 'btest', 'bxor',
+                             'extract', 'lrotate', 'lshift', 'replace', 'rrotate', 'rshift'} do
+         expect(type(M.bit32[name])).to_be 'function'
+      end
+  - it gives the results of bit32 in Lua 5.2 on this host: |
+      expect(luaproc(checks)).to_succeed_with 'ok\n'
+  - it gives the same results without the operators of Lua 5.3: |
+      expect(luaproc([[
+         local orig = _G.load
+         local origs = rawget(_G, 'loadstring')
+         _G.load = function(s, ...)
+            if type(s) == 'string' and s:find('&', 1, true) then return nil, 'no operators' end
+            return orig(s, ...)
+         end
+         if origs then
+            _G.loadstring = function(s, ...)
+               if type(s) == 'string' and s:find('&', 1, true) then return nil, 'no operators' end
+               return origs(s, ...)
+            end
+         end
+      ]] .. checks)).to_succeed_with 'ok\n'
+  - it gives the same results with only arithmetic: |
+      expect(luaproc([[
+         local orig = _G.load
+         local origs = rawget(_G, 'loadstring')
+         _G.load = function(s, ...)
+            if type(s) == 'string' and s:find('&', 1, true) then return nil, 'no operators' end
+            return orig(s, ...)
+         end
+         if origs then
+            _G.loadstring = function(s, ...)
+               if type(s) == 'string' and s:find('&', 1, true) then return nil, 'no operators' end
+               return origs(s, ...)
+            end
+         end
+         _G.bit = nil
+      ]] .. checks)).to_succeed_with 'ok\n'
+  - it raises an error for bits that are not among the 32: |
+      expect(M.bit32.extract(1, 31, 2)).to_raise 'non-existent bits'
+      expect(M.bit32.replace(1, 1, 33)).to_raise 'non-existent bits'
+
 - describe callable:
   - before:
       f = M.callable
