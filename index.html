@@ -3,7 +3,7 @@
 <html>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
 <head>
-    <title>std.normalize 5.0.1 Reference</title>
+    <title>std.normalize 5.1 Reference</title>
     <link rel="stylesheet" href="ldoc.css" type="text/css" />
 </head>
 <body>
@@ -24,7 +24,7 @@
 
 <div id="navigation">
 <br/>
-<h1>std.normalize 5.0.1</h1>
+<h1>std.normalize 5.1</h1>
 
 
 
@@ -149,6 +149,54 @@
 	<tr>
 	<td class="name" nowrap><a href="#xpcall">xpcall (f, errh, ...)</a></td>
 	<td class="summary">Support arguments to a protected function call, even on Lua 5.1.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#bit32.arshift">bit32.arshift (x, disp)</a></td>
+	<td class="summary">Shift right, filling the left with the sign bit.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#bit32.band">bit32.band (...)</a></td>
+	<td class="summary">Bitwise and.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#bit32.bnot">bit32.bnot (x)</a></td>
+	<td class="summary">Bitwise not.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#bit32.bor">bit32.bor (...)</a></td>
+	<td class="summary">Bitwise or.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#bit32.btest">bit32.btest (...)</a></td>
+	<td class="summary">Whether the bitwise and of the values is not zero.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#bit32.bxor">bit32.bxor (...)</a></td>
+	<td class="summary">Bitwise exclusive or.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#bit32.extract">bit32.extract (n, field[, width=1])</a></td>
+	<td class="summary">Extract bits of a value.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#bit32.lrotate">bit32.lrotate (x, disp)</a></td>
+	<td class="summary">Rotate left.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#bit32.lshift">bit32.lshift (x, disp)</a></td>
+	<td class="summary">Shift left, filling the right with zeros.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#bit32.replace">bit32.replace (n, v, field[, width=1])</a></td>
+	<td class="summary">Replace bits of a value.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#bit32.rrotate">bit32.rrotate (x, disp)</a></td>
+	<td class="summary">Rotate right.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#bit32.rshift">bit32.rshift (x, disp)</a></td>
+	<td class="summary">Shift right, filling the left with zeros.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#math.tointeger">math.tointeger (x)</a></td>
@@ -939,6 +987,436 @@ function
     <ul>
         <pre class="example"><span class="comment">-- Use errh to get a backtrack after curses exits abnormally
 </span><span class="global">xpcall</span>(main, errh, arg, opt)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "bit32.arshift"></a>
+    <strong>bit32.arshift (x, disp)</strong>
+    </dt>
+    <dd>
+    Shift right, filling the left with the sign bit.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+            <span class="types"><span class="type">integer</span></span>
+         value to shift, as an unsigned 32-bit integer
+        </li>
+        <li><span class="parameter">disp</span>
+            <span class="types"><span class="type">integer</span></span>
+         number of bits to shift, left if negative
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">integer</span></span>
+        the shifted value
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--&gt; 0xFFFFFFFE
+</span><span class="function-name">arshift</span>(<span class="number">0xFFFFFFFC</span>, <span class="number">1</span>)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "bit32.band"></a>
+    <strong>bit32.band (...)</strong>
+    </dt>
+    <dd>
+    Bitwise and.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">...</span>
+            <span class="types"><span class="type">integer</span></span>
+         values, as unsigned 32-bit integers
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">integer</span></span>
+        the bits that are set in every value
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--&gt; 0x0F
+</span><span class="function-name">band</span>(<span class="number">0xFF</span>, <span class="number">0x0F</span>)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "bit32.bnot"></a>
+    <strong>bit32.bnot (x)</strong>
+    </dt>
+    <dd>
+    Bitwise not.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+            <span class="types"><span class="type">integer</span></span>
+         value, as an unsigned 32-bit integer
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">integer</span></span>
+        <em>x</em> with every bit of the 32 flipped
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--&gt; 0xFFFFFF00
+</span><span class="function-name">bnot</span>(<span class="number">0xFF</span>)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "bit32.bor"></a>
+    <strong>bit32.bor (...)</strong>
+    </dt>
+    <dd>
+    Bitwise or.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">...</span>
+            <span class="types"><span class="type">integer</span></span>
+         values, as unsigned 32-bit integers
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">integer</span></span>
+        the bits that are set in any value
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--&gt; 0xFF
+</span><span class="function-name">bor</span>(<span class="number">0xF0</span>, <span class="number">0x0F</span>)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "bit32.btest"></a>
+    <strong>bit32.btest (...)</strong>
+    </dt>
+    <dd>
+    Whether the bitwise and of the values is not zero.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">...</span>
+            <span class="types"><span class="type">integer</span></span>
+         values, as unsigned 32-bit integers
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">boolean</span></span>
+        <code>true</code> if some bit is set in every value
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--&gt; true
+</span><span class="function-name">btest</span>(<span class="number">0x03</span>, <span class="number">0x02</span>)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "bit32.bxor"></a>
+    <strong>bit32.bxor (...)</strong>
+    </dt>
+    <dd>
+    Bitwise exclusive or.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">...</span>
+            <span class="types"><span class="type">integer</span></span>
+         values, as unsigned 32-bit integers
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">integer</span></span>
+        the bits that are set in an odd number of values
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--&gt; 0xF0
+</span><span class="function-name">bxor</span>(<span class="number">0xFF</span>, <span class="number">0x0F</span>)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "bit32.extract"></a>
+    <strong>bit32.extract (n, field[, width=1])</strong>
+    </dt>
+    <dd>
+    Extract bits of a value.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">n</span>
+            <span class="types"><span class="type">integer</span></span>
+         value to read, as an unsigned 32-bit integer
+        </li>
+        <li><span class="parameter">field</span>
+            <span class="types"><span class="type">integer</span></span>
+         the lowest bit to read, from 0
+        </li>
+        <li><span class="parameter">width</span>
+            <span class="types"><span class="type">integer</span></span>
+         the number of bits to read
+         (<em>default</em> 1)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">integer</span></span>
+        the bits, as the low bits of the result
+    </ol>
+
+    <h3>Raises:</h3>
+    if the bits are not all among the 32
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--&gt; 0x0A
+</span><span class="function-name">extract</span>(<span class="number">0xAB</span>, <span class="number">4</span>, <span class="number">4</span>)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "bit32.lrotate"></a>
+    <strong>bit32.lrotate (x, disp)</strong>
+    </dt>
+    <dd>
+    Rotate left.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+            <span class="types"><span class="type">integer</span></span>
+         value to rotate, as an unsigned 32-bit integer
+        </li>
+        <li><span class="parameter">disp</span>
+            <span class="types"><span class="type">integer</span></span>
+         number of bits to rotate, right if negative
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">integer</span></span>
+        the rotated value
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--&gt; 0x00000001
+</span><span class="function-name">lrotate</span>(<span class="number">0x80000000</span>, <span class="number">1</span>)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "bit32.lshift"></a>
+    <strong>bit32.lshift (x, disp)</strong>
+    </dt>
+    <dd>
+    Shift left, filling the right with zeros.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+            <span class="types"><span class="type">integer</span></span>
+         value to shift, as an unsigned 32-bit integer
+        </li>
+        <li><span class="parameter">disp</span>
+            <span class="types"><span class="type">integer</span></span>
+         number of bits to shift, right if negative
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">integer</span></span>
+        the shifted value
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--&gt; 0xF0
+</span><span class="function-name">lshift</span>(<span class="number">0x0F</span>, <span class="number">4</span>)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "bit32.replace"></a>
+    <strong>bit32.replace (n, v, field[, width=1])</strong>
+    </dt>
+    <dd>
+    Replace bits of a value.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">n</span>
+            <span class="types"><span class="type">integer</span></span>
+         value to change, as an unsigned 32-bit integer
+        </li>
+        <li><span class="parameter">v</span>
+            <span class="types"><span class="type">integer</span></span>
+         the bits to put in, as the low bits of <em>v</em>
+        </li>
+        <li><span class="parameter">field</span>
+            <span class="types"><span class="type">integer</span></span>
+         the lowest bit to replace, from 0
+        </li>
+        <li><span class="parameter">width</span>
+            <span class="types"><span class="type">integer</span></span>
+         the number of bits to replace
+         (<em>default</em> 1)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">integer</span></span>
+        <em>n</em> with the bits replaced
+    </ol>
+
+    <h3>Raises:</h3>
+    if the bits are not all among the 32
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--&gt; 0xFF
+</span><span class="function-name">replace</span>(<span class="number">0x0F</span>, <span class="number">0x0F</span>, <span class="number">4</span>, <span class="number">4</span>)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "bit32.rrotate"></a>
+    <strong>bit32.rrotate (x, disp)</strong>
+    </dt>
+    <dd>
+    Rotate right.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+            <span class="types"><span class="type">integer</span></span>
+         value to rotate, as an unsigned 32-bit integer
+        </li>
+        <li><span class="parameter">disp</span>
+            <span class="types"><span class="type">integer</span></span>
+         number of bits to rotate, left if negative
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">integer</span></span>
+        the rotated value
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--&gt; 0x80000000
+</span><span class="function-name">rrotate</span>(<span class="number">0x00000001</span>, <span class="number">1</span>)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "bit32.rshift"></a>
+    <strong>bit32.rshift (x, disp)</strong>
+    </dt>
+    <dd>
+    Shift right, filling the left with zeros.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+            <span class="types"><span class="type">integer</span></span>
+         value to shift, as an unsigned 32-bit integer
+        </li>
+        <li><span class="parameter">disp</span>
+            <span class="types"><span class="type">integer</span></span>
+         number of bits to shift, left if negative
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">integer</span></span>
+        the shifted value
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">--&gt; 0x0F
+</span><span class="function-name">rshift</span>(<span class="number">0xF0</span>, <span class="number">4</span>)</pre>
     </ul>
 
 </dd>
@@ -1785,7 +2263,7 @@ function
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/lunarmodules/ldoc">LDoc 1.5.0</a></i>
-<i style="float:right;">Last updated 2026-10-28 18:01:27 </i>
+<i style="float:right;">Last updated 2026-10-29 17:50:49 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>
