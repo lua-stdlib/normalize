@@ -921,7 +921,8 @@ local G = {
       -- @usage
       --    --> 0xFFFFFFFE
       --    arshift(0xFFFFFFFC, 1)
-      arshift = bit32.arshift,
+      arshift = argscheck 'bit32.arshift(int, int)'
+         .. bit32.arshift,
 
       --- Bitwise and.
       -- @function bit32.band
@@ -930,7 +931,8 @@ local G = {
       -- @usage
       --    --> 0x0F
       --    band(0xFF, 0x0F)
-      band = bit32.band,
+      band = argscheck 'bit32.band([int...])'
+         .. bit32.band,
 
       --- Bitwise not.
       -- @function bit32.bnot
@@ -939,7 +941,8 @@ local G = {
       -- @usage
       --    --> 0xFFFFFF00
       --    bnot(0xFF)
-      bnot = bit32.bnot,
+      bnot = argscheck 'bit32.bnot(int)'
+         .. bit32.bnot,
 
       --- Bitwise or.
       -- @function bit32.bor
@@ -948,7 +951,8 @@ local G = {
       -- @usage
       --    --> 0xFF
       --    bor(0xF0, 0x0F)
-      bor = bit32.bor,
+      bor = argscheck 'bit32.bor([int...])'
+         .. bit32.bor,
 
       --- Whether the bitwise and of the values is not zero.
       -- @function bit32.btest
@@ -957,7 +961,8 @@ local G = {
       -- @usage
       --    --> true
       --    btest(0x03, 0x02)
-      btest = bit32.btest,
+      btest = argscheck 'bit32.btest([int...])'
+         .. bit32.btest,
 
       --- Bitwise exclusive or.
       -- @function bit32.bxor
@@ -966,7 +971,8 @@ local G = {
       -- @usage
       --    --> 0xF0
       --    bxor(0xFF, 0x0F)
-      bxor = bit32.bxor,
+      bxor = argscheck 'bit32.bxor([int...])'
+         .. bit32.bxor,
 
       --- Extract bits of a value.
       -- @function bit32.extract
@@ -978,7 +984,8 @@ local G = {
       -- @usage
       --    --> 0x0A
       --    extract(0xAB, 4, 4)
-      extract = bit32.extract,
+      extract = argscheck 'bit32.extract(int, int, [int])'
+         .. bit32.extract,
 
       --- Rotate left.
       -- @function bit32.lrotate
@@ -988,7 +995,8 @@ local G = {
       -- @usage
       --    --> 0x00000001
       --    lrotate(0x80000000, 1)
-      lrotate = bit32.lrotate,
+      lrotate = argscheck 'bit32.lrotate(int, int)'
+         .. bit32.lrotate,
 
       --- Shift left, filling the right with zeros.
       -- @function bit32.lshift
@@ -998,7 +1006,8 @@ local G = {
       -- @usage
       --    --> 0xF0
       --    lshift(0x0F, 4)
-      lshift = bit32.lshift,
+      lshift = argscheck 'bit32.lshift(int, int)'
+         .. bit32.lshift,
 
       --- Replace bits of a value.
       -- @function bit32.replace
@@ -1011,7 +1020,8 @@ local G = {
       -- @usage
       --    --> 0xFF
       --    replace(0x0F, 0x0F, 4, 4)
-      replace = bit32.replace,
+      replace = argscheck 'bit32.replace(int, int, int, [int])'
+         .. bit32.replace,
 
       --- Rotate right.
       -- @function bit32.rrotate
@@ -1021,7 +1031,8 @@ local G = {
       -- @usage
       --    --> 0x80000000
       --    rrotate(0x00000001, 1)
-      rrotate = bit32.rrotate,
+      rrotate = argscheck 'bit32.rrotate(int, int)'
+         .. bit32.rrotate,
 
       --- Shift right, filling the left with zeros.
       -- @function bit32.rshift
@@ -1031,7 +1042,8 @@ local G = {
       -- @usage
       --    --> 0x0F
       --    rshift(0xF0, 4)
-      rshift = bit32.rshift,
+      rshift = argscheck 'bit32.rshift(int, int)'
+         .. bit32.rshift,
    },
    coroutine = {
       create = _G.coroutine.create,

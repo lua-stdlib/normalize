@@ -13,7 +13,8 @@
     is out of range modulo 2^32.  In a Lua that has `bit32` it is that,
     and otherwise it is made of the operators of Lua 5.3 and later, the
     `bit` library of LuaJIT, or else plain arithmetic, whichever is first
-    to give the same results.
+    to give the same results.  When typecheck is installed, each of them
+    checks its arguments, as the other functions do.
 
 
 ## Noteworthy changes in release 5.0.1 (2026-10-28) [stable]

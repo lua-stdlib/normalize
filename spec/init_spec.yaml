@@ -472,6 +472,19 @@ specify std.normalize:
          end
          _G.bit = nil
       ]] .. checks)).to_succeed_with 'ok\n'
+  - context with bad arguments:
+      badargs.diagnose('bit32.arshift(int, int)', M.bit32.arshift)
+      badargs.diagnose('bit32.band([int...])', M.bit32.band)
+      badargs.diagnose('bit32.bnot(int)', M.bit32.bnot)
+      badargs.diagnose('bit32.bor([int...])', M.bit32.bor)
+      badargs.diagnose('bit32.btest([int...])', M.bit32.btest)
+      badargs.diagnose('bit32.bxor([int...])', M.bit32.bxor)
+      badargs.diagnose('bit32.extract(int, int, [int])', M.bit32.extract)
+      badargs.diagnose('bit32.lrotate(int, int)', M.bit32.lrotate)
+      badargs.diagnose('bit32.lshift(int, int)', M.bit32.lshift)
+      badargs.diagnose('bit32.replace(int, int, int, [int])', M.bit32.replace)
+      badargs.diagnose('bit32.rrotate(int, int)', M.bit32.rrotate)
+      badargs.diagnose('bit32.rshift(int, int)', M.bit32.rshift)
   - it raises an error for bits that are not among the 32: |
       expect(M.bit32.extract(1, 31, 2)).to_raise 'non-existent bits'
       expect(M.bit32.replace(1, 1, 33)).to_raise 'non-existent bits'
